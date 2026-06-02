@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Civil Cost Calculator — ESD / URC</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <span class="header-tag">ESD · URC / JG Summit</span>
+      <h1>Civil Cost Calculator</h1>
+      <p class="header-sub">Engineering Services Department</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Building Parameters -->
+    <section class="card">
+      <h2>Building Parameters</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label>Ground Floor Area (sq.m)</label>
+          <input type="number" id="groundArea" placeholder="e.g. 200" min="0" />
+        </div>
+        <div class="field">
+          <label>Height (m)</label>
+          <input type="number" id="height" placeholder="e.g. 4.5" min="0" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Number of Floors</label>
+          <input type="number" id="floors" placeholder="e.g. 2" min="1" value="1" />
+        </div>
+        <div class="field">
+          <label>Mezzanine</label>
+          <select id="hasMezzanine">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cantilever</label>
+          <select id="hasCantilever">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+      </div>
+      <button id="calculateBtn">Calculate Estimate</button>
+    </section>
+
+    <!-- Cost Breakdown Output -->
+    <section class="card" id="resultsSection" style="display:none;">
+      <h2>Cost Breakdown</h2>
+      <div id="breakdown"></div>
+      <div class="total-row">
+        <span>Total Estimated Cost</span>
+        <span id="totalCost">—</span>
+      </div>
+      <button id="exportBtn">Export as PDF</button>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Civil Cost Calculator v0.1.0 — ESD Internship 2026 &nbsp;·&nbsp; <a href="admin.html">Admin Panel</a></p>
+  </footer>
+
+  <!-- SheetJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="src/calculator.js"></script>
+  <script>
+    document.getElementById('calculateBtn').addEventListener('click', async () => {
+      const params = {
+        groundArea: parseFloat(document.getElementById('groundArea').value) || 0,
+        height: parseFloat(document.getElementById('height').value) || 0,
+        floors: parseInt(document.getElementById('floors').value) || 1,
+        hasMezzanine: document.getElementById('hasMezzanine').value === 'true',
+        hasCantilever: document.getElementById('hasCantilever').value === 'true'
+      }
+
+      const prices = await Calculator.loadPrices()
+      const result = Calculator.estimate(params, prices)
+
+      const fmt = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+      const breakdown = document.getElementById('breakdown')
+      breakdown.innerHTML = `
+        <div class="breakdown-row"><span>Direct Costs (Materials + Labor)</span><span>${fmt(result.directTotal)}</span></div>
+        <div class="breakdown-row"><span>Engineering Fee</span><span>${fmt(result.engineeringFee)}</span></div>
+        <div class="breakdown-row"><span>Undefined Allowance</span><span>${fmt(result.undefinedAllowance)}</span></div>
+        <div class="breakdown-row"><span>Subtotal</span><span>${fmt(result.subtotal)}</span></div>
+        <div class="breakdown-row"><span>Contingency</span><span>${fmt(result.contingency)}</span></div>
+        <div class="breakdown-row"><span>Escalation</span><span>${fmt(result.escalation)}</span></div>
+      `
+
+      document.getElementById('totalCost').textContent = fmt(result.totalEstimate)
+      document.getElementById('resultsSection').style.display = 'block'
+    })
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      window.print()
+    })
+  </script>
+
+</body>
+</html>

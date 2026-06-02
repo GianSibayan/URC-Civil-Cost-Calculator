@@ -1,0 +1,93 @@
+{
+  "_meta": {
+    "last_updated": "2026-05-26",
+    "updated_by": "admin",
+    "version": "0.1.0",
+    "note": "Placeholder prices — to be replaced with actual URC price reference data"
+  },
+  "cement": {
+    "label": "Cement (per bag)",
+    "unit": "bag",
+    "price": 285.00
+  },
+  "rebar_10mm": {
+    "label": "Rebar 10mm (per kg)",
+    "unit": "kg",
+    "price": 52.00
+  },
+  "rebar_12mm": {
+    "label": "Rebar 12mm (per kg)",
+    "unit": "kg",
+    "price": 54.00
+  },
+  "sand": {
+    "label": "Sand (per cu.m)",
+    "unit": "cu.m",
+    "price": 1200.00
+  },
+  "gravel": {
+    "label": "Gravel (per cu.m)",
+    "unit": "cu.m",
+    "price": 1400.00
+  },
+  "chb_4inch": {
+    "label": "CHB 4-inch (per piece)",
+    "unit": "pc",
+    "price": 14.00
+  },
+  "chb_6inch": {
+    "label": "CHB 6-inch (per piece)",
+    "unit": "pc",
+    "price": 18.00
+  },
+  "wood_2x2": {
+    "label": "Wood 2x2 (per board foot)",
+    "unit": "bd.ft",
+    "price": 95.00
+  },
+  "wood_2x3": {
+    "label": "Wood 2x3 (per board foot)",
+    "unit": "bd.ft",
+    "price": 110.00
+  },
+  "sintra_board": {
+    "label": "Sintra Board 4x8 (per sheet)",
+    "unit": "sheet",
+    "price": 1800.00
+  },
+  "paint_primer": {
+    "label": "Primer (per gallon)",
+    "unit": "gal",
+    "price": 420.00
+  },
+  "paint_finish": {
+    "label": "Finish Paint (per gallon)",
+    "unit": "gal",
+    "price": 580.00
+  },
+  "labor": {
+    "label": "Labor (per man-day)",
+    "unit": "man-day",
+    "price": 650.00
+  },
+  "engineering_fee_rate": {
+    "label": "Engineering Fee Rate",
+    "unit": "%",
+    "price": 0.08
+  },
+  "contingency_rate": {
+    "label": "Contingency Rate",
+    "unit": "%",
+    "price": 0.10
+  },
+  "escalation_rate": {
+    "label": "Escalation Rate",
+    "unit": "%",
+    "price": 0.05
+  },
+  "undefined_allowance_rate": {
+    "label": "Undefined Allowance Rate",
+    "unit": "%",
+    "price": 0.03
+  }
+}

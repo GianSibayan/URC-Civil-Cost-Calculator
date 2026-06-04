@@ -1,64 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel — Civil Cost Calculator</title>
-  <link rel="stylesheet" href="assets/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URC CCC — Building Calculator</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: [
+                            'Inter',
+                            '-apple-system',
+                            'BlinkMacSystemFont',
+                            '"SF Pro"',
+                            '"SF Pro Text"',
+                            '"SF Pro Display"',
+                            '"Segoe UI"',
+                            'Roboto',
+                            'Helvetica',
+                            'Arial',
+                            'sans-serif'
+                        ]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+    </style>
 </head>
-<body>
+<body class="h-full overflow-hidden select-none">
 
-  <header>
-    <div class="header-inner">
-      <span class="header-tag">ESD · URC / JG Summit</span>
-      <h1>Admin Panel</h1>
-      <p class="header-sub">Price Reference Management</p>
-    </div>
-  </header>
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <main>
-
-    <!-- Auth Gate -->
-    <section class="card" id="authSection">
-      <h2>Admin Access</h2>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="adminPassword" placeholder="Enter admin password" />
-      </div>
-      <button id="loginBtn">Login</button>
-      <p id="authError" style="color: red; display:none;">Incorrect password.</p>
-    </section>
-
-    <!-- Admin Content (hidden until auth) -->
-    <div id="adminContent" style="display:none;">
-
-      <!-- Upload Excel -->
-      <section class="card">
-        <h2>Upload Price Reference Excel</h2>
-        <p class="hint">Upload the latest Excel file to bulk-update all material prices.</p>
-        <input type="file" id="excelUpload" accept=".xlsx, .xls" />
-        <button id="uploadBtn">Parse & Apply Prices</button>
-        <p id="uploadStatus"></p>
-      </section>
-
-      <!-- Edit Prices -->
-      <section class="card">
-        <h2>Edit Prices</h2>
-        <input type="text" id="priceSearch" placeholder="Search material..." />
-        <div id="priceList"></div>
-      </section>
-
+    <div id="page-menu" class="min-h-screen flex items-center justify-center p-4 bg-white transition-all duration-300 ease-in-out">
+        <div class="flex flex-col items-center gap-6 w-full max-w-md">
+            <h1 class="text-5xl font-semibold text-black text-center leading-tight">Civil Cost Calculator</h1>
+            <p class="text-2xl text-black text-center">What are we calculating today?</p>
+            <button onclick="openCalculator()" class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+                <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
+            </button>
+            <p class="text-zinc-500 text-base mt-2">Changing something?</p>
+            <button onclick="showToast('Connecting to URC SSO Portal...', 'info')" class="w-full max-w-sm h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
+                <span class="text-white text-base font-medium">Login with URC email</span>
+            </button>
+            <div class="w-full max-w-sm flex justify-center items-center gap-3">
+                <div class="flex-1 h-px bg-neutral-200"></div>
+                <span class="text-zinc-500 text-base whitespace-nowrap">No Account?</span>
+                <div class="flex-1 h-px bg-neutral-200"></div>
+            </div>
+            <button onclick="showToast('Sign up is currently unavailable.', 'error')" class="w-full max-w-sm h-10 bg-zinc-100 hover:bg-zinc-200 transition rounded-lg cursor-pointer flex items-center justify-center border border-zinc-200">
+                <span class="text-black text-base font-medium">Sign up</span>
+            </button>
+        </div>
     </div>
 
-  </main>
+    <script>
+        function openCalculator() {
+            const menu = document.getElementById('page-menu');
+            menu.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                window.location.href = 'calculator.html';
+            }, 300);
+        }
 
-  <footer>
-    <p>Civil Cost Calculator v0.1.0 — ESD Internship 2026 &nbsp;·&nbsp; <a href="index.html">← Back to Estimator</a></p>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="src/parser.js"></script>
-  <script src="src/admin.js"></script>
-
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50','border-rose-100','text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50','border-neutral-100','text-slate-800');
+            else toast.classList.add('border-neutral-200','text-neutral-900');
+            toast.innerHTML = `<span>${message}</span>`;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2','opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0','scale-95');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
 </body>
 </html>

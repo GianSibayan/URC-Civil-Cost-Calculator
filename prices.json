@@ -1,93 +1,172 @@
 {
-  "_meta": {
-    "last_updated": "2026-05-26",
+  "meta": {
+    "last_updated": "2026-06-04",
     "updated_by": "admin",
-    "version": "0.1.0",
-    "note": "Placeholder prices — to be replaced with actual URC price reference data"
+    "currency": "PHP",
+    "notes": "Tab 1 & 2 rates from Excel reference. Tab 3 unit rates pending PhilConstruct data from Sir Tony."
   },
-  "cement": {
-    "label": "Cement (per bag)",
-    "unit": "bag",
-    "price": 285.00
+
+  "tab1_tab2": {
+    "concrete_classes": {
+      "C16/20": { "price_per_m3": 3200, "use": "Lean/Blinding concrete" },
+      "C20/25": { "price_per_m3": 3800, "use": "Lightly loaded slabs" },
+      "C25/30": { "price_per_m3": 3800, "use": "General Footings, Columns" },
+      "C30/37": { "price_per_m3": 4500, "use": "Heavy Columns, Transfer slabs" },
+      "C35/45": { "price_per_m3": 5200, "use": "High-rise, post tensioned" }
+    },
+    "rebar_price_per_kg": 72,
+    "rebar_weights_per_meter": {
+      "10mm": 0.617,
+      "12mm": 0.888,
+      "16mm": 1.58,
+      "20mm": 2.47,
+      "25mm": 3.86,
+      "32mm": 6.31
+    },
+    "steel_density_kg_per_m3": 7850,
+    "excavation_cost_per_m3": 600,
+    "forms_price_per_m2": 850,
+    "labor_cost_per_day": 650,
+    "overhead_profit_rate": 0.15,
+    "escalation_factor": 1.0220176136,
+    "place_factor": 0.9
   },
-  "rebar_10mm": {
-    "label": "Rebar 10mm (per kg)",
-    "unit": "kg",
-    "price": 52.00
-  },
-  "rebar_12mm": {
-    "label": "Rebar 12mm (per kg)",
-    "unit": "kg",
-    "price": 54.00
-  },
-  "sand": {
-    "label": "Sand (per cu.m)",
-    "unit": "cu.m",
-    "price": 1200.00
-  },
-  "gravel": {
-    "label": "Gravel (per cu.m)",
-    "unit": "cu.m",
-    "price": 1400.00
-  },
-  "chb_4inch": {
-    "label": "CHB 4-inch (per piece)",
-    "unit": "pc",
-    "price": 14.00
-  },
-  "chb_6inch": {
-    "label": "CHB 6-inch (per piece)",
-    "unit": "pc",
-    "price": 18.00
-  },
-  "wood_2x2": {
-    "label": "Wood 2x2 (per board foot)",
-    "unit": "bd.ft",
-    "price": 95.00
-  },
-  "wood_2x3": {
-    "label": "Wood 2x3 (per board foot)",
-    "unit": "bd.ft",
-    "price": 110.00
-  },
-  "sintra_board": {
-    "label": "Sintra Board 4x8 (per sheet)",
-    "unit": "sheet",
-    "price": 1800.00
-  },
-  "paint_primer": {
-    "label": "Primer (per gallon)",
-    "unit": "gal",
-    "price": 420.00
-  },
-  "paint_finish": {
-    "label": "Finish Paint (per gallon)",
-    "unit": "gal",
-    "price": 580.00
-  },
-  "labor": {
-    "label": "Labor (per man-day)",
-    "unit": "man-day",
-    "price": 650.00
-  },
-  "engineering_fee_rate": {
-    "label": "Engineering Fee Rate",
-    "unit": "%",
-    "price": 0.08
-  },
-  "contingency_rate": {
-    "label": "Contingency Rate",
-    "unit": "%",
-    "price": 0.10
-  },
-  "escalation_rate": {
-    "label": "Escalation Rate",
-    "unit": "%",
-    "price": 0.05
-  },
-  "undefined_allowance_rate": {
-    "label": "Undefined Allowance Rate",
-    "unit": "%",
-    "price": 0.03
+
+  "tab3": {
+    "notes": "Unit rates for Cost Estimate Scope. Source: PhilConstruct (pending Sir Tony confirmation). All rates in PHP.",
+
+    "site_clearance": {
+      "site_clearance_lump_sum": 0
+    },
+
+    "yard_and_underground": {
+      "site_grading_drainage_per_m2": 0,
+      "landscaping_per_m2": 0,
+      "retention_basins_per_m2": 0,
+      "fire_loop_hydrants_per_m": 0,
+      "fire_water_tank_pumps_lump_sum": 0,
+      "paving_roadway_per_m2": 0,
+      "paving_parking_lot_per_m2": 0,
+      "paving_truck_dock_per_m2": 0,
+      "outdoor_lighting_lump_sum": 0,
+      "fencing_per_m": 0,
+      "railroad_sidings_per_m": 0,
+      "truck_scales_each": 0,
+      "site_security_lump_sum": 0,
+      "fire_road_per_m2": 0,
+      "other_lump_sum": 0
+    },
+
+    "yard_utilities": {
+      "potable_water_lump_sum": 0,
+      "city_water_lump_sum": 0,
+      "sanitary_sewer_lump_sum": 0,
+      "gas_natural_lump_sum": 0
+    },
+
+    "plant_utilities": {
+      "hot_water_lump_sum": 0,
+      "steam_lump_sum": 0,
+      "process_sewer_lump_sum": 0,
+      "gas_lpg_lump_sum": 0,
+      "fuel_oil_lump_sum": 0
+    },
+
+    "substation_power": {
+      "power_high_voltage_lump_sum": 0,
+      "substation_pdp_lv_lump_sum": 0,
+      "backup_generator_each": 0
+    },
+
+    "building_shell_per_m2": {
+      "excavation_fill": 0,
+      "foundations": 0,
+      "superstructure_slabs": 0,
+      "slab_on_grade": 0,
+      "floor_wall_caulk": 0,
+      "frame_steel": 0,
+      "frame_concrete_steel_wood": 0,
+      "roof_deck": 0,
+      "roofing_sheetmetal": 0,
+      "platforms": 0,
+      "siding_per_vertical_m2": 0,
+      "exterior_wall_per_vertical_m2": 0,
+      "conc_tiltup_walls_per_vertical_m2": 0,
+      "interior_load_bearing_walls_per_vertical_m2": 0,
+      "windows_doors_each": 0,
+      "truck_doors_each": 0,
+      "painting_exterior_per_vertical_m2": 0,
+      "stair_elevator_enclosures_each": 0
+    },
+
+    "interior_finishing_per_m2": {
+      "partitions_per_vertical_m2": 0,
+      "office_shell_lump_sum": 0,
+      "interior_windows_each": 0,
+      "walls_finishes_per_vertical_m2": 0,
+      "flooring": 0,
+      "floor_sealer": 0,
+      "doors_each": 0,
+      "ceiling": 0,
+      "builtin_items_lump_sum": 0,
+      "specialties_lump_sum": 0
+    },
+
+    "mechanical_per_m2": {
+      "hvac": 0,
+      "plumbing": 0,
+      "fire_protection": 0,
+      "fire_hose_racks_each": 0,
+      "laboratory_utilities_lump_sum": 0,
+      "elevators_escalators_each": 0
+    },
+
+    "electrical_per_m2": {
+      "lighting": 0,
+      "power_wiring": 0,
+      "communications_lump_sum": 0,
+      "building_grounding_lump_sum": 0,
+      "security_lump_sum": 0
+    },
+
+    "other_buildings": {
+      "transformer_building_lump_sum": 0,
+      "guard_house_lump_sum": 0,
+      "fire_pump_house_lump_sum": 0,
+      "boiler_house_lump_sum": 0,
+      "flammable_material_storage_lump_sum": 0,
+      "empty_pallet_storage_lump_sum": 0,
+      "scrap_building_lump_sum": 0,
+      "cafeteria_lump_sum": 0,
+      "waste_water_treatment_lump_sum": 0
+    },
+
+    "other_line_items": {
+      "truck_dock_doors_levelers_each": 0,
+      "furnishings_lump_sum": 0,
+      "canopies_lump_sum": 0,
+      "racks_each": 0,
+      "warehouse_management_system_lump_sum": 0
+    },
+
+    "engineering_construction_mgmt": {
+      "construction_management_lump_sum": 0,
+      "commissioning_lump_sum": 0,
+      "contractor_engineering_lump_sum": 0,
+      "plant_engineering_lump_sum": 0,
+      "pg_engineering_lump_sum": 0
+    },
+
+    "risk_funds": {
+      "undefined_lump_sum": 0,
+      "contingency_lump_sum": 0,
+      "potential_items_lump_sum": 0
+    },
+
+    "others": {
+      "maintaining_production_lump_sum": 0,
+      "premium_time_lump_sum": 0,
+      "taxes_lump_sum": 0
+    }
   }
 }

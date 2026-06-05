@@ -80,25 +80,25 @@ function calcBuilding() {
   // --- DIMENSION INPUTS ---
   const length     = getVal('input-length');
   const width      = getVal('input-width');
-  const height     = getVal('input-clear-height');
+  const height     = getVal('input-clearHeight');
   const stories    = getVal('input-stories');
   const mezzanine  = getVal('input-mezzanine') / 100; // convert % to decimal
 
   // --- STRUCTURE INPUTS ---
-  const dockDoors    = getVal('input-dock-doors');
-  const driveInDoors = getVal('input-drive-in-doors');
-  const baySpacingL  = getVal('input-bay-spacing-l');
-  const baySpacingW  = getVal('input-bay-spacing-w');
+  const dockDoors    = getVal('input-dockDoors');
+  const driveInDoors = getVal('input-driveInDoors');
+  const baySpacingL  = getVal('input-baySpacingL');
+  const baySpacingW  = getVal('input-baySpacingW');
 
   // --- CAPACITY INPUTS ---
-  const rackHeight      = getVal('input-rack-height');
-  const palletSize      = getVal('input-pallet-size');
-  const isleWidth       = getVal('input-isle-width');
-  const bottomClearance = getVal('input-bottom-clearance');
-  const storageEff      = getVal('input-storage-efficiency') / 100;
-  const stagingArea     = getVal('input-staging-area') / 100;
-  const rackLevelHeight = getVal('input-rack-level-height');
-  const palletDepth     = getVal('input-pallet-depth');
+  const rackHeight      = getVal('input-rackHeight');
+  const palletSize      = getVal('input-palletSize');
+  const isleWidth       = getVal('input-isleWidth');
+  const bottomClearance = getVal('input-bottomClearance');
+  const storageEff      = getVal('input-storageEfficiency') / 100;
+  const stagingArea     = getVal('input-dockStagingArea') / 100;
+  const rackLevelHeight = getVal('input-rackLevelHeight');
+  const palletDepth     = getVal('input-palletDepth');
 
   // --- DIMENSION CALCULATIONS ---
   const floorArea     = length * width;

@@ -13,19 +13,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: [
-                            'Inter',
-                            '-apple-system',
-                            'BlinkMacSystemFont',
-                            '"SF Pro"',
-                            '"SF Pro Text"',
-                            '"SF Pro Display"',
-                            '"Segoe UI"',
-                            'Roboto',
-                            'Helvetica',
-                            'Arial',
-                            'sans-serif'
-                        ]
+                        sans: ['Inter','-apple-system','BlinkMacSystemFont','"SF Pro"','"SF Pro Text"','"SF Pro Display"','"Segoe UI"','Roboto','Helvetica','Arial','sans-serif']
                     }
                 }
             }
@@ -38,7 +26,6 @@
             background-color: #ffffff;
             -webkit-font-smoothing: antialiased;
         }
-
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
@@ -66,12 +53,7 @@
             box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
         }
         .dim-input::placeholder { color: #bbb; font-weight: 400; }
-        
-        .struct-select {
-            text-align-last: center;
-            cursor: pointer;
-            appearance: none;
-        }
+        .struct-select { text-align-last: center; cursor: pointer; appearance: none; }
     </style>
 </head>
 <body class="h-full overflow-hidden select-none">
@@ -87,23 +69,23 @@
                     <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
                 </div>
                 <nav class="flex-1 px-3 mt-4 space-y-1">
-                    <button onclick="showCalculator()" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer">
+                    <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer">
                         <span class="truncate text-left flex-1">Building Calculator</span>
                     </button>
-                    <button onclick="showComingSoon()" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 hover:bg-neutral-50 cursor-pointer">
+                    <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">
                         <span class="truncate text-left flex-1">Footing Pedestal Cal..</span>
-                    </button>
-                    <button onclick="showComingSoon()" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 hover:bg-neutral-50 cursor-pointer">
+                    </div>
+                    <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">
                         <span class="truncate text-left flex-1">Cement Volume Cal...</span>
-                    </button>
-                    <button onclick="showComingSoon()" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 hover:bg-neutral-50 cursor-pointer">
+                    </div>
+                    <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">
                         <span class="truncate text-left flex-1">Full Breakdown</span>
-                    </button>
+                    </div>
                     <div class="pt-6">
                         <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-                        <button onclick="showComingSoon()" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 hover:bg-neutral-50 cursor-pointer">
+                        <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">
                             <span class="truncate text-left flex-1">History</span>
-                        </button>
+                        </div>
                     </div>
                 </nav>
                 <div class="p-4 border-t border-neutral-100">
@@ -114,19 +96,14 @@
             </aside>
 
             <main class="flex-1 flex flex-col bg-white overflow-hidden relative">
+
                 <header class="h-16 px-8 border-b border-neutral-200 bg-white flex items-center justify-between sticky top-0 z-10">
                     <div class="flex items-center gap-6">
                         <h2 class="text-2xl font-bold text-neutral-900">Building Calculator</h2>
                         <div class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40">
-                            <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">
-                                Dimension
-                            </button>
-                            <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">
-                                Structure
-                            </button>
-                            <button class="pointer-events-none text-neutral-400 px-4 py-1 rounded-full text-xs font-medium">
-                                Capacity
-                            </button>
+                            <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
+                            <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
+                            <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -136,148 +113,262 @@
                 </header>
 
                 <div class="flex-1 overflow-y-auto p-8 pb-32">
-                    
+
                     <div id="section-dimension" class="max-w-6xl mx-auto flex flex-col gap-8">
                         <h3 class="text-3xl font-bold text-neutral-900">Dimension (sqm)</h3>
                         <div class="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto w-full">
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[240px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-3">
                                     <h4 class="text-xl font-bold text-neutral-900">Length</h4>
-                                    <input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">meters</span>
                                 </div>
                                 <div class="w-full mt-4">
                                     <h5 class="text-sm font-semibold text-neutral-600 mb-2">Floor Area</h5>
-                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="output-floor-area">0.00 sqm</div>
+                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-floorArea">0.00 sqm</div>
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[240px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-3">
                                     <h4 class="text-xl font-bold text-neutral-900">Width</h4>
-                                    <input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">meters</span>
                                 </div>
                                 <div class="w-full mt-4">
                                     <h5 class="text-sm font-semibold text-neutral-600 mb-2">Gross Area</h5>
-                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="output-gross-area">0.00 sqm</div>
+                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-grossArea">0.00 sqm</div>
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[240px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-3">
                                     <h4 class="text-xl font-bold text-neutral-900">Clear Height</h4>
-                                    <input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">meters</span>
                                 </div>
                                 <div class="w-full mt-4">
                                     <h5 class="text-sm font-semibold text-neutral-600 mb-2">Building Volume</h5>
-                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="output-building-volume">0.00 cu.m</div>
+                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-bldgVolume">0.00 cu.m</div>
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[240px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-3">
                                     <h4 class="text-xl font-bold text-neutral-900">No. of Stories</h4>
-                                    <input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">floors</span>
                                 </div>
                                 <div class="w-full mt-4">
                                     <h5 class="text-sm font-semibold text-neutral-600 mb-2">Perimeter</h5>
-                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="output-perimeter">0.00 m</div>
+                                    <div class="bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-perimeter">0.00 m</div>
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-center text-center w-full sm:w-[280px] min-h-[240px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-3">
-                                    <h4 class="text-xl font-bold text-neutral-900">% Mezzanine</h4>
-                                    <input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <h4 class="text-xl font-bold text-neutral-900">％ Mezzanine</h4>
+                                    <input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">percent (%)</span>
                                 </div>
                             </div>
+
                         </div>
                     </div>
 
                     <div id="section-structure" class="hidden max-w-6xl mx-auto flex flex-col gap-8">
                         <h3 class="text-3xl font-bold text-neutral-900">Structure Specification</h3>
                         <div class="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto w-full">
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-start text-center w-full sm:w-[280px] min-h-[140px] shadow-sm">
                                 <h4 class="text-lg font-bold text-neutral-900 mb-3">Structure Type</h4>
-                                <select id="select-structureType" class="struct-select" data-tab="1" onchange="calcBuilding()">
+                                <select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
                                     <option value="steel_rigid">Steel Rigid Frames</option>
                                     <option value="steel_joist">Steel Joist and Column</option>
                                     <option value="tilt_up">Tilt-Up Concrete</option>
                                     <option value="pre_cast">Pre-Cast Concrete</option>
                                 </select>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-start text-center w-full sm:w-[280px] min-h-[140px] shadow-sm">
                                 <h4 class="text-lg font-bold text-neutral-900 mb-3">Roof Type</h4>
-                                <select id="select-roofType" class="struct-select" data-tab="1" onchange="calcBuilding()">
+                                <select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
                                     <option value="standing_seam">Standing Seam Metal</option>
                                     <option value="r_panel">R Panel Metal</option>
                                     <option value="tpo_membrane">TPO Membrane</option>
                                     <option value="epdm_membrane">EPDM Membrane</option>
                                 </select>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-start text-center w-full sm:w-[280px] min-h-[140px] shadow-sm">
                                 <h4 class="text-lg font-bold text-neutral-900 mb-3">Wall Cladding</h4>
-                                <select id="select-wallCladding" class="struct-select" data-tab="1" onchange="calcBuilding()">
+                                <select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
                                     <option value="metal_panel">Metal Panel</option>
                                     <option value="tilt_up_wall">Tilt-Up Concrete</option>
                                     <option value="pre_cast_wall">Pre-Cast Panel</option>
                                     <option value="masonry_block">Masonry Block</option>
                                 </select>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-start text-center w-full sm:w-[280px] min-h-[140px] shadow-sm">
                                 <h4 class="text-lg font-bold text-neutral-900 mb-3">Slab Thickness</h4>
-                                <select id="select-slabThickness" class="struct-select" data-tab="1" onchange="calcBuilding()">
+                                <select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
                                     <option value="100mm">100mm Light Storage</option>
                                     <option value="150mm">150mm Standard</option>
                                     <option value="200mm">200mm Heavy Loads</option>
                                     <option value="250mm">250mm Very Heavy</option>
                                 </select>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-2">
                                     <h4 class="text-lg font-bold text-neutral-900">Dock Doors</h4>
-                                    <input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" />
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-2">
                                     <h4 class="text-lg font-bold text-neutral-900">Drive-In Doors</h4>
-                                    <input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" />
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-start text-center w-full sm:w-[280px] min-h-[140px] shadow-sm">
                                 <h4 class="text-lg font-bold text-neutral-900 mb-3">Skylights / Windows</h4>
-                                <select id="select-skylights" class="struct-select" data-tab="1" onchange="calcBuilding()">
+                                <select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
                                     <option value="standard">Standard</option>
                                     <option value="none">None</option>
                                     <option value="minimal">Minimal</option>
                                     <option value="many">Many</option>
                                 </select>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-2">
                                     <h4 class="text-lg font-bold text-neutral-900">Bay Spacing (L)</h4>
-                                    <input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">meters</span>
                                 </div>
                             </div>
+
                             <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[240px] shadow-sm">
                                 <div class="w-full flex flex-col items-center gap-2">
                                     <h4 class="text-lg font-bold text-neutral-900">Bay Spacing (W)</h4>
-                                    <input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" data-tab="1" oninput="calcBuilding()" />
+                                    <input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" />
                                     <span class="text-xs text-neutral-400 font-medium">meters</span>
                                 </div>
                                 <div class="w-full mt-2">
                                     <h5 class="text-xs font-bold text-neutral-600 mb-1">Total Bay Spacing</h5>
-                                    <div class="bg-neutral-200 rounded-xl py-2 px-3 text-center font-bold text-neutral-800 text-sm shadow-sm" id="output-total-bay-spacing">0.00</div>
+                                    <div class="bg-neutral-200 rounded-xl py-2 px-3 text-center font-bold text-neutral-800 text-sm shadow-sm" id="result-totalBaySpacing">0.00</div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
 
-                    <!-- Coming Soon Section (hidden by default) -->
-                    <div id="section-coming-soon" class="hidden max-w-6xl mx-auto w-full flex items-center justify-center" style="min-height: 60vh;">
-                        <p class="text-6xl font-bold text-neutral-200">Coming Soon</p>
+                    <div id="section-capacity" class="hidden max-w-6xl mx-auto flex flex-col gap-8">
+                        <h3 class="text-3xl font-bold text-neutral-900">Capacity</h3>
+
+                        <div class="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto w-full">
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Rack Height</h4>
+                                    <input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">meters</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Pallet Size</h4>
+                                    <input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">meters</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Isle Width</h4>
+                                    <input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">meters</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Bottom Clearance</h4>
+                                    <input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">meters</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Storage Efficiency</h4>
+                                    <input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">percent (%)</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Dock / Staging Area</h4>
+                                    <input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">percent (%)</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Rack Level Height</h4>
+                                    <input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">meters</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[200px] shadow-sm">
+                                <div class="w-full flex flex-col items-center gap-3">
+                                    <h4 class="text-xl font-bold text-neutral-900">Pallet Depth</h4>
+                                    <input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" />
+                                    <span class="text-xs text-neutral-400 font-medium">meters</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="max-w-5xl mx-auto w-full">
+                            <h4 class="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-4">Results</h4>
+                            <div class="flex flex-wrap justify-center gap-8">
+
+                                <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
+                                    <h4 class="text-lg font-bold text-neutral-900 mb-1">Total Pallet Positions</h4>
+                                    <p class="text-xs text-neutral-400 mb-3">Formula pending</p>
+                                    <div class="w-full bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-totalPalletPositions">—</div>
+                                </div>
+
+                                <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
+                                    <h4 class="text-lg font-bold text-neutral-900 mb-1">Total Bay Spacing</h4>
+                                    <p class="text-xs text-neutral-400 mb-3">Formula pending</p>
+                                    <div class="w-full bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-capTotalBaySpacing1">—</div>
+                                </div>
+
+                                <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
+                                    <h4 class="text-lg font-bold text-neutral-900 mb-1">Total Bay Spacing</h4>
+                                    <p class="text-xs text-neutral-400 mb-3">Formula pending</p>
+                                    <div class="w-full bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-capTotalBaySpacing2">—</div>
+                                </div>
+
+                                <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
+                                    <h4 class="text-lg font-bold text-neutral-900 mb-1">Total Bay Spacing</h4>
+                                    <p class="text-xs text-neutral-400 mb-3">Formula pending</p>
+                                    <div class="w-full bg-neutral-200 rounded-2xl py-2.5 px-4 text-center font-bold text-neutral-800 text-lg shadow-sm" id="result-capTotalBaySpacing3">—</div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -285,43 +376,103 @@
         </div>
     </div>
 
-    <script src="src/auth.js"></script>
-    <script src="src/script.js"></script>
     <script>
+        let estimateState = {
+            length: 0, width: 0, clearHeight: 0, stories: 0, mezzanine: 0,
+            structureType: 'steel_rigid', roofType: 'standing_seam',
+            wallCladding: 'metal_panel', slabThickness: '100mm',
+            dockDoors: 0, driveInDoors: 0, skylights: 'standard',
+            baySpacingL: 0, baySpacingW: 0,
+            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0,
+            storageEfficiency: 0, dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0
+        };
+
         function goBackMain() {
-            Auth.logout();
-        }
-
-        function showComingSoon() {
-            document.getElementById('section-dimension').classList.add('hidden');
-            const structSection = document.getElementById('section-structure');
-            if (structSection) structSection.classList.add('hidden');
-            document.getElementById('section-coming-soon').classList.remove('hidden');
-        }
-
-        function showCalculator() {
-            document.getElementById('section-coming-soon').classList.add('hidden');
-            document.getElementById('section-dimension').classList.remove('hidden');
+            const calc = document.getElementById('page-calculator');
+            calc.classList.add('opacity-0');
+            setTimeout(() => {
+                window.location.href = 'admin.html';
+            }, 300);
         }
 
         function switchSection(section) {
-            const dimView = document.getElementById('section-dimension');
-            const structView = document.getElementById('section-structure');
-            const dimTab = document.getElementById('tab-dimension');
-            const structTab = document.getElementById('tab-structure');
-
-            if (section === 'dimension') {
-                structView.classList.add('hidden');
-                dimView.classList.remove('hidden');
-                dimTab.className = "bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all";
-                structTab.className = "text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all";
-            } else if (section === 'structure') {
-                dimView.classList.add('hidden');
-                structView.classList.remove('hidden');
-                structTab.className = "bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all";
-                dimTab.className = "text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all";
-            }
+            ['dimension','structure','capacity'].forEach(s => {
+                document.getElementById('section-' + s).classList.add('hidden');
+                const tab = document.getElementById('tab-' + s);
+                tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
+            });
+            document.getElementById('section-' + section).classList.remove('hidden');
+            const activeTab = document.getElementById('tab-' + section);
+            activeTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
         }
+
+        function handleInput(field, value) {
+            const parsed = parseFloat(value);
+            estimateState[field] = isNaN(parsed) ? 0 : parsed;
+            saveToCache();
+            updateUI();
+        }
+
+        function handleSelect(field, value) {
+            estimateState[field] = value;
+            saveToCache();
+        }
+
+        function updateUI() {
+            const L = estimateState.length || 0;
+            const W = estimateState.width || 0;
+            const H = estimateState.clearHeight || 0;
+            const M = estimateState.mezzanine || 0;
+            const mDec = M / 100;
+
+            const floorArea  = L * W;
+            const grossArea  = floorArea + (floorArea * mDec);
+            const bldgVolume = (L * W * H) + (L * W * mDec * 6);
+            const perimeter  = 2 * (L + W);
+
+            document.getElementById('result-floorArea').textContent  = floorArea.toFixed(2) + ' sqm';
+            document.getElementById('result-grossArea').textContent  = grossArea.toFixed(2) + ' sqm';
+            document.getElementById('result-bldgVolume').textContent = bldgVolume.toFixed(2) + ' cu.m';
+            document.getElementById('result-perimeter').textContent  = perimeter.toFixed(2) + ' m';
+
+            const bsl = estimateState.baySpacingL || 0;
+            const bsw = estimateState.baySpacingW || 0;
+            let totalBaySpacing = 0;
+            if (bsl > 0 && bsw > 0) totalBaySpacing = (L / bsl) + (W / bsw);
+            document.getElementById('result-totalBaySpacing').textContent = totalBaySpacing.toFixed(2);
+        }
+
+        function syncInputs() {
+            ['length','width','clearHeight','stories','mezzanine',
+             'dockDoors','driveInDoors','baySpacingL','baySpacingW',
+             'rackHeight','palletSize','isleWidth','bottomClearance',
+             'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth'].forEach(f => {
+                const el = document.getElementById('input-' + f);
+                if (el && estimateState[f] !== 0) el.value = estimateState[f];
+            });
+            ['structureType','roofType','wallCladding','slabThickness','skylights'].forEach(f => {
+                const el = document.getElementById('select-' + f);
+                if (el) el.value = estimateState[f];
+            });
+        }
+
+        function saveToCache() {
+            try { localStorage.setItem('urc_ccc_building_state_2026', JSON.stringify(estimateState)); } catch(e) {}
+        }
+
+        function loadFromCache() {
+            try {
+                const raw = localStorage.getItem('urc_ccc_building_state_2026');
+                if (raw) {
+                    const p = JSON.parse(raw);
+                    Object.keys(estimateState).forEach(k => { if (p[k] !== undefined) estimateState[k] = p[k]; });
+                }
+            } catch(e) {}
+            syncInputs();
+            updateUI();
+        }
+
+        window.onload = loadFromCache;
     </script>
 </body>
 </html>

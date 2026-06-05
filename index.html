@@ -1,110 +1,240 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Civil Cost Calculator — ESD / URC</title>
-  <link rel="stylesheet" href="assets/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civil Cost Calculator — ESD / URC</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+
+        .login-form {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 384px;
+        }
+
+        .login-form.visible {
+            display: flex;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid rgba(0,0,0,0.1);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            color: #111;
+        }
+
+        .login-input:focus {
+            border-color: rgba(0,0,0,0.3);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+
+        .login-input::placeholder {
+            color: #bbb;
+        }
+
+        .error-msg {
+            display: none;
+            color: #ef4444;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .error-msg.visible {
+            display: block;
+        }
+    </style>
 </head>
-<body>
+<body class="h-full overflow-hidden select-none">
 
-  <header>
-    <div class="header-inner">
-      <span class="header-tag">ESD · URC / JG Summit</span>
-      <h1>Civil Cost Calculator</h1>
-      <p class="header-sub">Engineering Services Department</p>
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ============================================================ -->
+    <!-- LANDING PAGE                                                  -->
+    <!-- ============================================================ -->
+    <div id="page-landing" class="min-h-screen flex items-center justify-center p-4 bg-white transition-all duration-300 ease-in-out">
+        <div class="flex flex-col items-center gap-6 w-full max-w-md">
+
+            <!-- Title -->
+            <div class="text-center">
+                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-2">ESD · URC / JG Summit</p>
+                <h1 class="text-5xl font-semibold text-black leading-tight">Civil Cost Calculator</h1>
+                <p class="text-neutral-500 text-base mt-2">Engineering Services Department</p>
+            </div>
+
+            <p class="text-2xl text-black text-center mt-2">What are we calculating today?</p>
+
+            <!-- Calculator Button -->
+            <button
+                onclick="showLoginForm('calculator')"
+                class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+                <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
+            </button>
+
+            <!-- Login Form (hidden by default, shown on button click) -->
+            <div id="login-form" class="login-form w-full max-w-sm">
+                <p id="login-label" class="text-sm font-semibold text-neutral-600 text-center">Enter your URC credentials</p>
+                <input
+                    id="login-email"
+                    class="login-input"
+                    type="email"
+                    placeholder="your.email@urc.com.ph"
+                    autocomplete="email"
+                />
+                <input
+                    id="login-password"
+                    class="login-input"
+                    type="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    onkeydown="if(event.key==='Enter') submitLogin()"
+                />
+                <p id="login-error" class="error-msg">Invalid email or password. Please try again.</p>
+                <button
+                    onclick="submitLogin()"
+                    id="login-btn"
+                    class="w-full h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
+                    <span class="text-white text-base font-medium">Login</span>
+                </button>
+                <button
+                    onclick="hideLoginForm()"
+                    class="w-full h-10 bg-zinc-100 hover:bg-zinc-200 transition rounded-lg cursor-pointer flex items-center justify-center border border-zinc-200">
+                    <span class="text-black text-sm font-medium">Cancel</span>
+                </button>
+            </div>
+
+            <!-- Divider — hidden when login form is visible -->
+            <div id="divider-section" class="flex flex-col items-center gap-4 w-full max-w-sm">
+                <p class="text-zinc-500 text-base">Changing something?</p>
+                <button
+                    onclick="showLoginForm('admin')"
+                    class="w-full h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
+                    <span class="text-white text-base font-medium">Login with URC email</span>
+                </button>
+            </div>
+
+        </div>
     </div>
-  </header>
 
-  <main>
+    <!-- Load auth.js -->
+    <script src="src/auth.js"></script>
 
-    <!-- Building Parameters -->
-    <section class="card">
-      <h2>Building Parameters</h2>
-      <div class="form-grid">
-        <div class="field">
-          <label>Ground Floor Area (sq.m)</label>
-          <input type="number" id="groundArea" placeholder="e.g. 200" min="0" />
-        </div>
-        <div class="field">
-          <label>Height (m)</label>
-          <input type="number" id="height" placeholder="e.g. 4.5" min="0" step="0.1" />
-        </div>
-        <div class="field">
-          <label>Number of Floors</label>
-          <input type="number" id="floors" placeholder="e.g. 2" min="1" value="1" />
-        </div>
-        <div class="field">
-          <label>Mezzanine</label>
-          <select id="hasMezzanine">
-            <option value="false">No</option>
-            <option value="true">Yes</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Cantilever</label>
-          <select id="hasCantilever">
-            <option value="false">No</option>
-            <option value="true">Yes</option>
-          </select>
-        </div>
-      </div>
-      <button id="calculateBtn">Calculate Estimate</button>
-    </section>
+    <script>
+        // Where to redirect after login — set by whichever button was clicked
+        let loginDestination = 'calculator';
 
-    <!-- Cost Breakdown Output -->
-    <section class="card" id="resultsSection" style="display:none;">
-      <h2>Cost Breakdown</h2>
-      <div id="breakdown"></div>
-      <div class="total-row">
-        <span>Total Estimated Cost</span>
-        <span id="totalCost">—</span>
-      </div>
-      <button id="exportBtn">Export as PDF</button>
-    </section>
+        // Show login form
+        function showLoginForm(destination) {
+            loginDestination = destination;
+            const form = document.getElementById('login-form');
+            const divider = document.getElementById('divider-section');
+            const label = document.getElementById('login-label');
 
-  </main>
+            form.classList.add('visible');
+            divider.style.display = 'none';
 
-  <footer>
-    <p>Civil Cost Calculator v0.1.0 — ESD Internship 2026 &nbsp;·&nbsp; <a href="admin.html">Admin Panel</a></p>
-  </footer>
+            if (destination === 'admin') {
+                label.textContent = 'Login to manage prices';
+            } else {
+                label.textContent = 'Enter your URC credentials';
+            }
 
-  <!-- SheetJS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="src/calculator.js"></script>
-  <script>
-    document.getElementById('calculateBtn').addEventListener('click', async () => {
-      const params = {
-        groundArea: parseFloat(document.getElementById('groundArea').value) || 0,
-        height: parseFloat(document.getElementById('height').value) || 0,
-        floors: parseInt(document.getElementById('floors').value) || 1,
-        hasMezzanine: document.getElementById('hasMezzanine').value === 'true',
-        hasCantilever: document.getElementById('hasCantilever').value === 'true'
-      }
+            // Focus email field
+            setTimeout(() => document.getElementById('login-email').focus(), 100);
+        }
 
-      const prices = await Calculator.loadPrices()
-      const result = Calculator.estimate(params, prices)
+        // Hide login form
+        function hideLoginForm() {
+            document.getElementById('login-form').classList.remove('visible');
+            document.getElementById('divider-section').style.display = 'flex';
+            document.getElementById('login-error').classList.remove('visible');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+        }
 
-      const fmt = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        // Submit login
+        async function submitLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            const loginBtn = document.getElementById('login-btn');
 
-      const breakdown = document.getElementById('breakdown')
-      breakdown.innerHTML = `
-        <div class="breakdown-row"><span>Direct Costs (Materials + Labor)</span><span>${fmt(result.directTotal)}</span></div>
-        <div class="breakdown-row"><span>Engineering Fee</span><span>${fmt(result.engineeringFee)}</span></div>
-        <div class="breakdown-row"><span>Undefined Allowance</span><span>${fmt(result.undefinedAllowance)}</span></div>
-        <div class="breakdown-row"><span>Subtotal</span><span>${fmt(result.subtotal)}</span></div>
-        <div class="breakdown-row"><span>Contingency</span><span>${fmt(result.contingency)}</span></div>
-        <div class="breakdown-row"><span>Escalation</span><span>${fmt(result.escalation)}</span></div>
-      `
+            if (!email || !password) {
+                errorEl.textContent = 'Please enter your email and password.';
+                errorEl.classList.add('visible');
+                return;
+            }
 
-      document.getElementById('totalCost').textContent = fmt(result.totalEstimate)
-      document.getElementById('resultsSection').style.display = 'block'
-    })
+            // Loading state
+            loginBtn.innerHTML = '<span class="text-white text-base font-medium">Logging in...</span>';
+            loginBtn.disabled = true;
+            errorEl.classList.remove('visible');
 
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      window.print()
-    })
-  </script>
+            const result = await Auth.login(email, password, loginDestination);
+
+            if (!result.success) {
+                errorEl.textContent = result.error || 'Invalid email or password.';
+                errorEl.classList.add('visible');
+                loginBtn.innerHTML = '<span class="text-white text-base font-medium">Login</span>';
+                loginBtn.disabled = false;
+            }
+            // On success, Auth.login() handles the redirect automatically
+        }
+
+        // Show toast
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50', 'border-rose-100', 'text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50', 'border-neutral-100', 'text-slate-800');
+            else toast.classList.add('border-neutral-200', 'text-neutral-900');
+            toast.innerHTML = `<span>${message}</span>`;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // If already logged in, redirect to calculator
+        window.onload = function() {
+            if (Auth.isLoggedIn()) {
+                window.location.href = '/calculator.html';
+            }
+        };
+    </script>
 
 </body>
 </html>

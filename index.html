@@ -233,13 +233,128 @@
             if (Auth.isLoggedIn()) {
                 window.location.href = '/calculator.html';
             }
-            // Clear form on load
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-password').value = '';
-            document.getElementById('login-error').classList.remove('visible');
-            hideLoginForm();
         };
     </script>
 
+
+
+
+
+    <canvas id="pc" style="position:fixed;bottom:0;left:0;width:100%;height:55vh;pointer-events:none;z-index:0;"></canvas>
+    <script>
+    (function(){
+        var c = document.getElementById('pc');
+        var x = c.getContext('2d');
+        var W, H, P = [], M = {x:-9999,y:-9999}, N = 55;
+
+        function resize() {
+            W = c.width = c.offsetWidth;
+            H = c.height = c.offsetHeight;
+        }
+
+        // Arc zone — particles live below a swooping curve
+        // Curve: y > arcY(px) where arcY is a parabola dipping low in center
+        function arcY(px) {
+            // Parabola: highest at edges (y=0), lowest at center (y = H * 0.55)
+            var t = (px / W) * 2 - 1; // -1 to 1
+            return H * (0.55 - 0.55 * t * t);
+        }
+
+        function inZone(px, py) {
+            return py > arcY(px);
+        }
+
+        function mk() {
+            P = [];
+            var attempts = 0;
+            while (P.length < N && attempts < 1000) {
+                attempts++;
+                var px = Math.random() * W;
+                var py = arcY(px) + Math.random() * (H - arcY(px));
+                if (inZone(px, py)) {
+                    P.push({x:px, y:py, vx:(Math.random()-.5)*.45, vy:(Math.random()-.5)*.45});
+                }
+            }
+        }
+
+        function fr() {
+            x.clearRect(0, 0, W, H);
+
+            for (var i = 0; i < P.length; i++) {
+                var p = P[i];
+
+                // Repel from mouse
+                var dx = p.x - M.x, dy = p.y - M.y;
+                var d = Math.sqrt(dx*dx+dy*dy);
+                if (d < 85 && d > 0) {
+                    var f = (85-d)/85*2;
+                    p.vx += (dx/d)*f*.1;
+                    p.vy += (dy/d)*f*.1;
+                }
+
+                p.vx *= .97; p.vy *= .97;
+                if (Math.abs(p.vx)<.05) p.vx += (Math.random()-.5)*.1;
+                if (Math.abs(p.vy)<.05) p.vy += (Math.random()-.5)*.1;
+
+                p.x += p.vx; p.y += p.vy;
+
+                // Bounce off arc boundary — push back down
+                var threshold = arcY(p.x);
+                if (p.y < threshold) {
+                    p.y = threshold;
+                    p.vy = Math.abs(p.vy) * .6;
+                }
+
+                // Bounce off screen edges
+                if (p.x < 0) { p.x = 0; p.vx *= -1; }
+                if (p.x > W) { p.x = W; p.vx *= -1; }
+                if (p.y > H) { p.y = H; p.vy *= -1; }
+            }
+
+            // Draw connections
+            for (var i = 0; i < P.length; i++) {
+                for (var j = i+1; j < P.length; j++) {
+                    var dx = P[i].x-P[j].x, dy = P[i].y-P[j].y;
+                    var d = Math.sqrt(dx*dx+dy*dy);
+                    if (d < 100) {
+                        x.beginPath();
+                        x.moveTo(P[i].x, P[i].y);
+                        x.lineTo(P[j].x, P[j].y);
+                        x.strokeStyle = 'rgba(0,0,0,'+(1-d/100)*.18+')';
+                        x.lineWidth = .8;
+                        x.stroke();
+                    }
+                }
+            }
+
+            // Draw dots
+            for (var i = 0; i < P.length; i++) {
+                x.beginPath();
+                x.arc(P[i].x, P[i].y, 2.5, 0, 6.28);
+                x.fillStyle = 'rgba(0,0,0,.22)';
+                x.fill();
+            }
+
+            requestAnimationFrame(fr);
+        }
+
+        window.addEventListener('mousemove', function(e) {
+            var r = c.getBoundingClientRect();
+            M.x = e.clientX - r.left;
+            M.y = e.clientY - r.top;
+        });
+        window.addEventListener('touchmove', function(e) {
+            var t = e.touches[0], r = c.getBoundingClientRect();
+            M.x = t.clientX - r.left;
+            M.y = t.clientY - r.top;
+        }, {passive:true});
+        window.addEventListener('mouseleave', function() { M.x=-9999; M.y=-9999; });
+        window.addEventListener('resize', function() { resize(); mk(); });
+
+        resize();
+        mk();
+        fr();
+    })();
+    </script>
 </body>
 </html>

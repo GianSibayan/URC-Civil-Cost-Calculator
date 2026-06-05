@@ -233,6 +233,11 @@
             if (Auth.isLoggedIn()) {
                 window.location.href = '/calculator.html';
             }
+            // Clear form on load
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').classList.remove('visible');
+            hideLoginForm();
         };
     </script>
 

@@ -6,7 +6,9 @@
     <title>URC CCC — Building Calculator</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script src="/src/auth.js"></script>
 
     <script>
         tailwind.config = {
@@ -453,12 +455,12 @@
                             <div class="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto w-full">
                                 <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-start text-center w-full sm:w-[280px] min-h-[140px] shadow-sm">
                                     <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Class</h4>
-                                    <select id="select-concreteClass" class="struct-select" onchange="handleSelect('concreteClass', this.value)">
-                                        <option value="C20/25">C20/25</option>
-                                        <option value="C25/30">C25/30</option>
-                                        <option value="C30/37" selected>C30/37</option>
-                                        <option value="C35/45">C35/45</option>
-                                        <option value="C40/50">C40/50</option>
+                                    <select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
+                                        <option value="C16/20">C16/20 — Lean/Blinding</option>
+                                        <option value="C20/25">C20/25 — Light Slabs</option>
+                                        <option value="C25/30">C25/30 — General</option>
+                                        <option value="C30/37" selected>C30/37 — Heavy Columns</option>
+                                        <option value="C35/45">C35/45 — High-Rise</option>
                                     </select>
                                 </div>
                                 <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 flex flex-col items-center justify-between text-center w-full sm:w-[280px] min-h-[160px] shadow-sm">
@@ -598,6 +600,97 @@
     </div>
 
     <script>
+        // ============================================================
+        // PRICES — loaded from prices.json on page load
+        // window.PRICES is also exposed for src/parser.js (admin panel)
+        // ============================================================
+        window.PRICES = null;
+
+        async function loadPrices() {
+            try {
+                const res = await fetch(
+                    'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json'
+                );
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                window.PRICES = await res.json();
+                applyPricesToState();
+                syncInputs();
+                updateUI();
+                showToast('Price data loaded.', 'success');
+            } catch (e) {
+                console.warn('Could not fetch live prices.json, using defaults.', e);
+                showToast('Could not load live prices. Using cached/default values.', 'error');
+                syncInputs();
+                updateUI();
+            }
+        }
+
+        // Applies prices.json values into estimateState for Tab 2 fields.
+        // Only sets fields that are still at 0 (respects user edits already in cache).
+        function applyPricesToState() {
+            if (!window.PRICES) return;
+            const p = window.PRICES.tab1_tab2;
+            const concreteClass = estimateState.concreteClass || 'C30/37';
+            const concretePrice = p.concrete_classes[concreteClass]
+                ? p.concrete_classes[concreteClass].price_per_m3
+                : 0;
+
+            const defaults = {
+                concretePriceM3:  concretePrice,
+                excavationCostM3: p.excavation_cost_per_m3,
+                rebarPriceKg:     p.rebar_price_per_kg,
+                overheadProfit:   Math.round(p.overhead_profit_rate * 100),   // stored as decimal, display as %
+                formsPriceM2:     p.forms_price_per_m2,
+                laborCostDay:     p.labor_cost_per_day,
+                steelDensity:     p.steel_density_kg_per_m3,
+            };
+
+            // Only overwrite if the field is still 0 (fresh session or no cache)
+            Object.entries(defaults).forEach(([k, v]) => {
+                if (estimateState[k] === 0) estimateState[k] = v;
+            });
+
+            saveToCache();
+        }
+
+        // Called when the concrete class dropdown changes —
+        // looks up the new price from PRICES and updates the input.
+        function handleConcreteClassChange(value) {
+            estimateState.concreteClass = value;
+            if (window.PRICES) {
+                const cls = window.PRICES.tab1_tab2.concrete_classes;
+                if (cls[value]) {
+                    estimateState.concretePriceM3 = cls[value].price_per_m3;
+                    const el = document.getElementById('input-concretePriceM3');
+                    if (el) el.value = estimateState.concretePriceM3;
+                }
+            }
+            const sel = document.getElementById('select-concreteClass');
+            if (sel) estimateState.concreteClass = value;
+            saveToCache();
+            updateUI();
+        }
+
+        // ============================================================
+        // TOAST NOTIFICATIONS
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50', 'border-rose-100', 'text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50', 'border-neutral-100', 'text-slate-800');
+            else toast.classList.add('border-neutral-200', 'text-neutral-900');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
         let estimateState = {
             length: 0, width: 0, clearHeight: 0, stories: 0, mezzanine: 0,
             structureType: 'steel_rigid', roofType: 'standing_seam',
@@ -815,7 +908,15 @@
         }
 
         window.onload = function() {
+            // Auth guard — redirects to index.html if no session token
+            if (typeof Auth !== 'undefined') {
+                Auth.requireLogin();
+            }
+            // Load cache first so inputs are restored immediately
             loadFromCache();
+            // Then fetch live prices.json — auto-fills cost fields from prices.json
+            // if they haven't been manually set yet
+            loadPrices();
         };
     </script>
 </body>

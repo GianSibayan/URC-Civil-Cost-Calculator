@@ -110,17 +110,25 @@ const Parser = {
       return null;
     }
 
-    try {
-      const res = await fetch(
-        `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch (e) {
-      console.error(`Failed to load ${config.file}:`, e);
-      showToast(`Failed to load ${config.label} prices.`, 'error');
-      return null;
+    // Try relative path first (Vercel serves files from root),
+    // fall back to raw GitHub in case relative fetch fails.
+    const urls = [
+      `/${config.file}`,
+      `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`,
+    ];
+
+    for (const url of urls) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) return await res.json();
+      } catch (_) {
+        // try next URL
+      }
     }
+
+    console.error(`Failed to load ${config.file} from all sources`);
+    showToast(`Failed to load ${config.label} prices.`, 'error');
+    return null;
   },
 
   // ============================================================

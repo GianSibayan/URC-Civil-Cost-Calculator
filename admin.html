@@ -453,10 +453,28 @@ let categoryData = {};
 let dirtyRows = new Set();
 
 // ============================================================
-// AUTH GUARD
+// AUTH GUARD + PRICES BOOTSTRAP
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     Auth.requireLogin();
+
+    // Fetch prices.json so window.PRICES is available for renderCore()
+    // Try relative path first (works on Vercel + local), fall back to raw GitHub
+    try {
+        let res = await fetch('/prices.json');
+        if (!res.ok) throw new Error('relative failed');
+        window.PRICES = await res.json();
+    } catch (_) {
+        try {
+            const res = await fetch(
+                'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json'
+            );
+            if (res.ok) window.PRICES = await res.json();
+        } catch (e) {
+            console.error('Could not load prices.json:', e);
+        }
+    }
+
     const meta = window.PRICES ? window.PRICES.meta : null;
     if (meta) {
         document.getElementById('last-updated-label').textContent =

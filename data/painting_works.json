@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Paint Tinting Color",
+    "unit": "Ltr",
+    "price_php": 182.0
+  },
+  {
+    "name": "Paint Aluminum",
+    "unit": "gal",
+    "price_php": 664.0
+  },
+  {
+    "name": "Paint Enamel",
+    "unit": "gal",
+    "price_php": 660.0
+  },
+  {
+    "name": "Paint Latex Gloss",
+    "unit": "gal",
+    "price_php": 640.2
+  },
+  {
+    "name": "Paint Latex Semi-Gloss",
+    "unit": "gal",
+    "price_php": 650.0
+  },
+  {
+    "name": "Paint Red Lead",
+    "unit": "gal",
+    "price_php": 581.0
+  },
+  {
+    "name": "Thinner Lacquer",
+    "unit": "gal",
+    "price_php": 511.0
+  },
+  {
+    "name": "Paint Metal Epoxy",
+    "unit": "gal",
+    "price_php": 676.0
+  },
+  {
+    "name": "Paint Primer Solvent",
+    "unit": "gal",
+    "price_php": 635.0
+  },
+  {
+    "name": "Brush Paint (101mm)",
+    "unit": "pc",
+    "price_php": 72.0
+  },
+  {
+    "name": "Brush Roller (152mm)",
+    "unit": "pc",
+    "price_php": 84.0
+  },
+  {
+    "name": "Brush Steel (101mm)",
+    "unit": "pc",
+    "price_php": 36.0
+  },
+  {
+    "name": "Oil Paint",
+    "unit": "Ltr",
+    "price_php": 158.09
+  },
+  {
+    "name": "Spar Varnish",
+    "unit": "Ltr",
+    "price_php": 145.0
+  },
+  {
+    "name": "Lacquer Putty",
+    "unit": "Ltr",
+    "price_php": 167.0
+  },
+  {
+    "name": "Concrete neutralizer",
+    "unit": "gal",
+    "price_php": 422.0
+  },
+  {
+    "name": "Putty Knife",
+    "unit": "pc",
+    "price_php": 26.0
+  },
+  {
+    "name": "Roller paint # 9 w/ tray",
+    "unit": "pc",
+    "price_php": 153.0
+  },
+  {
+    "name": "Paint thinner",
+    "unit": "gal",
+    "price_php": 286.0
+  },
+  {
+    "name": "Sand paper #120",
+    "unit": "Dozen",
+    "price_php": 123.0
+  }
+]

@@ -1,0 +1,132 @@
+{
+  "prices": [
+    {
+      "name": "Concrete Hollow Blocks (CHB) 4″",
+      "unit": "pc",
+      "price_php": 12.0
+    },
+    {
+      "name": "Concrete Hollow Blocks (CHB) 6″",
+      "unit": "pc",
+      "price_php": 18.0
+    },
+    {
+      "name": "Portland Cement, 40 kg.",
+      "unit": "bag",
+      "price_php": 261.0
+    },
+    {
+      "name": "Washed sand",
+      "unit": "cu.m.",
+      "price_php": 1365.0
+    },
+    {
+      "name": "10 mm. Dia. x 6.0 M. DSB",
+      "unit": "pc.",
+      "price_php": 159.0
+    },
+    {
+      "name": "Tie Wire #16",
+      "unit": "kg.",
+      "price_php": 61.0
+    },
+    {
+      "name": "Cement",
+      "unit": "bag",
+      "price_php": 262.0
+    },
+    {
+      "name": "Sand",
+      "unit": "cu.m.",
+      "price_php": 1432.0
+    },
+    {
+      "name": "Gravel Fill",
+      "unit": "cu.m.",
+      "price_php": 1417.0
+    },
+    {
+      "name": "Weep Holes (PVC)",
+      "unit": "Lm.",
+      "price_php": 201.0
+    },
+    {
+      "name": "Filter Cloth",
+      "unit": "sq.m.",
+      "price_php": 260.0
+    },
+    {
+      "name": "Boulders",
+      "unit": "cu.m.",
+      "price_php": 1482.05
+    },
+    {
+      "name": "Screened Sand",
+      "unit": "cu.m.",
+      "price_php": 1550.0
+    },
+    {
+      "name": "Screened Gravel",
+      "unit": "cu.m.",
+      "price_php": 1590.0
+    }
+  ],
+  "concrete_proportion_table": [
+    {
+      "mixture_class": "AA",
+      "proportion": {
+        "cement": 1,
+        "sand": "1 1/2",
+        "gravel": 3
+      },
+      "cement_in_bag": {
+        "40kg": 12,
+        "50kg": 9.5
+      },
+      "sand_cu_m": 0.05,
+      "gravel_cu_m": 1
+    },
+    {
+      "mixture_class": "A",
+      "proportion": {
+        "cement": 1,
+        "sand": 2,
+        "gravel": 4
+      },
+      "cement_in_bag": {
+        "40kg": 9,
+        "50kg": 7
+      },
+      "sand_cu_m": 0.05,
+      "gravel_cu_m": 1
+    },
+    {
+      "mixture_class": "B",
+      "proportion": {
+        "cement": 1,
+        "sand": "2 1/2",
+        "gravel": 5
+      },
+      "cement_in_bag": {
+        "40kg": 7.5,
+        "50kg": 6
+      },
+      "sand_cu_m": 0.05,
+      "gravel_cu_m": 1
+    },
+    {
+      "mixture_class": "C",
+      "proportion": {
+        "cement": 1,
+        "sand": 3,
+        "gravel": 6
+      },
+      "cement_in_bag": {
+        "40kg": 6,
+        "50kg": 5
+      },
+      "sand_cu_m": 0.05,
+      "gravel_cu_m": 1
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+[
+  {
+    "name": "20mmdia UPVC  pipe",
+    "unit": "pcs",
+    "price_php": 84.0
+  },
+  {
+    "name": "20mmdia RSC conduit",
+    "unit": "pcs",
+    "price_php": 212.0
+  },
+  {
+    "name": "20mmdia RSC coupling",
+    "unit": "pcs",
+    "price_php": 20.5
+  },
+  {
+    "name": "20mmdia UPVC coupling",
+    "unit": "pcs",
+    "price_php": 4.5
+  },
+  {
+    "name": "20mmdia  UPVC adoptor",
+    "unit": "pcs",
+    "price_php": 7.0
+  },
+  {
+    "name": "20mm dia. Locknut& bushing",
+    "unit": "pcs",
+    "price_php": 7.8
+  },
+  {
+    "name": "20mm dia. RSC Locknut& bushing",
+    "unit": "pcs",
+    "price_php": 14.0
+  },
+  {
+    "name": "Junction box depth type,metal gauge 16 w/ cover",
+    "unit": "pcs",
+    "price_php": 22.6
+  },
+  {
+    "name": "Utility box depth type, metal gauge 16 w/cover",
+    "unit": "pcs",
+    "price_php": 25.0
+  },
+  {
+    "name": "4×4 square box depth, metal gauge 16 w/cover",
+    "unit": "pcs",
+    "price_php": 48.0
+  },
+  {
+    "name": "Electrical tape big",
+    "unit": "pcs.",
+    "price_php": 38.0
+  },
+  {
+    "name": "Rubber tape big",
+    "unit": "pcs.",
+    "price_php": 82.0
+  },
+  {
+    "name": "Solvent cement 100cc",
+    "unit": "pcs.",
+    "price_php": 230.0
+  },
+  {
+    "name": "G.I. Wire No. 12",
+    "unit": "kls.",
+    "price_php": 63.0
+  },
+  {
+    "name": "Concrete nail no.3",
+    "unit": "kls.",
+    "price_php": 115.0
+  },
+  {
+    "name": "CWN no.3",
+    "unit": "kls.",
+    "price_php": 67.0
+  },
+  {
+    "name": "Entrance cap",
+    "unit": "pcs.",
+    "price_php": 34.0
+  },
+  {
+    "name": "Terminal Lugs",
+    "unit": "lot",
+    "price_php": 610.0
+  },
+  {
+    "name": "Red Led Paint",
+    "unit": "Gal",
+    "price_php": 469.0
+  },
+  {
+    "name": "Cable Tie",
+    "unit": "pc",
+    "price_php": 1.0
+  },
+  {
+    "name": "Secondary Rack",
+    "unit": "pc",
+    "price_php": 540.0
+  },
+  {
+    "name": "Black Paint",
+    "unit": "Gal",
+    "price_php": 616.0
+  },
+  {
+    "name": "8.0mm2 THHN",
+    "unit": "m",
+    "price_php": 41.0
+  },
+  {
+    "name": "5.5mm2 THHN",
+    "unit": "m",
+    "price_php": 36.0
+  },
+  {
+    "name": "3.5mm2 THHN",
+    "unit": "m",
+    "price_php": 24.0
+  },
+  {
+    "name": "2.0mm2 THHN",
+    "unit": "m",
+    "price_php": 22.0
+  },
+  {
+    "name": "1-gang Switch, 10A, 240V",
+    "unit": "set",
+    "price_php": 105.0
+  },
+  {
+    "name": "2-gang  switch, 10A, 240V",
+    "unit": "set",
+    "price_php": 134.0
+  },
+  {
+    "name": "2-gang  3  way  switch, 10A, 240V",
+    "unit": "set",
+    "price_php": 234.0
+  },
+  {
+    "name": "1-gang Convenince Outlet, 10A, 240V",
+    "unit": "set",
+    "price_php": 239.0
+  },
+  {
+    "name": "2-gang  Convenience Outlet, 3 prong 10A, 240V",
+    "unit": "set",
+    "price_php": 341.0
+  },
+  {
+    "name": "24  Watts light bulb",
+    "unit": "set",
+    "price_php": 280.0
+  },
+  {
+    "name": "1-18watts Compact flourescent lighting fixtures",
+    "unit": "set",
+    "price_php": 676.0
+  },
+  {
+    "name": "2-36 watts ,220v,Flourescent (box type)",
+    "unit": "set",
+    "price_php": 1220.0
+  },
+  {
+    "name": "1 x 18, 230V, Compact Flourescent (Keyless Type Porcelain Receptacle Outlet)",
+    "unit": "set",
+    "price_php": 678.0
+  },
+  {
+    "name": "Main :40AT/50AF,1PCB,240V,18KAIC, BOLT-ON",
+    "unit": "set",
+    "price_php": 12500.0
+  },
+  {
+    "name": "2-15AT/50AF,1PCB,240V,10KAIC,,BOLT-ON",
+    "unit": "PC",
+    "price_php": 315.0
+  },
+  {
+    "name": "3-20AT/50AF,1PCB,240V,10KAIC,,BOLT-ON",
+    "unit": "PC",
+    "price_php": 315.0
+  }
+]

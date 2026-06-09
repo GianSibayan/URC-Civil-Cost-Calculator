@@ -1,0 +1,127 @@
+[
+  {
+    "name": "6mm thk.x 65mm x 65mm x 6.0 Angle bar(T & B Chord)",
+    "unit": "pc",
+    "price_php": 2278.0
+  },
+  {
+    "name": "6mm thk. x 50mm x 50mm x 6.0 Angle bar(Web Member)",
+    "unit": "pc",
+    "price_php": 1751.0
+  },
+  {
+    "name": "10mm thk. Gusset plate welded to truss",
+    "unit": "sq.m.",
+    "price_php": 4285.0
+  },
+  {
+    "name": "150mm x 65mm x 20mm x 2mm LC-Purlins",
+    "unit": "pcs.",
+    "price_php": 1101.0
+  },
+  {
+    "name": "255mm x 90mm x 25mm x 5mm thk.  LC- Channel beam",
+    "unit": "pcs.",
+    "price_php": 4103.0
+  },
+  {
+    "name": "300mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
+    "unit": "pcs.",
+    "price_php": 76.0
+  },
+  {
+    "name": "350mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
+    "unit": "pcs.",
+    "price_php": 81.0
+  },
+  {
+    "name": "380mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
+    "unit": "pcs.",
+    "price_php": 79.0
+  },
+  {
+    "name": "465mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
+    "unit": "pcs.",
+    "price_php": 83.0
+  },
+  {
+    "name": "550mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
+    "unit": "pcs.",
+    "price_php": 89.0
+  },
+  {
+    "name": "12mm. Thk. Buckle Plate",
+    "unit": "sq.m.",
+    "price_php": 5200.0
+  },
+  {
+    "name": "16mm dia. Plain Bar cross bracing",
+    "unit": "pc.",
+    "price_php": 422.0
+  },
+  {
+    "name": "16 mm dia. Turn buckle",
+    "unit": "pc.",
+    "price_php": 142.0
+  },
+  {
+    "name": "12mm x 250mm x 300mm Base Plate",
+    "unit": "sq.m.",
+    "price_php": 5200.0
+  },
+  {
+    "name": "100 x 100 x 6mm thk. Angular base plate",
+    "unit": "pc.",
+    "price_php": 1887.0
+  },
+  {
+    "name": "50 x 50 x 5mm Angular Bar",
+    "unit": "pc.",
+    "price_php": 1399.0
+  },
+  {
+    "name": "75 x 75 x 6mm x 130mm Clip Angle to Purlins",
+    "unit": "pc.",
+    "price_php": 2623.5
+  },
+  {
+    "name": "Welding Rod (Fuji)",
+    "unit": "box",
+    "price_php": 2340.0
+  },
+  {
+    "name": "Oxygen(content only)",
+    "unit": "tank",
+    "price_php": 1579.0
+  },
+  {
+    "name": "Acetylene(content only)",
+    "unit": "tank",
+    "price_php": 2010.0
+  },
+  {
+    "name": "Hacksaw Blade",
+    "unit": "pc.",
+    "price_php": 62.0
+  },
+  {
+    "name": "Paint brush # 4",
+    "unit": "pc.",
+    "price_php": 62.0
+  },
+  {
+    "name": "Paint brush # 2",
+    "unit": "pc.",
+    "price_php": 35.2
+  },
+  {
+    "name": "Red Lead Primer",
+    "unit": "gal.",
+    "price_php": 429.8
+  },
+  {
+    "name": "Paint Thinner",
+    "unit": "gal.",
+    "price_php": 553.25
+  }
+]

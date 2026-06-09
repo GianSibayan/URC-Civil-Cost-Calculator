@@ -1,0 +1,127 @@
+[
+  {
+    "name": "100mm dia. PVC",
+    "unit": "pc",
+    "price_php": 758.88
+  },
+  {
+    "name": "75mm dia. PVC",
+    "unit": "pc",
+    "price_php": 487.7
+  },
+  {
+    "name": "50mm dia PVC (vp & wp)",
+    "unit": "pc",
+    "price_php": 333.0
+  },
+  {
+    "name": "PVC Clean Out w/ plug & sealing ring 100mm",
+    "unit": "pc",
+    "price_php": 99.4
+  },
+  {
+    "name": "PVC Clean Out w/ plug & sealing ring 150mm",
+    "unit": "pc",
+    "price_php": 118.23
+  },
+  {
+    "name": "PVC P-Trap w/ plug & sealing ring 50mm",
+    "unit": "pc",
+    "price_php": 67.45
+  },
+  {
+    "name": "PVC Tee (150mm)",
+    "unit": "pc",
+    "price_php": 107.0
+  },
+  {
+    "name": "PVC Tee (100mm)",
+    "unit": "pc",
+    "price_php": 92.0
+  },
+  {
+    "name": "PVC WYE (100mm)",
+    "unit": "pc",
+    "price_php": 97.0
+  },
+  {
+    "name": "PVC WYE REDUCER (100mmX50mm)",
+    "unit": "pc",
+    "price_php": 84.0
+  },
+  {
+    "name": "PVC WYE REDUCER (100mmX75mm)",
+    "unit": "pc",
+    "price_php": 94.0
+  },
+  {
+    "name": "PVC ELBOW 90° (100mm)",
+    "unit": "pc",
+    "price_php": 96.0
+  },
+  {
+    "name": "PVC ELBOW 90° (75mm)",
+    "unit": "pc",
+    "price_php": 87.0
+  },
+  {
+    "name": "PVC Elbow 90° (50mm)",
+    "unit": "pc",
+    "price_php": 64.0
+  },
+  {
+    "name": "PVC Elbow 45° (100mm)",
+    "unit": "pc",
+    "price_php": 96.0
+  },
+  {
+    "name": "PVC Elbow 45° (75mm)",
+    "unit": "pc",
+    "price_php": 84.0
+  },
+  {
+    "name": "PVC Elbow 45° (50mm)",
+    "unit": "pc",
+    "price_php": 68.0
+  },
+  {
+    "name": "PVC Coupling (100mm)",
+    "unit": "pc",
+    "price_php": 97.0
+  },
+  {
+    "name": "Vulca Seal",
+    "unit": "pc",
+    "price_php": 445.0
+  },
+  {
+    "name": "20mmØ Polypropylene, Type 3, PN20",
+    "unit": "pc.",
+    "price_php": 252.0
+  },
+  {
+    "name": "20mmØ Coupling",
+    "unit": "pc.",
+    "price_php": 97.0
+  },
+  {
+    "name": "20mmØ Tee",
+    "unit": "pc.",
+    "price_php": 97.0
+  },
+  {
+    "name": "20mmØ Elbow",
+    "unit": "pc.",
+    "price_php": 97.0
+  },
+  {
+    "name": "Teflon Tape",
+    "unit": "roll",
+    "price_php": 28.5
+  },
+  {
+    "name": "Stainless Steel Faucet",
+    "unit": "pc",
+    "price_php": 180.0
+  }
+]

@@ -1,0 +1,152 @@
+[
+  {
+    "name": "Common Nails Assorted",
+    "unit": "Kg",
+    "price_php": 69.0
+  },
+  {
+    "name": "Concrete Nails Assorted",
+    "unit": "Kg",
+    "price_php": 80.0
+  },
+  {
+    "name": "GI Sheet Plain Gauge 16 x 8′ (1.613mm thick)",
+    "unit": "pc",
+    "price_php": 1865.0
+  },
+  {
+    "name": "GI Sheet Plain Gauge 20 x 8′ (1.006mm thick)",
+    "unit": "pc",
+    "price_php": 1940.0
+  },
+  {
+    "name": "GI Sheet Plain Gauge 26 x 8′ (0.551mm thick)",
+    "unit": "pc",
+    "price_php": 550.0
+  },
+  {
+    "name": "Gravel G1",
+    "unit": "cu.m.",
+    "price_php": 530.0
+  },
+  {
+    "name": "Gravel GI – 1/2″",
+    "unit": "cu.m.",
+    "price_php": 435.0
+  },
+  {
+    "name": "Gravel G2",
+    "unit": "cu.m.",
+    "price_php": 420.0
+  },
+  {
+    "name": "Gravel G2-1/2″",
+    "unit": "cu.m.",
+    "price_php": 420.0
+  },
+  {
+    "name": "Gravel 3/4″",
+    "unit": "cu.m.",
+    "price_php": 440.0
+  },
+  {
+    "name": "Fine Aggregate",
+    "unit": "cu.m.",
+    "price_php": 465.0
+  },
+  {
+    "name": "Lumber Coco",
+    "unit": "bd.ft.",
+    "price_php": 48.0
+  },
+  {
+    "name": "Lumber Good",
+    "unit": "bd.ft.",
+    "price_php": 59.0
+  },
+  {
+    "name": "Natural Gravel",
+    "unit": "cu.m.",
+    "price_php": 550.0
+  },
+  {
+    "name": "Formed Oil",
+    "unit": "L",
+    "price_php": 117.0
+  },
+  {
+    "name": "Plyboard 3/4″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 1080.0
+  },
+  {
+    "name": "Plyboard 1″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 1125.0
+  },
+  {
+    "name": "Plywood Marine 1/4″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 425.0
+  },
+  {
+    "name": "Plywood Marine 1/2″ x 4′  8′",
+    "unit": "pc",
+    "price_php": 775.0
+  },
+  {
+    "name": "Plywood Marine 3/4″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 1355.0
+  },
+  {
+    "name": "Plywood Ordinary 1/4″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 388.0
+  },
+  {
+    "name": "Plywood Ordinary 1/2″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 695.0
+  },
+  {
+    "name": "Plywood Ordinary 3/4″ x 4′ x 8′",
+    "unit": "pc",
+    "price_php": 1175.0
+  },
+  {
+    "name": "Reinforcing Steel Bars Plain Grade 40",
+    "unit": "Kg",
+    "price_php": 39.0
+  },
+  {
+    "name": "Reinforcing Steel Bars Plain Grade 60",
+    "unit": "Kg",
+    "price_php": 40.0
+  },
+  {
+    "name": "Reinforcing Steel Bars Deformed Grade 40",
+    "unit": "Kg",
+    "price_php": 39.0
+  },
+  {
+    "name": "Reinforcing Steel Bars Deformed Grade 60",
+    "unit": "Kg",
+    "price_php": 40.0
+  },
+  {
+    "name": "Steel Deck",
+    "unit": "sq.m.",
+    "price_php": 820.0
+  },
+  {
+    "name": "GI Tie Wire #12",
+    "unit": "Kg",
+    "price_php": 75.0
+  },
+  {
+    "name": "GI Tie Wire #16",
+    "unit": "Kg",
+    "price_php": 65.0
+  }
+]

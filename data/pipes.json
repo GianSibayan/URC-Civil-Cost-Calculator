@@ -1,0 +1,52 @@
+{
+  "nominal_size_unit_price": [
+    { "english": "1/4\"", "metric_mm": 15, "price_per_6m_php": 6106.62 },
+    { "english": "3/8\"", "metric_mm": 20, "price_per_6m_php": 6877.73 },
+    { "english": "1/2\"", "metric_mm": 25, "price_per_6m_php": 8479.59 },
+    { "english": "3/4\"", "metric_mm": 32, "price_per_6m_php": 11359.01 },
+    { "english": "1\"",   "metric_mm": 40, "price_per_6m_php": 15559.53 },
+    { "english": "1-1/4\"", "metric_mm": 50, "price_per_6m_php": 21373.31 },
+    { "english": "1-1/2\"", "metric_mm": 65, "price_per_6m_php": 25261.54 },
+    { "english": "2\"",   "metric_mm": 80, "price_per_6m_php": 33049.82 },
+    { "english": "2-1/2\"", "metric_mm": 100, "price_per_6m_php": 55715.65 },
+    { "english": "3\"",   "metric_mm": 125, "price_per_6m_php": 65366.45 },
+    { "english": "4\"",   "metric_mm": 150, "price_per_6m_php": 91992.16 },
+    { "english": "5\"",   "metric_mm": 200, "price_per_6m_php": 140303.95 },
+    { "english": "6\"",   "metric_mm": 250, "price_per_6m_php": 151698.56 },
+    { "english": "8\"",   "metric_mm": 300, "price_per_6m_php": 222270.40 },
+    { "english": "10\"",  "metric_mm": 350, "price_per_6m_php": 303603.17 },
+    { "english": "12\"",  "metric_mm": 400, "price_per_6m_php": 374037.01 }
+  ],
+  "seamless_galvanized_steel": [
+    { "item_no": 1,  "description": "GI Pipe, 1/2\", Sch40, Seamless",  "price_per_length_php": 946.27,    "remarks": "6 meters / length" },
+    { "item_no": 2,  "description": "GI Pipe, 3/4\", Sch40, Seamless",  "price_per_length_php": 1238.97,   "remarks": "6 meters / length" },
+    { "item_no": 3,  "description": "GI Pipe, 1\", Sch40, Seamless",    "price_per_length_php": 1679.34,   "remarks": "6 meters / length" },
+    { "item_no": 4,  "description": "GI Pipe, 1 1/4\", Sch40, Seamless","price_per_length_php": 2230.19,   "remarks": "6 meters / length" },
+    { "item_no": 5,  "description": "GI Pipe, 1 1/2\", Sch40, Seamless","price_per_length_php": 2662.38,   "remarks": "6 meters / length" },
+    { "item_no": 6,  "description": "GI Pipe, 2\", Sch40, Seamless",    "price_per_length_php": 3536.33,   "remarks": "6 meters / length" },
+    { "item_no": 7,  "description": "GI Pipe, 2 1/2\", Sch40, Seamless","price_per_length_php": 5628.55,   "remarks": "6 meters / length" },
+    { "item_no": 8,  "description": "GI Pipe, 3\", Sch40, Seamless",    "price_per_length_php": 7352.82,   "remarks": "6 meters / length" },
+    { "item_no": 9,  "description": "GI Pipe, 4\", Sch40, Seamless",    "price_per_length_php": 10482.83,  "remarks": "6 meters / length" },
+    { "item_no": 10, "description": "GI Pipe, 5\", Sch40, Seamless",    "price_per_length_php": 14174.52,  "remarks": "6 meters / length" },
+    { "item_no": 11, "description": "GI Pipe, 6\", Sch40, Seamless",    "price_per_length_php": 18381.56,  "remarks": "6 meters / length" },
+    { "item_no": 12, "description": "GI Pipe, 8\", Sch40, Seamless",    "price_per_length_php": 27693.29,  "remarks": "6 meters / length" },
+    { "item_no": 13, "description": "GI Pipe, 10\", Sch40, Seamless",   "price_per_length_php": 39320.67,  "remarks": "6 meters / length" },
+    { "item_no": 14, "description": "GI Pipe, 12\", Sch40, Seamless",   "price_per_length_php": 51986.73,  "remarks": "6 meters / length" }
+  ],
+  "erw_welded_galvanized_steel": [
+    { "item_no": 1,  "description": "GI Pipe, 1/2\", Sch40, Welded",   "price_per_length_php": 603.28,    "remarks": "6 meters / length" },
+    { "item_no": 2,  "description": "GI Pipe, 3/4\", Sch40, Welded",   "price_per_length_php": 807.06,    "remarks": "6 meters / length" },
+    { "item_no": 3,  "description": "GI Pipe, 1\", Sch40, Welded",     "price_per_length_php": 1243.13,   "remarks": "6 meters / length" },
+    { "item_no": 4,  "description": "GI Pipe, 1 1/4\", Sch40, Welded", "price_per_length_php": 1698.36,   "remarks": "6 meters / length" },
+    { "item_no": 5,  "description": "GI Pipe, 1 1/2\", Sch40, Welded", "price_per_length_php": 1962.65,   "remarks": "6 meters / length" },
+    { "item_no": 6,  "description": "GI Pipe, 2\", Sch40, Welded",     "price_per_length_php": 2627.07,   "remarks": "6 meters / length" },
+    { "item_no": 7,  "description": "GI Pipe, 2 1/2\", Sch40, Welded", "price_per_length_php": 4373.68,   "remarks": "6 meters / length" },
+    { "item_no": 8,  "description": "GI Pipe, 3\", Sch40, Welded",     "price_per_length_php": 5396.37,   "remarks": "6 meters / length" },
+    { "item_no": 9,  "description": "GI Pipe, 4\", Sch40, Welded",     "price_per_length_php": 8359.55,   "remarks": "6 meters / length" },
+    { "item_no": 10, "description": "GI Pipe, 5\", Sch40, Welded",     "price_per_length_php": 11344.41,  "remarks": "6 meters / length" },
+    { "item_no": 11, "description": "GI Pipe, 6\", Sch40, Welded",     "price_per_length_php": 15718.29,  "remarks": "6 meters / length" },
+    { "item_no": 12, "description": "GI Pipe, 8\", Sch40, Welded",     "price_per_length_php": 24458.69,  "remarks": "6 meters / length" },
+    { "item_no": 13, "description": "GI Pipe, 10\", Sch40, Welded",    "price_per_length_php": 32355.38,  "remarks": "6 meters / length" },
+    { "item_no": 14, "description": "GI Pipe, 12\", Sch40, Welded",    "price_per_length_php": 44126.11,  "remarks": "6 meters / length" }
+  ]
+}

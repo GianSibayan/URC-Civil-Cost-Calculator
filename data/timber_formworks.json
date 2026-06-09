@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Coco lumber",
+    "unit": "bd. ft.",
+    "price_php": 62.0
+  },
+  {
+    "name": "3/4\" x 4' x 8' – Plyboard",
+    "unit": "pc",
+    "price_php": 1074.0
+  },
+  {
+    "name": "1\" x 4' x 8' – Plyboard",
+    "unit": "pc",
+    "price_php": 1138.0
+  },
+  {
+    "name": "1/4\" x 4' x 8' – Marine Plywood",
+    "unit": "pc",
+    "price_php": 435.0
+  },
+  {
+    "name": "1/2\" x 4' x 8' – Marine Plywood",
+    "unit": "pc",
+    "price_php": 790.0
+  },
+  {
+    "name": "3/4\" x 4' x 8' – Marine Plywood",
+    "unit": "pc",
+    "price_php": 1374.0
+  },
+  {
+    "name": "1/4\" x 4' x 8' – Ordinary Plywood",
+    "unit": "pc",
+    "price_php": 381.0
+  },
+  {
+    "name": "1/2\" x 4' x 8' – Ordinary Plywood",
+    "unit": "pc",
+    "price_php": 674.0
+  },
+  {
+    "name": "3/4\" x 4' x 8' – Ordinary Plywood",
+    "unit": "pc",
+    "price_php": 1112.0
+  },
+  {
+    "name": "Assorted Nails",
+    "unit": "Kg",
+    "price_php": 65.0
+  }
+]

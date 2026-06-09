@@ -1,0 +1,82 @@
+[
+  {
+    "product": "Ready-Mix Concrete 3000 PSI",
+    "curing_time": "28 days",
+    "price_php": 4900.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3000 PSI",
+    "curing_time": "14 days",
+    "price_php": 5200.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3000 PSI",
+    "curing_time": "7 days",
+    "price_php": 5450.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3000 PSI",
+    "curing_time": "3 days",
+    "price_php": 6000.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3500 PSI",
+    "curing_time": "28 days",
+    "price_php": 5100.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3500 PSI",
+    "curing_time": "14 days",
+    "price_php": 5400.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3500 PSI",
+    "curing_time": "7 days",
+    "price_php": 5750.0
+  },
+  {
+    "product": "Ready-Mix Concrete 3500 PSI",
+    "curing_time": "3 days",
+    "price_php": 6150.0
+  },
+  {
+    "product": "Ready-Mix Concrete 4000 PSI",
+    "curing_time": "28 days",
+    "price_php": 5400.0
+  },
+  {
+    "product": "Ready-Mix Concrete 4000 PSI",
+    "curing_time": "14 days",
+    "price_php": 5750.0
+  },
+  {
+    "product": "Ready-Mix Concrete 4500 PSI",
+    "curing_time": "28 days",
+    "price_php": 5450.0
+  },
+  {
+    "product": "Ready-Mix Concrete 4500 PSI",
+    "curing_time": "14 days",
+    "price_php": 6150.0
+  },
+  {
+    "product": "Ready-Mix Concrete 5000 PSI",
+    "curing_time": "28 days",
+    "price_php": 5750.0
+  },
+  {
+    "product": "Ready-Mix Concrete 5000 PSI",
+    "curing_time": "14 days",
+    "price_php": 6450.0
+  },
+  {
+    "product": "Ready-Mix Concrete 6000 PSI",
+    "curing_time": "28 days",
+    "price_php": 6050.0
+  },
+  {
+    "product": "Ready-Mix Concrete 6000 PSI",
+    "curing_time": "14 days",
+    "price_php": 6950.0
+  }
+]

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URC CCC — Admin</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter','-apple-system','BlinkMacSystemFont','"SF Pro"','"SF Pro Text"','"SF Pro Display"','"Segoe UI"','Roboto','Helvetica','Arial','sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+
+        .price-input {
+            background: transparent;
+            border: 1.5px solid transparent;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #111;
+            font-family: 'Inter', sans-serif;
+            text-align: right;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .price-input:hover {
+            border-color: rgba(0,0,0,0.12);
+            background: #f9fafb;
+        }
+        .price-input:focus {
+            border-color: rgba(0,0,0,0.25);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        .price-input.dirty {
+            border-color: rgba(0,0,0,0.2);
+            background: #fffbeb;
+        }
+
+        .price-table { width: 100%; border-collapse: collapse; }
+        .price-table th {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+            background: #fafafa;
+        }
+        .price-table td {
+            padding: 7px 12px;
+            font-size: 13px;
+            color: #111827;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .price-table tr:last-child td { border-bottom: none; }
+        .price-table tbody tr:hover td { background: #f9fafb; }
+        .price-table tbody tr.dirty td { background: #fffbeb; }
+
+        .section-divider {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 16px 0 6px;
+        }
+
+        .save-btn {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .save-btn:hover { border-color: #111; color: #111; }
+        .save-btn.saved { border-color: #16a34a; color: #16a34a; }
+        .save-btn.saving { opacity: 0.5; cursor: not-allowed; }
+
+        .nav-active {
+            background: #f3f4f6 !important;
+            font-weight: 600 !important;
+            color: #111827 !important;
+        }
+
+        .readonly-cell { color: #9ca3af; font-size: 12px; }
+
+        .toast {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid;
+            transition: all 0.3s;
+            transform: translateY(4px);
+            opacity: 0;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+        .toast-error   { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+        .toast-info    { background: #f8fafc; border-color: #e2e8f0; color: #475569; }
+    </style>
+</head>
+<body class="h-full overflow-hidden select-none">
+
+<div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+<div class="flex h-full overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white flex flex-col flex-shrink-0 border-r border-neutral-200">
+        <div class="p-6 pb-2">
+            <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
+            <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Admin Panel</p>
+        </div>
+
+        <nav class="flex-1 px-3 mt-4 space-y-1 overflow-y-auto">
+
+            <!-- Core rates -->
+            <button onclick="switchCategory('core')" id="nav-core"
+                class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Footing & Pedestal rates
+            </button>
+
+            <!-- Price list section -->
+            <div class="pt-5">
+                <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Price list</span>
+
+                <button onclick="switchCategory('concreting_materials')" id="nav-concreting_materials"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Concreting Materials
+                </button>
+                <button onclick="switchCategory('timber_formworks')" id="nav-timber_formworks"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Timber Formworks
+                </button>
+                <button onclick="switchCategory('roofing')" id="nav-roofing"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Roofing
+                </button>
+                <button onclick="switchCategory('steel_truss')" id="nav-steel_truss"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Steel Truss
+                </button>
+                <button onclick="switchCategory('painting_works')" id="nav-painting_works"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Painting Works
+                </button>
+                <button onclick="switchCategory('electrical')" id="nav-electrical"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Electrical
+                </button>
+                <button onclick="switchCategory('masonry')" id="nav-masonry"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Masonry
+                </button>
+                <button onclick="switchCategory('fencing')" id="nav-fencing"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Fencing
+                </button>
+                <button onclick="switchCategory('ceiling')" id="nav-ceiling"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Ceiling
+                </button>
+                <button onclick="switchCategory('plumbing')" id="nav-plumbing"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Plumbing
+                </button>
+                <button onclick="switchCategory('rebars')" id="nav-rebars"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Rebars
+                </button>
+                <button onclick="switchCategory('concrete_mix')" id="nav-concrete_mix"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Concrete Mix
+                </button>
+                <button onclick="switchCategory('equipment')" id="nav-equipment"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Equipment
+                </button>
+                <button onclick="switchCategory('pipes')" id="nav-pipes"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    Pipes
+                </button>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-neutral-100 space-y-2">
+            <div id="last-updated-label" class="text-xs text-neutral-400 text-center"></div>
+            <button onclick="window.location.href='index.html'"
+                class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition cursor-pointer">
+                Main Page
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 flex flex-col bg-white overflow-hidden">
+
+        <!-- TOPBAR -->
+        <header class="h-16 px-8 border-b border-neutral-200 bg-white flex items-center justify-between sticky top-0 z-10 flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <h2 id="page-title" class="text-2xl font-bold text-neutral-900">Price Management</h2>
+                <span id="page-badge" class="text-xs font-semibold text-neutral-400 bg-neutral-100 px-2.5 py-1 rounded-full"></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="exportCurrent()"
+                    class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer">
+                    Export
+                </button>
+                <button onclick="saveAll()" id="save-all-btn"
+                    class="px-4 py-2 text-sm font-semibold bg-black text-white rounded-lg hover:bg-neutral-800 transition cursor-pointer">
+                    Save all changes
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENT -->
+        <div id="content-area" class="flex-1 overflow-y-auto px-8 py-6">
+
+            <!-- Empty state -->
+            <div id="view-empty" class="flex flex-col items-center justify-center h-full text-center">
+                <p class="text-neutral-400 text-sm">Select a category from the sidebar to manage prices.</p>
+            </div>
+
+            <!-- Loading state -->
+            <div id="view-loading" class="hidden flex flex-col items-center justify-center h-full">
+                <p class="text-neutral-400 text-sm">Loading...</p>
+            </div>
+
+            <!-- Core rates (prices.json tab1_tab2) -->
+            <div id="view-core" class="hidden max-w-2xl">
+                <div class="section-divider">Concrete classes</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table" id="table-concrete-classes">
+                        <thead><tr>
+                            <th>Class</th>
+                            <th>Use</th>
+                            <th class="text-right">Price per m³ (₱)</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody id="tbody-concrete-classes"></tbody>
+                    </table>
+                </div>
+
+                <div class="section-divider">General rates</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table">
+                        <thead><tr><th>Rate</th><th class="text-right">Value</th><th></th></tr></thead>
+                        <tbody id="tbody-general-rates"></tbody>
+                    </table>
+                </div>
+
+                <div class="section-divider">Rebar weights per meter (kg/m)</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table">
+                        <thead><tr><th>Size</th><th class="text-right">kg/m</th><th></th></tr></thead>
+                        <tbody id="tbody-rebar-weights"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Simple schema view (name / unit / price_php) -->
+            <div id="view-simple" class="hidden max-w-3xl">
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:58%">Item</th>
+                            <th style="width:14%">Unit</th>
+                            <th style="width:18%" class="text-right">Price (₱)</th>
+                            <th style="width:10%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-simple"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Masonry view -->
+            <div id="view-masonry" class="hidden max-w-3xl">
+                <div class="section-divider">CHB Wall Works & Stone Masonry</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:58%">Item</th>
+                            <th style="width:14%">Unit</th>
+                            <th style="width:18%" class="text-right">Price (₱)</th>
+                            <th style="width:10%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-masonry-prices"></tbody>
+                    </table>
+                </div>
+                <div class="section-divider">Concrete proportion table — reference only</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th>Class</th>
+                            <th class="text-center">Cement</th>
+                            <th class="text-center">Sand</th>
+                            <th class="text-center">Gravel</th>
+                            <th class="text-center">40kg bags</th>
+                            <th class="text-center">50kg bags</th>
+                            <th class="text-center">Sand cu.m</th>
+                            <th class="text-center">Gravel cu.m</th>
+                        </tr></thead>
+                        <tbody id="tbody-masonry-proportion"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Rebars view -->
+            <div id="view-rebars" class="hidden max-w-3xl">
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:20%">Spec</th>
+                            <th style="width:22%">Size</th>
+                            <th style="width:22%">Length</th>
+                            <th style="width:22%" class="text-right">Price (₱)</th>
+                            <th style="width:14%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-rebars"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Concrete mix view -->
+            <div id="view-concrete_mix" class="hidden max-w-3xl">
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:38%">Product</th>
+                            <th style="width:22%">Curing time</th>
+                            <th style="width:26%" class="text-right">Price per cu.m (₱)</th>
+                            <th style="width:14%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-concrete-mix"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Equipment view -->
+            <div id="view-equipment" class="hidden max-w-4xl">
+                <div class="section-divider">Main equipment</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:44%">Equipment</th>
+                            <th style="width:8%" class="text-center">Unit</th>
+                            <th style="width:18%" class="text-right">Min rate (₱)</th>
+                            <th style="width:18%" class="text-right">Max rate (₱)</th>
+                            <th style="width:12%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-equipment-main"></tbody>
+                    </table>
+                </div>
+                <div class="section-divider">Support equipment</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:44%">Equipment</th>
+                            <th style="width:8%" class="text-center">Unit</th>
+                            <th style="width:18%" class="text-right">Min rate (₱)</th>
+                            <th style="width:18%" class="text-right">Max rate (₱)</th>
+                            <th style="width:12%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-equipment-support"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pipes view -->
+            <div id="view-pipes" class="hidden max-w-4xl">
+                <div class="section-divider">Nominal size — unit price per length</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th>English</th>
+                            <th>Metric (mm)</th>
+                            <th class="text-right">Price per 6m (₱)</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody id="tbody-pipes-nominal"></tbody>
+                    </table>
+                </div>
+                <div class="section-divider">Seamless galvanized steel pipes</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden mb-6">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:52%">Description</th>
+                            <th style="width:20%">Remarks</th>
+                            <th style="width:18%" class="text-right">Price per length (₱)</th>
+                            <th style="width:10%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-pipes-seamless"></tbody>
+                    </table>
+                </div>
+                <div class="section-divider">ERW welded galvanized steel pipes</div>
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:52%">Description</th>
+                            <th style="width:20%">Remarks</th>
+                            <th style="width:18%" class="text-right">Price per length (₱)</th>
+                            <th style="width:10%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-pipes-erw"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="src/auth.js"></script>
+<script src="src/parser.js"></script>
+<script>
+
+// ============================================================
+// STATE
+// ============================================================
+let currentCategory = null;
+let categoryData = {};
+let dirtyRows = new Set();
+
+// ============================================================
+// AUTH GUARD
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    Auth.requireLogin();
+    const meta = window.PRICES ? window.PRICES.meta : null;
+    if (meta) {
+        document.getElementById('last-updated-label').textContent =
+            `Last updated: ${meta.last_updated}`;
+    }
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function switchCategory(key) {
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('nav-active'));
+    const navBtn = document.getElementById('nav-' + key);
+    if (navBtn) navBtn.classList.add('nav-active');
+
+    const allViews = document.querySelectorAll('[id^="view-"]');
+    allViews.forEach(v => v.classList.add('hidden'));
+
+    currentCategory = key;
+    dirtyRows.clear();
+
+    const titles = {
+        core: 'Footing & Pedestal rates',
+        concreting_materials: 'Concreting Materials',
+        timber_formworks: 'Timber Formworks',
+        roofing: 'Roofing',
+        steel_truss: 'Steel Truss',
+        painting_works: 'Painting Works',
+        electrical: 'Electrical',
+        masonry: 'Masonry',
+        fencing: 'Fencing',
+        ceiling: 'Ceiling',
+        plumbing: 'Plumbing',
+        rebars: 'Rebars',
+        concrete_mix: 'Concrete Mix',
+        equipment: 'Equipment',
+        pipes: 'Pipes',
+    };
+
+    document.getElementById('page-title').textContent = titles[key] || key;
+
+    if (key === 'core') {
+        renderCore();
+    } else {
+        loadAndRender(key);
+    }
+}
+
+// ============================================================
+// LOAD CATEGORY JSON
+// ============================================================
+async function loadAndRender(key) {
+    document.getElementById('view-loading').classList.remove('hidden');
+
+    try {
+        const data = await Parser.loadCategory(key);
+        if (!data) return;
+        categoryData[key] = data;
+
+        document.getElementById('view-loading').classList.add('hidden');
+
+        if (key === 'masonry') { renderMasonry(data); return; }
+        if (key === 'rebars') { renderRebars(data); return; }
+        if (key === 'concrete_mix') { renderConcreteMix(data); return; }
+        if (key === 'equipment') { renderEquipment(data); return; }
+        if (key === 'pipes') { renderPipes(data); return; }
+
+        renderSimple(key, data);
+
+    } catch(e) {
+        document.getElementById('view-loading').classList.add('hidden');
+        showToast('Failed to load data.', 'error');
+    }
+}
+
+// ============================================================
+// CORE RATES (prices.json)
+// ============================================================
+function renderCore() {
+    const PRICES = window.PRICES;
+    if (!PRICES) { showToast('Price data not loaded.', 'error'); return; }
+
+    document.getElementById('page-badge').textContent = 'prices.json';
+    document.getElementById('view-core').classList.remove('hidden');
+
+    const t = PRICES.tab1_tab2;
+
+    // Concrete classes
+    const tbCC = document.getElementById('tbody-concrete-classes');
+    tbCC.innerHTML = Object.entries(t.concrete_classes).map(([cls, data]) => `
+        <tr data-key="concrete_class" data-cls="${cls}">
+            <td class="font-medium">${cls}</td>
+            <td class="readonly-cell">${data.use}</td>
+            <td class="text-right"><input class="price-input" value="${data.price_per_m3}" oninput="markDirty(this, 'core')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveCoreRow(this, 'concrete_class', '${cls}')">save</button></td>
+        </tr>`).join('');
+
+    // General rates
+    const generalRates = [
+        { key: 'rebar_price_per_kg',      label: 'Rebar price per kg',         value: t.rebar_price_per_kg },
+        { key: 'steel_density_kg_per_m3', label: 'Steel density (kg/m³)',      value: t.steel_density_kg_per_m3 },
+        { key: 'excavation_cost_per_m3',  label: 'Excavation cost per m³',     value: t.excavation_cost_per_m3 },
+        { key: 'forms_price_per_m2',      label: 'Forms price per m²',         value: t.forms_price_per_m2 },
+        { key: 'labor_cost_per_day',      label: 'Labor cost per day',         value: t.labor_cost_per_day },
+        { key: 'overhead_profit_rate',    label: 'Overhead & profit rate',     value: t.overhead_profit_rate },
+        { key: 'escalation_factor',       label: 'Escalation factor',          value: t.escalation_factor },
+        { key: 'place_factor',            label: 'Place factor',               value: t.place_factor },
+    ];
+    const tbGR = document.getElementById('tbody-general-rates');
+    tbGR.innerHTML = generalRates.map(r => `
+        <tr data-key="${r.key}">
+            <td>${r.label}</td>
+            <td class="text-right"><input class="price-input" value="${r.value}" oninput="markDirty(this, 'core')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveCoreRow(this, 'general', '${r.key}')">save</button></td>
+        </tr>`).join('');
+
+    // Rebar weights
+    const tbRW = document.getElementById('tbody-rebar-weights');
+    tbRW.innerHTML = Object.entries(t.rebar_weights_per_meter).map(([size, weight]) => `
+        <tr data-key="rebar_${size}">
+            <td class="font-medium">${size}</td>
+            <td class="text-right"><input class="price-input" value="${weight}" oninput="markDirty(this, 'core')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveCoreRow(this, 'rebar_weight', '${size}')">save</button></td>
+        </tr>`).join('');
+}
+
+function saveCoreRow(btn, type, key) {
+    const row = btn.closest('tr');
+    const input = row.querySelector('.price-input');
+    const val = parseFloat(input.value);
+    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+
+    const PRICES = window.PRICES;
+    const t = PRICES.tab1_tab2;
+
+    if (type === 'concrete_class') {
+        t.concrete_classes[key].price_per_m3 = val;
+    } else if (type === 'general') {
+        t[key] = val;
+    } else if (type === 'rebar_weight') {
+        t.rebar_weights_per_meter[key] = val;
+    }
+
+    PRICES.meta.last_updated = new Date().toISOString().split('T')[0];
+    PRICES.meta.updated_by = Auth.getEmail() || 'admin';
+
+    Parser.savePricesJson(PRICES).then(ok => {
+        if (ok) flashSaved(btn, row);
+    });
+}
+
+// ============================================================
+// SIMPLE SCHEMA (name / unit / price_php)
+// ============================================================
+function renderSimple(key, data) {
+    const arr = Array.isArray(data) ? data : [];
+    document.getElementById('page-badge').textContent = `${arr.length} items`;
+    document.getElementById('view-simple').classList.remove('hidden');
+
+    const tb = document.getElementById('tbody-simple');
+    tb.innerHTML = arr.map((item, i) => `
+        <tr data-index="${i}">
+            <td>${item.name}</td>
+            <td class="readonly-cell">${item.unit || ''}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_php}" oninput="markDirty(this, '${key}')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveSimpleRow(this, '${key}', ${i})">save</button></td>
+        </tr>`).join('');
+}
+
+async function saveSimpleRow(btn, key, index) {
+    const row = btn.closest('tr');
+    const val = parseFloat(row.querySelector('.price-input').value);
+    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+
+    btn.textContent = 'saving...';
+    btn.classList.add('saving');
+
+    const ok = await Parser.updateSimpleItem(key, index, 'price_php', val);
+    btn.classList.remove('saving');
+    if (ok) flashSaved(btn, row);
+}
+
+// ============================================================
+// MASONRY
+// ============================================================
+function renderMasonry(data) {
+    document.getElementById('page-badge').textContent = `${data.prices.length} items + proportion table`;
+    document.getElementById('view-masonry').classList.remove('hidden');
+
+    const tbP = document.getElementById('tbody-masonry-prices');
+    tbP.innerHTML = data.prices.map((item, i) => `
+        <tr data-index="${i}">
+            <td>${item.name}</td>
+            <td class="readonly-cell">${item.unit || ''}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_php}" oninput="markDirty(this, 'masonry')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveMasonryPrice(this, ${i})">save</button></td>
+        </tr>`).join('');
+
+    const tbProp = document.getElementById('tbody-masonry-proportion');
+    tbProp.innerHTML = data.concrete_proportion_table.map(row => `
+        <tr>
+            <td class="font-medium">${row.mixture_class}</td>
+            <td class="text-center readonly-cell">${row.proportion.cement}</td>
+            <td class="text-center readonly-cell">${row.proportion.sand}</td>
+            <td class="text-center readonly-cell">${row.proportion.gravel}</td>
+            <td class="text-center readonly-cell">${row.cement_in_bag['40kg']}</td>
+            <td class="text-center readonly-cell">${row.cement_in_bag['50kg']}</td>
+            <td class="text-center readonly-cell">${row.sand_cu_m}</td>
+            <td class="text-center readonly-cell">${row.gravel_cu_m}</td>
+        </tr>`).join('');
+}
+
+async function saveMasonryPrice(btn, index) {
+    const row = btn.closest('tr');
+    const val = parseFloat(row.querySelector('.price-input').value);
+    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+
+    btn.textContent = 'saving...';
+    btn.classList.add('saving');
+
+    const data = categoryData['masonry'];
+    data.prices[index].price_php = val;
+    const ok = await Parser.saveBulk('masonry', data);
+    btn.classList.remove('saving');
+    if (ok) flashSaved(btn, row);
+}
+
+// ============================================================
+// REBARS
+// ============================================================
+function renderRebars(data) {
+    document.getElementById('page-badge').textContent = `${data.length} items`;
+    document.getElementById('view-rebars').classList.remove('hidden');
+
+    const tb = document.getElementById('tbody-rebars');
+    let lastSpec = '';
+    tb.innerHTML = data.map((item, i) => {
+        const specCell = item.spec !== lastSpec
+            ? `<td class="font-medium" style="vertical-align:top;padding-top:10px;">${item.spec}</td>`
+            : `<td></td>`;
+        lastSpec = item.spec;
+        return `<tr data-index="${i}">
+            ${specCell}
+            <td class="readonly-cell">${item.size}</td>
+            <td class="readonly-cell">${item.length}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_php}" oninput="markDirty(this, 'rebars')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveSimpleRow(this, 'rebars', ${i})">save</button></td>
+        </tr>`;
+    }).join('');
+}
+
+// ============================================================
+// CONCRETE MIX
+// ============================================================
+function renderConcreteMix(data) {
+    document.getElementById('page-badge').textContent = `${data.length} items`;
+    document.getElementById('view-concrete_mix').classList.remove('hidden');
+
+    const tb = document.getElementById('tbody-concrete-mix');
+    let lastProduct = '';
+    tb.innerHTML = data.map((item, i) => {
+        const productCell = item.product !== lastProduct
+            ? `<td class="font-medium">${item.product}</td>`
+            : `<td></td>`;
+        lastProduct = item.product;
+        return `<tr data-index="${i}">
+            ${productCell}
+            <td class="readonly-cell">${item.curing_time}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_php}" oninput="markDirty(this, 'concrete_mix')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveSimpleRow(this, 'concrete_mix', ${i})">save</button></td>
+        </tr>`;
+    }).join('');
+}
+
+// ============================================================
+// EQUIPMENT
+// ============================================================
+function renderEquipment(data) {
+    const main = data.filter(e => e.category === 'main');
+    const support = data.filter(e => e.category === 'support');
+    document.getElementById('page-badge').textContent = `${data.length} items`;
+    document.getElementById('view-equipment').classList.remove('hidden');
+
+    function equipRow(item) {
+        const i = data.indexOf(item);
+        return `<tr data-index="${i}">
+            <td>${item.name}</td>
+            <td class="text-center readonly-cell">${item.unit}</td>
+            <td class="text-right"><input class="price-input" value="${item.rate_min_php}" oninput="markDirty(this, 'equipment')"></td>
+            <td class="text-right"><input class="price-input" value="${item.rate_max_php}" oninput="markDirty(this, 'equipment')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveEquipmentRow(this, ${i})">save</button></td>
+        </tr>`;
+    }
+
+    document.getElementById('tbody-equipment-main').innerHTML = main.map(equipRow).join('');
+    document.getElementById('tbody-equipment-support').innerHTML = support.map(equipRow).join('');
+}
+
+async function saveEquipmentRow(btn, index) {
+    const row = btn.closest('tr');
+    const inputs = row.querySelectorAll('.price-input');
+    const minVal = parseFloat(inputs[0].value);
+    const maxVal = parseFloat(inputs[1].value);
+    if (isNaN(minVal) || isNaN(maxVal)) { showToast('Invalid value.', 'error'); return; }
+
+    btn.textContent = 'saving...';
+    btn.classList.add('saving');
+
+    const ok = await Parser.updateEquipmentItem(index, minVal, maxVal);
+    btn.classList.remove('saving');
+    if (ok) flashSaved(btn, row);
+}
+
+// ============================================================
+// PIPES
+// ============================================================
+function renderPipes(data) {
+    const totalItems = data.nominal_size_unit_price.length
+        + data.seamless_galvanized_steel.length
+        + data.erw_welded_galvanized_steel.length;
+    document.getElementById('page-badge').textContent = `${totalItems} items across 3 tables`;
+    document.getElementById('view-pipes').classList.remove('hidden');
+
+    const tbNom = document.getElementById('tbody-pipes-nominal');
+    tbNom.innerHTML = data.nominal_size_unit_price.map((item, i) => `
+        <tr data-index="${i}">
+            <td class="font-medium">${item.english}</td>
+            <td class="readonly-cell">${item.metric_mm}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_per_6m_php}" oninput="markDirty(this, 'pipes')"></td>
+            <td class="text-right"><button class="save-btn" onclick="savePipesRow(this, 'nominal_size_unit_price', ${i}, 'price_per_6m_php')">save</button></td>
+        </tr>`).join('');
+
+    const tbSea = document.getElementById('tbody-pipes-seamless');
+    tbSea.innerHTML = data.seamless_galvanized_steel.map((item, i) => `
+        <tr data-index="${i}">
+            <td>${item.description}</td>
+            <td class="readonly-cell">${item.remarks}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_per_length_php}" oninput="markDirty(this, 'pipes')"></td>
+            <td class="text-right"><button class="save-btn" onclick="savePipesRow(this, 'seamless_galvanized_steel', ${i}, 'price_per_length_php')">save</button></td>
+        </tr>`).join('');
+
+    const tbErw = document.getElementById('tbody-pipes-erw');
+    tbErw.innerHTML = data.erw_welded_galvanized_steel.map((item, i) => `
+        <tr data-index="${i}">
+            <td>${item.description}</td>
+            <td class="readonly-cell">${item.remarks}</td>
+            <td class="text-right"><input class="price-input" value="${item.price_per_length_php}" oninput="markDirty(this, 'pipes')"></td>
+            <td class="text-right"><button class="save-btn" onclick="savePipesRow(this, 'erw_welded_galvanized_steel', ${i}, 'price_per_length_php')">save</button></td>
+        </tr>`).join('');
+}
+
+async function savePipesRow(btn, tableKey, index, field) {
+    const row = btn.closest('tr');
+    const val = parseFloat(row.querySelector('.price-input').value);
+    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+
+    btn.textContent = 'saving...';
+    btn.classList.add('saving');
+
+    const ok = await Parser.updatePipesItem(tableKey, index, field, val);
+    btn.classList.remove('saving');
+    if (ok) flashSaved(btn, row);
+}
+
+// ============================================================
+// EXPORT CURRENT CATEGORY
+// ============================================================
+function exportCurrent() {
+    if (!currentCategory) {
+        showToast('Select a category first.', 'error');
+        return;
+    }
+    if (currentCategory === 'core') {
+        Parser.downloadTemplate();
+        return;
+    }
+    const data = categoryData[currentCategory];
+    if (!data) {
+        showToast('Load the category first before exporting.', 'error');
+        return;
+    }
+    Parser.downloadCategory(currentCategory, data);
+}
+
+// ============================================================
+// SAVE ALL
+// ============================================================
+async function saveAll() {
+    const btn = document.getElementById('save-all-btn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    if (currentCategory === 'core') {
+        const PRICES = window.PRICES;
+        PRICES.meta.last_updated = new Date().toISOString().split('T')[0];
+        await Parser.savePricesJson(PRICES);
+    } else if (categoryData[currentCategory]) {
+        await Parser.saveBulk(currentCategory, categoryData[currentCategory]);
+    }
+
+    dirtyRows.clear();
+    btn.textContent = 'All saved';
+    setTimeout(() => {
+        btn.textContent = 'Save all changes';
+        btn.disabled = false;
+    }, 1500);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function markDirty(input, key) {
+    const row = input.closest('tr');
+    row.classList.add('dirty');
+    input.classList.add('dirty');
+    dirtyRows.add(row);
+
+    // Update in-memory categoryData so save-all works
+    if (key !== 'core' && categoryData[key]) {
+        const index = parseInt(row.dataset.index);
+        if (!isNaN(index)) {
+            const arr = Array.isArray(categoryData[key]) ? categoryData[key] : categoryData[key].prices;
+            if (arr && arr[index]) {
+                const inputs = row.querySelectorAll('.price-input');
+                if (inputs.length === 1) arr[index].price_php = parseFloat(inputs[0].value) || 0;
+                if (inputs.length === 2) {
+                    arr[index].rate_min_php = parseFloat(inputs[0].value) || 0;
+                    arr[index].rate_max_php = parseFloat(inputs[1].value) || 0;
+                }
+            }
+        }
+    }
+}
+
+function flashSaved(btn, row) {
+    row.classList.remove('dirty');
+    row.querySelectorAll('.price-input').forEach(i => i.classList.remove('dirty'));
+    btn.textContent = '✓ saved';
+    btn.classList.add('saved');
+    setTimeout(() => {
+        btn.textContent = 'save';
+        btn.classList.remove('saved');
+    }, 2000);
+}
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type} pointer-events-auto`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+</script>
+</body>
+</html>

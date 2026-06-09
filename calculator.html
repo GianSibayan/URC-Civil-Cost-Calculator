@@ -44,6 +44,31 @@
 
 <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+<!-- ==================== LANDING PAGE ==================== -->
+<div id="page-menu" class="min-h-screen flex items-center justify-center p-4 bg-white transition-all duration-300 ease-in-out">
+    <div class="flex flex-col items-center gap-6 w-full max-w-md">
+        <h1 class="text-5xl font-semibold text-black text-center leading-tight">Civil Cost Calculator</h1>
+        <p class="text-2xl text-black text-center">What are we calculating today?</p>
+        <button onclick="openCalculator()" class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+            <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
+        </button>
+        <p class="text-zinc-500 text-base mt-2">Changing something?</p>
+        <button onclick="showToast('Connecting to URC SSO Portal...', 'info')" class="w-full max-w-sm h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
+            <span class="text-white text-base font-medium">Login with URC email</span>
+        </button>
+        <div class="w-full max-w-sm flex justify-center items-center gap-3">
+            <div class="flex-1 h-px bg-neutral-200"></div>
+            <span class="text-zinc-500 text-base whitespace-nowrap">No Account?</span>
+            <div class="flex-1 h-px bg-neutral-200"></div>
+        </div>
+        <button onclick="showToast('Sign up is currently unavailable.', 'error')" class="w-full max-w-sm h-10 bg-zinc-100 hover:bg-zinc-200 transition rounded-lg cursor-pointer flex items-center justify-center border border-zinc-200">
+            <span class="text-black text-base font-medium">Sign up</span>
+        </button>
+    </div>
+</div>
+
+<!-- ==================== CALCULATOR ==================== -->
+<div id="page-calculator" class="hidden h-full overflow-hidden flex flex-col bg-white transition-all duration-300 ease-in-out opacity-0">
 <div class="flex h-full overflow-hidden bg-white">
 
     <!-- =================== SIDEBAR =================== -->
@@ -559,17 +584,96 @@
         </div>
 
         <!-- ====== LIVE OUTPUT PANEL (4 cols) ====== -->
-        <aside class="col-span-4 bg-neutral-50 flex flex-col h-full overflow-hidden border-l border-neutral-100">
+        <aside class="col-span-4 bg-[#f8f9fa] flex flex-col h-full overflow-hidden border-l border-neutral-100">
             <div class="px-6 pt-6 pb-2 flex-shrink-0 border-b border-neutral-200">
                 <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
+                <p class="text-lg font-bold text-neutral-800 mt-1">Estimation Line Ledger</p>
             </div>
-            <div id="output-widget" class="flex-1 overflow-y-auto px-6 py-4 space-y-1">
-                <!-- Populated by renderOutputPanel() -->
+            <div class="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+                <!-- Summary metrics card -->
+                <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm space-y-3 text-sm">
+                    <div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Floor Area</span>
+                            <span id="side-floorArea" class="font-semibold text-neutral-900">0.00 sqm</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length × Width</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Gross Area</span>
+                            <span id="side-grossArea" class="font-semibold text-neutral-900">0.00 sqm</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor Area + (Floor Area × Mezzanine %)</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Building Volume</span>
+                            <span id="side-bldgVolume" class="font-semibold text-neutral-900">0.00 cu.m</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area × Height) + (Area × Mezzanine % × 6)</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Perimeter Line</span>
+                            <span id="side-perimeter" class="font-semibold text-neutral-900">0.00 m</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 × (Length + Width)</p>
+                    </div>
+                    <div class="pt-2 border-t border-neutral-100">
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Concrete Volume</span>
+                            <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m³</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) × Nodes</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Total Connection Nodes</span>
+                            <span id="side-baySpacing" class="font-semibold text-neutral-900">0.00</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (L / Spacing L) + (W / Spacing W)</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="text-neutral-500 font-medium">Total Pallet Slots</span>
+                            <span id="side-pallets" class="font-semibold text-neutral-900">0</span>
+                        </div>
+                        <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Footprint) × Rack Levels</p>
+                    </div>
+                </div>
+
+                <!-- Bill of Quantities card -->
+                <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities Expenditures</h4>
+                    <div class="space-y-2 text-sm text-neutral-600">
+                        <div class="flex justify-between">
+                            <span>Material Base Matrix</span>
+                            <span id="side-cost-materials" class="font-bold text-neutral-900">₱0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Excavation Displacement</span>
+                            <span id="side-cost-excavation" class="font-bold text-neutral-900">₱0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Civil Installation Labor</span>
+                            <span id="side-cost-labor" class="font-bold text-neutral-900">₱0.00</span>
+                        </div>
+                    </div>
+                    <div class="border-t border-neutral-200 pt-4 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total Estimate</h4>
+                            <p class="text-[11px] text-neutral-400 leading-tight mt-0.5">Includes all sheets and margin</p>
+                        </div>
+                        <div class="text-2xl font-black text-neutral-900" id="side-grand-total">₱0.00</div>
+                    </div>
+                </div>
             </div>
         </aside>
 
     </div><!-- end grid -->
 </div><!-- end outer flex -->
+</div><!-- end page-calculator -->
 
 <script>
 // ============================================================
@@ -654,8 +758,30 @@ let currentActiveModule = 'building';
 // ============================================================
 // NAVIGATION
 // ============================================================
+function openCalculator() {
+    const menu = document.getElementById('page-menu');
+    const calc = document.getElementById('page-calculator');
+    menu.classList.add('opacity-0', 'scale-95');
+    setTimeout(() => {
+        menu.classList.add('hidden');
+        calc.classList.remove('hidden');
+        calc.offsetHeight;
+        calc.classList.remove('opacity-0');
+        loadFromCache();
+        loadPrices();
+    }, 300);
+}
+
 function goBackMain() {
-    window.location.href = 'admin.html';
+    const menu = document.getElementById('page-menu');
+    const calc = document.getElementById('page-calculator');
+    calc.classList.add('opacity-0');
+    setTimeout(() => {
+        calc.classList.add('hidden');
+        menu.classList.remove('hidden');
+        menu.offsetHeight;
+        menu.classList.remove('opacity-0', 'scale-95');
+    }, 300);
 }
 
 function switchModule(mod) {
@@ -813,7 +939,21 @@ function updateUI() {
     _set('cost-breakdown-labor',      '\u20b1'+laborSubtotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
     _set('cost-breakdown-total',      '\u20b1'+grandTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 
-    // Live output panel
+    // Static side panel
+    _set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
+    _set('side-grossArea',  grossArea.toFixed(2) + ' sqm');
+    _set('side-bldgVolume', bldgVolume.toFixed(2) + ' cu.m');
+    _set('side-perimeter',  perimeter.toFixed(2) + ' m');
+    _set('side-concrete',   totalConcreteVol.toFixed(2) + ' m³');
+    _set('side-baySpacing', totalBaySpacing.toFixed(2));
+    _set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
+    const php = n => '\u20b1'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    _set('side-cost-materials',  php(materialSubtotal));
+    _set('side-cost-excavation', php(excavationSubtotal));
+    _set('side-cost-labor',      php(laborSubtotal));
+    _set('side-grand-total',     php(grandTotal));
+
+    // Live output panel (legacy output-widget, safe no-op if element absent)
     renderOutputPanel({
         floorArea, grossArea, bldgVolume, perimeter,
         baySpacing1, baySpacing2, totalBaySpacing,
@@ -924,8 +1064,6 @@ function showToast(message, type='success') {
 // ============================================================
 window.onload = function() {
     if (typeof Auth !== 'undefined') Auth.requireLogin();
-    loadFromCache();
-    loadPrices();
 };
 </script>
 </body>

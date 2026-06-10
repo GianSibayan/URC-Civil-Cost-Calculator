@@ -2,51 +2,56 @@
   {
     "name": "Corrugated Roofing, Gauge 26 (0.551 mm x 2.44mm)",
     "unit": "SQ M",
-    "price_php": 423.0
+    "price_php": 423
   },
   {
     "name": "Pre-painted Metal Roofing Sheet GA 26, Long Span",
     "unit": "SQ M",
-    "price_php": 466.0
+    "price_php": 466
   },
   {
     "name": "Pre-painted Metal Roofing Sheet GA 26, 2.44m",
     "unit": "SQ M",
-    "price_php": 472.0
+    "price_php": 472
   },
   {
     "name": "Pre-painted Gutter, GA 24(0.701 mm) x 2.44m",
     "unit": "LN.M",
-    "price_php": 351.0
+    "price_php": 351
   },
   {
     "name": "Ordinary Gutter, GA 24 (0.701 mm) x 2.44m",
     "unit": "LN.M",
-    "price_php": 305.0
+    "price_php": 305
   },
   {
     "name": "Pre-painted Flashing, GA 24 (0.701 mm) x 2.44m",
     "unit": "LN.M",
-    "price_php": 323.0
+    "price_php": 323
   },
   {
     "name": "Ordinary Flashing, GA 24 (0.701 mm) x 2.44m",
     "unit": "LN.M",
-    "price_php": 306.0
+    "price_php": 306
   },
   {
     "name": "Pre-painted Ridge Roll, GA 24 (0.701 mm) x 2.44m",
     "unit": "LN.M",
-    "price_php": 261.0
+    "price_php": 261
   },
   {
     "name": "Ordinary Ridge Roll, GA 24 (0.701 mm) 2.44m",
     "unit": "LN.M",
-    "price_php": 204.0
+    "price_php": 204
   },
   {
     "name": "Roof Ventilators",
     "unit": "Set",
-    "price_php": 1580.0
+    "price_php": 1580
+  },
+  {
+    "name": "testing",
+    "unit": "testing",
+    "price_php": 1
   }
 ]

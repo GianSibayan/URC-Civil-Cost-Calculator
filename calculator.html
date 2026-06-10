@@ -579,9 +579,15 @@
         // NAVIGATION
         // ============================================================
         function goBackMain() {
+            // document.body.style.transition = 'opacity 0.2s';
+            // document.body.style.opacity = '0';
+            // setTimeout(function() { window.location.href = 'index.html'; }, 200);
+            
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';
-            setTimeout(function() { window.location.href = 'index.html'; }, 200);
+            setTimeout(function() {
+                Auth.logout();
+            }, 200);
         }
 
         function switchModule(mod) {

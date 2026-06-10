@@ -2,82 +2,82 @@
   {
     "name": "6mm thk.x 65mm x 65mm x 6.0 Angle bar(T & B Chord)",
     "unit": "pc",
-    "price_php": 2278.0
+    "price_php": 2278
   },
   {
     "name": "6mm thk. x 50mm x 50mm x 6.0 Angle bar(Web Member)",
     "unit": "pc",
-    "price_php": 1751.0
+    "price_php": 1751
   },
   {
     "name": "10mm thk. Gusset plate welded to truss",
     "unit": "sq.m.",
-    "price_php": 4285.0
+    "price_php": 4285
   },
   {
     "name": "150mm x 65mm x 20mm x 2mm LC-Purlins",
     "unit": "pcs.",
-    "price_php": 1101.0
+    "price_php": 1101
   },
   {
     "name": "255mm x 90mm x 25mm x 5mm thk.  LC- Channel beam",
     "unit": "pcs.",
-    "price_php": 4103.0
+    "price_php": 4103
   },
   {
     "name": "300mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
     "unit": "pcs.",
-    "price_php": 76.0
+    "price_php": 76
   },
   {
     "name": "350mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
     "unit": "pcs.",
-    "price_php": 81.0
+    "price_php": 81
   },
   {
     "name": "380mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
     "unit": "pcs.",
-    "price_php": 79.0
+    "price_php": 79
   },
   {
     "name": "465mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
     "unit": "pcs.",
-    "price_php": 83.0
+    "price_php": 83
   },
   {
     "name": "550mmx12mm dia. Plain Bar w/ standard nuts & washers @ both ends: Sagrod",
     "unit": "pcs.",
-    "price_php": 89.0
+    "price_php": 89
   },
   {
     "name": "12mm. Thk. Buckle Plate",
     "unit": "sq.m.",
-    "price_php": 5200.0
+    "price_php": 5200
   },
   {
     "name": "16mm dia. Plain Bar cross bracing",
     "unit": "pc.",
-    "price_php": 422.0
+    "price_php": 422
   },
   {
     "name": "16 mm dia. Turn buckle",
     "unit": "pc.",
-    "price_php": 142.0
+    "price_php": 142
   },
   {
     "name": "12mm x 250mm x 300mm Base Plate",
     "unit": "sq.m.",
-    "price_php": 5200.0
+    "price_php": 5200
   },
   {
     "name": "100 x 100 x 6mm thk. Angular base plate",
     "unit": "pc.",
-    "price_php": 1887.0
+    "price_php": 1887
   },
   {
     "name": "50 x 50 x 5mm Angular Bar",
     "unit": "pc.",
-    "price_php": 1399.0
+    "price_php": 1399
   },
   {
     "name": "75 x 75 x 6mm x 130mm Clip Angle to Purlins",
@@ -87,27 +87,27 @@
   {
     "name": "Welding Rod (Fuji)",
     "unit": "box",
-    "price_php": 2340.0
+    "price_php": 2340
   },
   {
     "name": "Oxygen(content only)",
     "unit": "tank",
-    "price_php": 1579.0
+    "price_php": 1579
   },
   {
     "name": "Acetylene(content only)",
     "unit": "tank",
-    "price_php": 2010.0
+    "price_php": 2010
   },
   {
     "name": "Hacksaw Blade",
     "unit": "pc.",
-    "price_php": 62.0
+    "price_php": 62
   },
   {
     "name": "Paint brush # 4",
     "unit": "pc.",
-    "price_php": 62.0
+    "price_php": 62
   },
   {
     "name": "Paint brush # 2",
@@ -123,5 +123,20 @@
     "name": "Paint Thinner",
     "unit": "gal.",
     "price_php": 553.25
+  },
+  {
+    "name": "hatdog",
+    "unit": "dog",
+    "price_php": 0
+  },
+  {
+    "name": "hatdog ketchup",
+    "unit": "doggydog",
+    "price_php": 999
+  },
+  {
+    "name": "hatdog na malaki",
+    "unit": "doggydogdog",
+    "price_php": 10000
   }
 ]

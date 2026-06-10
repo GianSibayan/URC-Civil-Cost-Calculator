@@ -128,5 +128,15 @@
     "name": "hatdog",
     "unit": "dog",
     "price_php": 10
+  },
+  {
+    "name": "hatdog ketchup",
+    "unit": "doggydog",
+    "price_php": 999
+  },
+  {
+    "name": "hatdog na malaki",
+    "unit": "doggydogdog",
+    "price_php": 10000
   }
 ]

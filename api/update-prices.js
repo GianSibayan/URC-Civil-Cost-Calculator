@@ -126,7 +126,7 @@ export default async function handler(req, res) {
     if (!updateRes.ok) {
       const err = await updateRes.json();
       console.error('GitHub push failed:', err);
-      return res.status(500).json({ error: 'Failed to update file on GitHub' });
+      return res.status(500).json({ error: 'Failed to update file on GitHub', detail: err.message, status: updateRes.status });
     }
 
     return res.status(200).json({ success: true, message: `${filename} updated successfully` });

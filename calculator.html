@@ -9,9 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
-    <!-- Auth guard — must load before any JS runs -->
-    <script src="/src/auth.js"></script>
-
     <script>
         tailwind.config = {
             theme: {
@@ -64,37 +61,35 @@
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- SIDEBAR NAVIGATION -->
     <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
         <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
-        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Delightful Day!</p>
-
+        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
+        
         <nav class="flex-1 mt-8 space-y-1">
             <button id="nav-building" onclick="switchModule('building')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors">
                 Building Calculator
             </button>
             <button id="nav-footing" onclick="switchModule('footing')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                Footing &amp; Pedestal Cal.
+                Footing & Pedestal Cal.
             </button>
-            <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">
-                Cement Volume Cal...
-            </div>
+            <button id="nav-scope" onclick="switchModule('scope')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Cost Estimate Scope
+            </button>
             <div class="pt-6">
                 <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
                 <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">History</div>
             </div>
         </nav>
-
+        
         <div class="pt-4 border-t border-neutral-100 mt-auto">
-            <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+            <button onclick="window.location.href='index.html'" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
                 <span>Main Page</span>
             </button>
         </div>
     </aside>
 
-    <!-- WORKSPACE AREA -->
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
-
+        
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
             <div class="flex items-center gap-6">
                 <h2 id="header-title" class="text-2xl font-bold text-neutral-900">Building Calculator</h2>
@@ -110,12 +105,10 @@
             </div>
         </header>
 
-        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
-
-            <!-- SCROLLABLE INPUTS COLUMN -->
+        <div id="module-calculator-grid" class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
+            
             <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
-
-                <!-- MODULE: BUILDING -> DIMENSION -->
+                
                 <div id="section-dimension" class="flex flex-col gap-6">
                     <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -147,7 +140,6 @@
                     </div>
                 </div>
 
-                <!-- MODULE: BUILDING -> STRUCTURE -->
                 <div id="section-structure" class="hidden flex flex-col gap-6">
                     <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -217,7 +209,6 @@
                     </div>
                 </div>
 
-                <!-- MODULE: BUILDING -> CAPACITY -->
                 <div id="section-capacity" class="hidden flex flex-col gap-6">
                     <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -264,7 +255,6 @@
                     </div>
                 </div>
 
-                <!-- MODULE: FOOTING -> GEOMETRY -->
                 <div id="section-footing-geometry" class="hidden flex flex-col gap-6">
                     <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -301,22 +291,21 @@
                     </div>
                 </div>
 
-                <!-- MODULE: FOOTING -> MATERIALS -->
                 <div id="section-footing-materials" class="hidden flex flex-col gap-6">
                     <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 flex flex-col justify-start min-h-[120px]">
                             <h4 class="text-base font-bold text-neutral-800 mb-2">Concrete Class</h4>
-                            <select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
-                                <option value="C16/20">C16/20 — Lean/Blinding</option>
-                                <option value="C20/25">C20/25 — Light Slabs</option>
-                                <option value="C25/30">C25/30 — General</option>
-                                <option value="C30/37" selected>C30/37 — Heavy Columns</option>
-                                <option value="C35/45">C35/45 — High-Rise</option>
+                            <select id="select-concreteClass" class="struct-select" onchange="handleSelect('concreteClass', this.value)">
+                                <option value="16/20">16/20</option>
+                                <option value="20/25">20/25</option>
+                                <option value="25/30">25/30</option>
+                                <option value="30/37" selected>30/37</option>
+                                <option value="35/45">35/45</option>
                             </select>
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Price / m3</h4>
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Price / m³</h4>
                             <input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" />
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
@@ -325,11 +314,11 @@
                             <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Cost / m3</h4>
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Cost / m³</h4>
                             <input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" />
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Rate / m3</h4>
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Rate / m³</h4>
                             <input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" />
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
@@ -346,7 +335,7 @@
                             <input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" />
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Forms Price / m2</h4>
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Forms Price / m²</h4>
                             <input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" />
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
@@ -361,7 +350,6 @@
                 </div>
             </div>
 
-            <!-- STICKY SIDEBAR VISUALIZATION & OUTPUT DASHBOARD -->
             <div class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
                 <div class="sticky top-0 space-y-6">
                     <div>
@@ -369,47 +357,45 @@
                         <p class="text-lg font-bold text-neutral-800 mt-1">Estimation Line Ledger</p>
                     </div>
 
-                    <!-- CHART.JS VISUALIZATION -->
                     <div class="bg-white p-4 rounded-2xl border border-neutral-200/60 shadow-sm">
                         <canvas id="costChart" height="200"></canvas>
                     </div>
 
-                    <!-- SPATIAL OUTPUT METRICS -->
                     <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4 text-sm">
                         <div>
                             <div class="flex justify-between items-center mb-0.5">
                                 <span class="text-neutral-500 font-medium">Floor Area</span>
                                 <span id="side-floorArea" class="font-semibold text-neutral-900">0.00 sqm</span>
                             </div>
-                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length x Width</p>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length × Width</p>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-0.5">
                                 <span class="text-neutral-500 font-medium">Gross Area</span>
                                 <span id="side-grossArea" class="font-semibold text-neutral-900">0.00 sqm</span>
                             </div>
-                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor + (Floor x Mezzanine %)</p>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor + (Floor × Mezzanine %)</p>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-0.5">
                                 <span class="text-neutral-500 font-medium">Building Volume</span>
                                 <span id="side-bldgVolume" class="font-semibold text-neutral-900">0.00 cu.m</span>
                             </div>
-                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area x H) + (Area x Mezz % x 6)</p>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area × H) + (Area × Mezz % × 6)</p>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-0.5">
                                 <span class="text-neutral-500 font-medium">Perimeter Line</span>
                                 <span id="side-perimeter" class="font-semibold text-neutral-900">0.00 m</span>
                             </div>
-                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 x (Length + Width)</p>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 × (Length + Width)</p>
                         </div>
                         <div class="pt-3 border-t border-neutral-100">
                             <div class="flex justify-between items-center mb-0.5">
                                 <span class="text-neutral-500 font-medium">Concrete Volume</span>
-                                <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m3</span>
+                                <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m³</span>
                             </div>
-                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) x Nodes</p>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) × Nodes</p>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-0.5">
@@ -423,62 +409,157 @@
                                 <span class="text-neutral-500 font-medium">Total Pallet Slots</span>
                                 <span id="side-pallets" class="font-semibold text-neutral-900">0</span>
                             </div>
-                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Pallet Footprint) x Levels</p>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Pallet Footprint) × Levels</p>
                         </div>
                     </div>
 
-                    <!-- FINANCIAL SUMMARY -->
                     <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
                         <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
                         <div class="space-y-2 text-sm text-neutral-600">
-                            <div class="flex justify-between"><span>Material Base</span><span id="cost-breakdown-materials" class="font-bold text-neutral-900">P0.00</span></div>
-                            <div class="flex justify-between"><span>Excavation</span><span id="cost-breakdown-excavation" class="font-bold text-neutral-900">P0.00</span></div>
-                            <div class="flex justify-between"><span>Labor Overhead</span><span id="cost-breakdown-labor" class="font-bold text-neutral-900">P0.00</span></div>
+                            <div class="flex justify-between"><span>Material Base</span><span id="cost-breakdown-materials" class="font-bold text-neutral-900">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Excavation</span><span id="cost-breakdown-excavation" class="font-bold text-neutral-900">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Labor Overhead</span><span id="cost-breakdown-labor" class="font-bold text-neutral-900">₱0.00</span></div>
                         </div>
                         <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center">
                             <div>
                                 <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
                                 <p class="text-[10px] text-neutral-400 leading-tight">Awaiting DB connection</p>
                             </div>
-                            <div class="text-2xl font-black text-neutral-900" id="cost-breakdown-total">P0.00</div>
+                            <div class="text-2xl font-black text-neutral-900" id="cost-breakdown-total">₱0.00</div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="module-scope-grid" class="hidden flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
+            
+            <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Cost Estimate Scope</h3>
+                    <p class="text-sm text-neutral-500 mt-1">Yard & Underground - is work outside of the building that is classifiable as real estate.</p>
+                </div>
+
+                <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-sm text-neutral-500">
+                                <th class="py-3 px-4 font-semibold text-center w-12">#</th>
+                                <th class="py-3 px-4 font-semibold">Description</th>
+                                <th class="py-3 px-4 font-semibold text-center w-32">Input</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium text-neutral-800">
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">1</td>
+                                <td class="py-3 px-4">Site grading & drainage</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">2</td>
+                                <td class="py-3 px-4">Landscaping</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">3</td>
+                                <td class="py-3 px-4">Retention Basins / Storm water</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">4</td>
+                                <td class="py-3 px-4">Fire Loop and hydrants</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">5</td>
+                                <td class="py-3 px-4">Fire Water Tank, pumps</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">6</td>
+                                <td class="py-3 px-4">Paving - Roadway</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">7</td>
+                                <td class="py-3 px-4">Paving - Parking Lot</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">8</td>
+                                <td class="py-3 px-4">Paving - Truck Dock</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">9</td>
+                                <td class="py-3 px-4">Outdoor Lighting</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">10</td>
+                                <td class="py-3 px-4">Fencing</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">11</td>
+                                <td class="py-3 px-4">Railroad Sidings</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">12</td>
+                                <td class="py-3 px-4">Truck Scales</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">13</td>
+                                <td class="py-3 px-4">Site Security</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">14</td>
+                                <td class="py-3 px-4">Fire road</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                <td class="py-3 px-4 text-center text-neutral-400">15</td>
+                                <td class="py-3 px-4">Other</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
+                <div class="h-full w-full flex flex-col items-center justify-center opacity-40">
+                    <p class="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-2">Cart / Summary</p>
+                    <p class="text-xs text-neutral-400">(Awaiting Shopping Cart Integration)</p>
+                </div>
+            </div>
 
         </div>
+
     </main>
 
     <script>
-        // ============================================================
-        // STATE
-        // ============================================================
-        window.PRICES = null;
-
         let estimateState = {
             length: 0, width: 0, clearHeight: 0, stories: 0, mezzanine: 0,
             structureType: 'steel_rigid', roofType: 'standing_seam', wallCladding: 'metal_panel', slabThickness: '100mm',
             dockDoors: 0, driveInDoors: 0, skylights: 'standard', baySpacingL: 0, baySpacingW: 0,
-            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0, storageEfficiency: 0,
-            dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
-            footingLength: 0, footingWidth: 0, footingDepth: 0,
-            pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
-            concreteClass: 'C30/37', concretePriceM3: 0,
-            excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
-            rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0,
-            formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850
+            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0, storageEfficiency: 0, dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
+            footingLength: 0, footingWidth: 0, footingDepth: 0, pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
+            concreteClass: '30/37', concretePriceM3: 0, excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
+            rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0, formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850
         };
 
         let currentActiveModule = 'building';
 
-        // ============================================================
-        // CHART.JS
-        // ============================================================
+        // CHART.JS INITIALIZATION
         const ctx = document.getElementById('costChart').getContext('2d');
         const costChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Floor Area (sqm)', 'Concrete (m3)', 'Perimeter (m)'],
+                labels: ['Floor Area (sqm)', 'Concrete (m³)', 'Perimeter (m)'],
                 datasets: [{
                     data: [0, 0, 0],
                     backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
@@ -495,161 +576,73 @@
             }
         });
 
-        // ============================================================
-        // PRICES.JSON — relative first, then raw GitHub fallback
-        // ============================================================
-        async function loadPrices() {
-            try {
-                let res = await fetch('/prices.json');
-                if (!res.ok) throw new Error('relative failed');
-                window.PRICES = await res.json();
-            } catch (_) {
-                try {
-                    const res = await fetch(
-                        'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json'
-                    );
-                    if (res.ok) window.PRICES = await res.json();
-                } catch (e) {
-                    console.warn('Could not load prices.json:', e);
-                }
-            }
-
-            if (window.PRICES) {
-                applyPricesToState();
-                showToast('Price data loaded.', 'success');
-            } else {
-                showToast('Could not load live prices. Using cached/default values.', 'error');
-            }
-
-            syncInputs();
-            updateUI();
-        }
-
-        // Applies prices.json values into estimateState.
-        // Only overwrites fields still at 0 (respects user-cached values).
-        function applyPricesToState() {
-            if (!window.PRICES) return;
-            const p = window.PRICES.tab1_tab2;
-            const cls = estimateState.concreteClass || 'C30/37';
-            const concretePrice = (p.concrete_classes && p.concrete_classes[cls])
-                ? p.concrete_classes[cls].price_per_m3
-                : 0;
-
-            const defaults = {
-                concretePriceM3:  concretePrice,
-                excavationCostM3: p.excavation_cost_per_m3,
-                rebarPriceKg:     p.rebar_price_per_kg,
-                overheadProfit:   Math.round((p.overhead_profit_rate || 0) * 100),
-                formsPriceM2:     p.forms_price_per_m2,
-                laborCostDay:     p.labor_cost_per_day,
-                steelDensity:     p.steel_density_kg_per_m3,
-            };
-
-            Object.entries(defaults).forEach(([k, v]) => {
-                if (estimateState[k] === 0) estimateState[k] = v;
-            });
-
-            // Reflect concrete price in the readonly input immediately
-            const concEl = document.getElementById('input-concretePriceM3');
-            if (concEl && concretePrice) concEl.value = concretePrice;
-
-            saveToCache();
-        }
-
-        // Concrete class change — looks up live price from PRICES
-        function handleConcreteClassChange(value) {
-            estimateState.concreteClass = value;
-            if (window.PRICES) {
-                const cls = window.PRICES.tab1_tab2.concrete_classes;
-                if (cls && cls[value]) {
-                    estimateState.concretePriceM3 = cls[value].price_per_m3;
-                    const el = document.getElementById('input-concretePriceM3');
-                    if (el) el.value = estimateState.concretePriceM3;
-                }
-            } else {
-                estimateState.concretePriceM3 = 0;
-                const el = document.getElementById('input-concretePriceM3');
-                if (el) el.value = '';
-            }
-            saveToCache();
-            updateUI();
-        }
-
-        // ============================================================
-        // NAVIGATION
-        // ============================================================
-        function goBackMain() {
-            // document.body.style.transition = 'opacity 0.2s';
-            // document.body.style.opacity = '0';
-            // setTimeout(function() { window.location.href = 'index.html'; }, 200);
-            
-            document.body.style.transition = 'opacity 0.2s';
-            document.body.style.opacity = '0';
-            setTimeout(function() {
-                Auth.logout();
-            }, 200);
-        }
-
         function switchModule(mod) {
             currentActiveModule = mod;
-            var headerTitle = document.getElementById('header-title');
-            var headerTabs  = document.getElementById('header-tabs-container');
-
-            ['dimension','structure','capacity','footing-geometry','footing-materials'].forEach(function(s) {
-                var el = document.getElementById('section-' + s);
-                if (el) el.classList.add('hidden');
+            const headerTitle = document.getElementById('header-title');
+            const headerTabs = document.getElementById('header-tabs-container');
+            const calcGrid = document.getElementById('module-calculator-grid');
+            const scopeGrid = document.getElementById('module-scope-grid');
+            
+            ['building', 'footing', 'scope'].forEach(m => {
+                const navBtn = document.getElementById('nav-' + m);
+                if (navBtn) navBtn.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors';
             });
-
-            ['building','footing'].forEach(function(m) {
-                var btn = document.getElementById('nav-' + m);
-                if (btn) btn.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors';
-            });
-
-            var activeNav = document.getElementById('nav-' + mod);
+            
+            const activeNav = document.getElementById('nav-' + mod);
             if (activeNav) activeNav.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors';
 
-            if (mod === 'building') {
-                headerTitle.textContent = 'Building Calculator';
+            if (mod === 'scope') {
+                calcGrid.classList.add('hidden');
+                scopeGrid.classList.remove('hidden');
+                headerTitle.textContent = "Cost Estimate Scope";
+                headerTabs.classList.add('hidden');
+            } else {
+                calcGrid.classList.remove('hidden');
+                scopeGrid.classList.add('hidden');
                 headerTabs.classList.remove('hidden');
-                headerTabs.innerHTML =
-                    '<button onclick="switchSection(\'dimension\')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>' +
-                    '<button onclick="switchSection(\'structure\')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>' +
-                    '<button onclick="switchSection(\'capacity\')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>';
-                document.getElementById('section-dimension').classList.remove('hidden');
-            } else if (mod === 'footing') {
-                headerTitle.textContent = 'Footing & Pedestal';
-                headerTabs.classList.remove('hidden');
-                headerTabs.innerHTML =
-                    '<button onclick="switchSection(\'footing-geometry\')" id="tab-footing-geometry" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>' +
-                    '<button onclick="switchSection(\'footing-materials\')" id="tab-footing-materials" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>';
-                document.getElementById('section-footing-geometry').classList.remove('hidden');
+                
+                ['dimension','structure','capacity','footing-geometry','footing-materials'].forEach(s => {
+                    const el = document.getElementById('section-' + s);
+                    if (el) el.classList.add('hidden');
+                });
+
+                if (mod === 'building') {
+                    headerTitle.textContent = "Building Calculator";
+                    headerTabs.innerHTML = `
+                        <button onclick="switchSection('dimension')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
+                        <button onclick="switchSection('structure')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
+                        <button onclick="switchSection('capacity')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
+                    `;
+                    document.getElementById('section-dimension').classList.remove('hidden');
+                } else if (mod === 'footing') {
+                    headerTitle.textContent = "Footing & Pedestal";
+                    headerTabs.innerHTML = `
+                        <button onclick="switchSection('footing-geometry')" id="tab-footing-geometry" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>
+                        <button onclick="switchSection('footing-materials')" id="tab-footing-materials" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>
+                    `;
+                    document.getElementById('section-footing-geometry').classList.remove('hidden');
+                }
+                updateUI();
             }
-            updateUI();
         }
 
         function switchSection(section) {
-            var subSections = currentActiveModule === 'building'
-                ? ['dimension','structure','capacity']
-                : ['footing-geometry','footing-materials'];
-
-            subSections.forEach(function(s) {
-                var el = document.getElementById('section-' + s);
+            const subSections = currentActiveModule === 'building' ? ['dimension','structure','capacity'] : ['footing-geometry','footing-materials'];
+            subSections.forEach(s => {
+                const el = document.getElementById('section-' + s);
                 if (el) el.classList.add('hidden');
-                var tab = document.getElementById('tab-' + s);
+                const tab = document.getElementById('tab-' + s);
                 if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
             });
-
-            var activeSec = document.getElementById('section-' + section);
+            
+            const activeSec = document.getElementById('section-' + section);
             if (activeSec) activeSec.classList.remove('hidden');
-            var targetTab = document.getElementById('tab-' + section);
+            const targetTab = document.getElementById('tab-' + section);
             if (targetTab) targetTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
         }
 
-        // ============================================================
-        // INPUT HANDLERS
-        // ============================================================
         function handleInput(field, value) {
-            var parsed = parseFloat(value);
+            const parsed = parseFloat(value);
             estimateState[field] = isNaN(parsed) ? 0 : parsed;
             saveToCache();
             updateUI();
@@ -657,99 +650,81 @@
 
         function handleSelect(field, value) {
             estimateState[field] = value;
+            if (field === 'concreteClass') {
+                estimateState.concretePriceM3 = 0; 
+                const concreteEl = document.getElementById('input-concretePriceM3');
+                if (concreteEl) concreteEl.value = "";
+            }
             saveToCache();
             updateUI();
         }
 
-        // ============================================================
-        // COMPUTATION + DOM UPDATE
-        // ============================================================
         function updateUI() {
-            var L    = estimateState.length      || 0;
-            var W    = estimateState.width       || 0;
-            var H    = estimateState.clearHeight || 0;
-            var M    = estimateState.mezzanine   || 0;
-            var mDec = M / 100;
+            if (currentActiveModule === 'scope') return;
 
-            var floorArea  = L * W;
-            var grossArea  = floorArea + (floorArea * mDec);
-            var bldgVolume = (L * W * H) + (L * W * mDec * 6);
-            var perimeter  = 2 * (L + W);
+            // BUILDING METRICS
+            const L = estimateState.length || 0;
+            const W = estimateState.width || 0;
+            const H = estimateState.clearHeight || 0;
+            const M = estimateState.mezzanine || 0;
+            const mDec = M / 100;
 
-            var bsl = estimateState.baySpacingL || 0;
-            var bsw = estimateState.baySpacingW || 0;
-            var totalBaySpacing = 0;
+            const floorArea = L * W;
+            const grossArea = floorArea + (floorArea * mDec);
+            const bldgVolume = (L * W * H) + (L * W * mDec * 6);
+            const perimeter = 2 * (L + W);
+
+            // LOGISTICS CAPACITY
+            const bsl = estimateState.baySpacingL || 0;
+            const bsw = estimateState.baySpacingW || 0;
+            let totalBaySpacing = 0;
             if (bsl > 0 && bsw > 0) totalBaySpacing = (L / bsl) + (W / bsw);
-            var nodes = Math.ceil(totalBaySpacing);
+            const nodes = Math.ceil(totalBaySpacing);
 
-            var rh  = estimateState.rackHeight      || 0;
-            var ps  = estimateState.palletSize       || 0;
-            var bc  = estimateState.bottomClearance  || 0;
-            var se  = (estimateState.storageEfficiency || 0) / 100;
-            var ds  = (estimateState.dockStagingArea   || 0) / 100;
-            var rlh = estimateState.rackLevelHeight    || 0;
-            var pd  = estimateState.palletDepth        || 0;
+            const rh = estimateState.rackHeight || 0;
+            const ps = estimateState.palletSize || 0;
+            const bc = estimateState.bottomClearance || 0;
+            const se = (estimateState.storageEfficiency || 0) / 100;
+            const ds = (estimateState.dockStagingArea || 0) / 100;
+            const rlh = estimateState.rackLevelHeight || 0;
+            const pd = estimateState.palletDepth || 0;
 
-            var rackLevels = 0;
+            let rackLevels = 0;
             if (rlh > 0 && rh > bc) rackLevels = Math.floor((rh - bc) / rlh);
 
-            var totalPalletPositions = 0;
-            var singlePalletArea = ps * pd;
+            let totalPalletPositions = 0;
+            const singlePalletArea = ps * pd;
             if (singlePalletArea > 0) {
-                var productiveFloorSpace = floorArea * se * (1 - ds);
+                const productiveFloorSpace = floorArea * se * (1 - ds);
                 totalPalletPositions = Math.floor(productiveFloorSpace / singlePalletArea) * rackLevels;
             }
 
-            var fl = estimateState.footingLength  || 0;
-            var fw = estimateState.footingWidth   || 0;
-            var fd = estimateState.footingDepth   || 0;
-            var pl = estimateState.pedestalLength || 0;
-            var pw = estimateState.pedestalWidth  || 0;
-            var ph = estimateState.pedestalHeight || 0;
+            // FOOTING & CONCRETE
+            const fl = estimateState.footingLength || 0;
+            const fw = estimateState.footingWidth || 0;
+            const fd = estimateState.footingDepth || 0;
+            const pl = estimateState.pedestalLength || 0;
+            const pw = estimateState.pedestalWidth || 0;
+            const ph = estimateState.pedestalHeight || 0;
 
-            var footingVol  = fl * fw * fd;
-            var pedestalVol = pl * pw * ph;
-            var concreteVol = (footingVol + pedestalVol) * nodes;
+            const footingVol = fl * fw * fd;
+            const pedestalVol = pl * pw * ph;
+            const concreteVol = (footingVol + pedestalVol) * nodes;
 
-            // Cost computation from prices.json fields in estimateState
-            var priceConcretePerM3  = estimateState.concretePriceM3  || 0;
-            var costExcavationPerM3 = estimateState.excavationCostM3 || 0;
-            var laborRatePerM3      = estimateState.laborRateM3      || 0;
-            var overheadMargin      = (estimateState.overheadProfit  || 0) / 100;
-
-            var materialSubtotal   = concreteVol * priceConcretePerM3;
-            var excavationSubtotal = concreteVol * 1.2 * costExcavationPerM3;
-            var laborSubtotal      = concreteVol * laborRatePerM3;
-            var rawSum             = materialSubtotal + excavationSubtotal + laborSubtotal;
-            var grandTotal         = rawSum + (rawSum * overheadMargin);
-
-            function fmt(n) {
-                return 'P' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-
-            // Sidebar metrics
-            document.getElementById('side-floorArea').textContent  = floorArea.toFixed(2)   + ' sqm';
-            document.getElementById('side-grossArea').textContent  = grossArea.toFixed(2)   + ' sqm';
-            document.getElementById('side-bldgVolume').textContent = bldgVolume.toFixed(2)  + ' cu.m';
-            document.getElementById('side-perimeter').textContent  = perimeter.toFixed(2)   + ' m';
-            document.getElementById('side-concrete').textContent   = concreteVol.toFixed(2) + ' m3';
+            // DOM UPDATES: DASHBOARD WIDGET
+            document.getElementById('side-floorArea').textContent = floorArea.toFixed(2) + ' sqm';
+            document.getElementById('side-grossArea').textContent = grossArea.toFixed(2) + ' sqm';
+            document.getElementById('side-bldgVolume').textContent = bldgVolume.toFixed(2) + ' cu.m';
+            document.getElementById('side-perimeter').textContent = perimeter.toFixed(2) + ' m';
+            document.getElementById('side-concrete').textContent = concreteVol.toFixed(2) + ' m³';
             document.getElementById('side-baySpacing').textContent = nodes;
-            document.getElementById('side-pallets').textContent    = totalPalletPositions.toLocaleString('en-US');
+            document.getElementById('side-pallets').textContent = totalPalletPositions.toLocaleString('en-US');
 
-            // Cost breakdown
-            document.getElementById('cost-breakdown-materials').textContent  = fmt(materialSubtotal);
-            document.getElementById('cost-breakdown-excavation').textContent = fmt(excavationSubtotal);
-            document.getElementById('cost-breakdown-labor').textContent      = fmt(laborSubtotal);
-            document.getElementById('cost-breakdown-total').textContent      = fmt(grandTotal);
-
-            // Chart
+            // UPDATE CHART VISUALIZATION LIVE
             costChart.data.datasets[0].data = [floorArea, concreteVol, perimeter];
             costChart.update();
         }
 
-        // ============================================================
-        // CACHE
-        // ============================================================
         function syncInputs() {
             [
                 'length','width','clearHeight','stories','mezzanine',
@@ -758,18 +733,18 @@
                 'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth',
                 'footingLength','footingWidth','footingDepth',
                 'pedestalLength','pedestalWidth','pedestalHeight',
-                'excavationDepth','excavationCostM3','laborRateM3',
+                'excavationDepth','excavationCostM3',
                 'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity'
-            ].forEach(function(f) {
-                var el = document.getElementById('input-' + f);
+            ].forEach(f => {
+                const el = document.getElementById('input-' + f);
                 if (el && estimateState[f] !== 0) el.value = estimateState[f];
             });
-            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass'].forEach(function(f) {
-                var el = document.getElementById('select-' + f);
+            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass'].forEach(f => {
+                const el = document.getElementById('select-' + f);
                 if (el) el.value = estimateState[f];
             });
-            var concEl = document.getElementById('input-concretePriceM3');
-            if (concEl && estimateState.concretePriceM3 !== 0) concEl.value = estimateState.concretePriceM3;
+            const concreteEl = document.getElementById('input-concretePriceM3');
+            if (concreteEl) concreteEl.value = ""; 
         }
 
         function saveToCache() {
@@ -778,47 +753,17 @@
 
         function loadFromCache() {
             try {
-                var raw = localStorage.getItem('urc_ccc_building_state_2026');
+                const raw = localStorage.getItem('urc_ccc_building_state_2026');
                 if (raw) {
-                    var p = JSON.parse(raw);
-                    Object.keys(estimateState).forEach(function(k) { if (p[k] !== undefined) estimateState[k] = p[k]; });
+                    const p = JSON.parse(raw);
+                    Object.keys(estimateState).forEach(k => { if (p[k] !== undefined) estimateState[k] = p[k]; });
                 }
             } catch(e) {}
             syncInputs();
             updateUI();
         }
 
-        // ============================================================
-        // TOAST
-        // ============================================================
-        function showToast(message, type) {
-            type = type || 'success';
-            var container = document.getElementById('toastContainer');
-            if (!container) return;
-            var toast = document.createElement('div');
-            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
-            if (type === 'error') toast.classList.add('bg-rose-50','border-rose-100','text-rose-800');
-            else if (type === 'info') toast.classList.add('bg-slate-50','border-neutral-100','text-slate-800');
-            else toast.classList.add('border-neutral-200','text-neutral-900');
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(function() { toast.classList.remove('translate-y-2','opacity-0'); }, 10);
-            setTimeout(function() {
-                toast.classList.add('opacity-0','scale-95');
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 3500);
-        }
-
-        // ============================================================
-        // BOOT — auth guard -> cache -> live prices
-        // ============================================================
-        window.onload = function() {
-            if (typeof Auth !== 'undefined') {
-                Auth.requireLogin();
-            }
-            loadFromCache();
-            loadPrices();
-        };
+        window.onload = loadFromCache;
     </script>
 </body>
 </html>

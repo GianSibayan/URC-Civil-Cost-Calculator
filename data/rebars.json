@@ -3,216 +3,222 @@
     "spec": "GRADE 60",
     "size": "50mm Diameter",
     "length": "12 meters",
-    "price_php": 4050.0
+    "price_php": 4050
   },
   {
     "spec": "GRADE 60",
     "size": "50mm Diameter",
     "length": "9 meters",
-    "price_php": 3370.0
+    "price_php": 3370
   },
   {
     "spec": "GRADE 60",
     "size": "50mm Diameter",
     "length": "7.5 meters",
-    "price_php": 3350.0
+    "price_php": 3350
   },
   {
     "spec": "GRADE 60",
     "size": "50mm Diameter",
     "length": "6 meters",
-    "price_php": 2750.0
+    "price_php": 2750
   },
   {
     "spec": "GRADE 60",
     "size": "40mm Diameter",
     "length": "12 meters",
-    "price_php": 3600.0
+    "price_php": 3600
   },
   {
     "spec": "GRADE 60",
     "size": "40mm Diameter",
     "length": "9 meters",
-    "price_php": 3744.0
+    "price_php": 3744
   },
   {
     "spec": "GRADE 60",
     "size": "40mm Diameter",
     "length": "7.5 meters",
-    "price_php": 2580.0
+    "price_php": 2580
   },
   {
     "spec": "GRADE 60",
     "size": "40mm Diameter",
     "length": "6 meters",
-    "price_php": 1400.0
+    "price_php": 1400
   },
   {
     "spec": "GRADE 60",
     "size": "36mm Diameter",
     "length": "12 meters",
-    "price_php": 3000.0
+    "price_php": 3000
   },
   {
     "spec": "GRADE 60",
     "size": "36mm Diameter",
     "length": "9 meters",
-    "price_php": 2250.0
+    "price_php": 2250
   },
   {
     "spec": "GRADE 60",
     "size": "36mm Diameter",
     "length": "7.5 meters",
-    "price_php": 1650.0
+    "price_php": 1650
   },
   {
     "spec": "GRADE 60",
     "size": "36mm Diameter",
     "length": "6 meters",
-    "price_php": 1400.0
+    "price_php": 1400
   },
   {
     "spec": "GRADE 60",
     "size": "32mm Diameter",
     "length": "12 meters",
-    "price_php": 2500.0
+    "price_php": 2500
   },
   {
     "spec": "GRADE 60",
     "size": "32mm Diameter",
     "length": "9 meters",
-    "price_php": 1700.0
+    "price_php": 1700
   },
   {
     "spec": "GRADE 60",
     "size": "32mm Diameter",
     "length": "7.5 meters",
-    "price_php": 1500.0
+    "price_php": 1500
   },
   {
     "spec": "GRADE 60",
     "size": "32mm Diameter",
     "length": "6 meters",
-    "price_php": 1300.0
+    "price_php": 1300
   },
   {
     "spec": "GRADE 60",
     "size": "28mm Diameter",
     "length": "12 meters",
-    "price_php": 1800.0
+    "price_php": 1800
   },
   {
     "spec": "GRADE 60",
     "size": "28mm Diameter",
     "length": "9 meters",
-    "price_php": 1600.0
+    "price_php": 1600
   },
   {
     "spec": "GRADE 60",
     "size": "28mm Diameter",
     "length": "7.5 meters",
-    "price_php": 1350.0
+    "price_php": 1350
   },
   {
     "spec": "GRADE 60",
     "size": "28mm Diameter",
     "length": "6 meters",
-    "price_php": 980.0
+    "price_php": 980
   },
   {
     "spec": "GRADE 60",
     "size": "25mm Diameter",
     "length": "12 meters",
-    "price_php": 1700.0
+    "price_php": 1700
   },
   {
     "spec": "GRADE 60",
     "size": "25mm Diameter",
     "length": "9 meters",
-    "price_php": 1290.0
+    "price_php": 1290
   },
   {
     "spec": "GRADE 60",
     "size": "25mm Diameter",
     "length": "7.5 meters",
-    "price_php": 1100.0
+    "price_php": 1100
   },
   {
     "spec": "GRADE 60",
     "size": "25mm Diameter",
     "length": "6 meters",
-    "price_php": 850.0
+    "price_php": 850
   },
   {
     "spec": "GRADE 60",
     "size": "20mm Diameter",
     "length": "12 meters",
-    "price_php": 1080.0
+    "price_php": 1080
   },
   {
     "spec": "GRADE 60",
     "size": "20mm Diameter",
     "length": "9 meters",
-    "price_php": 896.0
+    "price_php": 896
   },
   {
     "spec": "GRADE 60",
     "size": "20mm Diameter",
     "length": "7.5 meters",
-    "price_php": 705.0
+    "price_php": 705
   },
   {
     "spec": "GRADE 60",
     "size": "20mm Diameter",
     "length": "6 meters",
-    "price_php": 540.0
+    "price_php": 540
   },
   {
     "spec": "GRADE 60",
     "size": "16mm Diameter",
     "length": "9 meters",
-    "price_php": 560.0
+    "price_php": 560
   },
   {
     "spec": "GRADE 60",
     "size": "16mm Diameter",
     "length": "7.5 meters",
-    "price_php": 400.0
+    "price_php": 400
   },
   {
     "spec": "GRADE 60",
     "size": "16mm Diameter",
     "length": "6 meters",
-    "price_php": 340.0
+    "price_php": 340
   },
   {
     "spec": "GRADE 40",
     "size": "12mm Diameter",
     "length": "9 meters",
-    "price_php": 290.0
+    "price_php": 290
   },
   {
     "spec": "GRADE 40",
     "size": "12mm Diameter",
     "length": "7.5 meters",
-    "price_php": 270.0
+    "price_php": 270
   },
   {
     "spec": "GRADE 40",
     "size": "12mm Diameter",
     "length": "6 meters",
-    "price_php": 190.0
+    "price_php": 190
   },
   {
     "spec": "GRADE 40",
     "size": "10mm Diameter",
     "length": "6 meters",
-    "price_php": 140.0
+    "price_php": 140
   },
   {
     "spec": "TIE WIRE",
     "size": "No. #16",
     "length": "25kgs/roll",
-    "price_php": 2200.0
+    "price_php": 2200
+  },
+  {
+    "spec": "sikret",
+    "size": "67",
+    "length": "6767",
+    "price_php": 676767
   }
 ]

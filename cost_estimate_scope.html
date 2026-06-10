@@ -60,7 +60,6 @@
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- SIDEBAR -->
     <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
         <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
         <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
@@ -88,7 +87,6 @@
         </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
 
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
@@ -101,7 +99,6 @@
 
         <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
 
-            <!-- LEFT: scope table -->
             <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
                 <div class="mb-6">
                     <h3 class="text-2xl font-bold text-neutral-900">Cost Estimate Scope</h3>
@@ -119,90 +116,101 @@
                         </thead>
                         <tbody class="text-sm font-medium text-neutral-800">
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">1</td>
-                                <td class="py-3 px-4">Site grading &amp; drainage</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">1</td><td class="py-3 px-4">Site grading &amp; drainage</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">2</td>
-                                <td class="py-3 px-4">Landscaping</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">2</td><td class="py-3 px-4">Landscaping</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">3</td>
-                                <td class="py-3 px-4">Retention Basins / Storm water</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">3</td><td class="py-3 px-4">Retention Basins / Storm water</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">4</td>
-                                <td class="py-3 px-4">Fire Loop and hydrants</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">4</td><td class="py-3 px-4">Fire Loop and hydrants</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">5</td>
-                                <td class="py-3 px-4">Fire Water Tank, pumps</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">5</td><td class="py-3 px-4">Fire Water Tank, pumps</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">6</td>
-                                <td class="py-3 px-4">Paving - Roadway</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">6</td><td class="py-3 px-4">Paving - Roadway</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">7</td>
-                                <td class="py-3 px-4">Paving - Parking Lot</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">7</td><td class="py-3 px-4">Paving - Parking Lot</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">8</td>
-                                <td class="py-3 px-4">Paving - Truck Dock</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">8</td><td class="py-3 px-4">Paving - Truck Dock</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">9</td>
-                                <td class="py-3 px-4">Outdoor Lighting</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">9</td><td class="py-3 px-4">Outdoor Lighting</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">10</td>
-                                <td class="py-3 px-4">Fencing</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">10</td><td class="py-3 px-4">Fencing</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">11</td>
-                                <td class="py-3 px-4">Railroad Sidings</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">11</td><td class="py-3 px-4">Railroad Sidings</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">12</td>
-                                <td class="py-3 px-4">Truck Scales</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">12</td><td class="py-3 px-4">Truck Scales</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">13</td>
-                                <td class="py-3 px-4">Site Security</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">13</td><td class="py-3 px-4">Site Security</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">14</td>
-                                <td class="py-3 px-4">Fire road</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">14</td><td class="py-3 px-4">Fire road</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                             <tr class="hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">15</td>
-                                <td class="py-3 px-4">Other</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input !py-1.5 !text-sm !shadow-none border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></td>
+                                <td class="py-3 px-4 text-center text-neutral-400">15</td><td class="py-3 px-4">Other</td>
+                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- RIGHT: placeholder -->
-            <div class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
-                <div class="h-full w-full flex flex-col items-center justify-center opacity-40">
-                    <p class="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-2">Cart / Summary</p>
-                    <p class="text-xs text-neutral-400">(Awaiting Shopping Cart Integration)</p>
+            <div class="xl:col-span-4 bg-[#f8f9fa] p-8 flex flex-col h-full border-t xl:border-t-0 border-neutral-200">
+                <div class="mb-6 border-b border-neutral-200 pb-4">
+                    <h3 class="text-lg font-bold text-neutral-900">Material Cart</h3>
+                    <p class="text-xs text-neutral-500 mt-1" id="db-status">Loading databases...</p>
+                </div>
+
+                <div class="flex flex-col gap-3 mb-6">
+                    <label class="text-xs font-bold text-neutral-500 uppercase">1. Search Database</label>
+                    
+                    <select id="category-selector" onchange="updateMaterialDropdown()" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
+                        <option value="">-- Select Material Category --</option>
+                        </select>
+
+                    <label class="text-xs font-bold text-neutral-500 uppercase mt-2">2. Select Materials</label>
+                    
+                    <div id="material-checkbox-list" class="w-full bg-white border border-neutral-200 rounded-lg p-2 text-sm h-56 overflow-y-auto flex flex-col shadow-inner">
+                        <div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>
+                    </div>
+
+                    <button onclick="addSelectedToCart()" class="w-full py-2.5 bg-black hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg transition mt-2 shadow-sm">
+                        Add Selected to Cart
+                    </button>
+                </div>
+
+                <div id="cart-items" class="flex-1 overflow-y-auto space-y-3 pr-2 pb-4">
+                    <div id="empty-cart-msg" class="text-sm text-neutral-400 text-center mt-10">Estimate cart is empty</div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-neutral-200 flex items-center justify-between bg-[#f8f9fa] sticky bottom-0 z-10">
+                    <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Grand Total</span>
+                    <span id="grand-total" class="text-2xl font-bold text-neutral-900">₱0.00</span>
                 </div>
             </div>
 
@@ -210,19 +218,291 @@
     </main>
 
     <script>
-        window.onload = function() {
+        // ============================================================
+        // 1. STATE & CONFIGURATION
+        // ============================================================
+        
+        // This array mirrors your `CATEGORY_FILES` from parser.js
+        const DB_CONFIG = [
+            { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
+            { id: 'timber_formworks', file: 'data/timber_formworks.json', schema: 'simple', label: 'Timber Formworks' },
+            { id: 'roofing', file: 'data/roofing.json', schema: 'simple', label: 'Roofing' },
+            { id: 'steel_truss', file: 'data/steel_truss.json', schema: 'simple', label: 'Steel Truss' },
+            { id: 'painting_works', file: 'data/painting_works.json', schema: 'simple', label: 'Painting Works' },
+            { id: 'electrical', file: 'data/electrical.json', schema: 'simple', label: 'Electrical' },
+            { id: 'masonry', file: 'data/masonry.json', schema: 'masonry', label: 'Masonry' },
+            { id: 'fencing', file: 'data/fencing.json', schema: 'simple', label: 'Fencing' },
+            { id: 'ceiling', file: 'data/ceiling.json', schema: 'simple', label: 'Ceiling' },
+            { id: 'plumbing', file: 'data/plumbing.json', schema: 'simple', label: 'Plumbing' },
+            { id: 'rebars', file: 'data/rebars.json', schema: 'rebars', label: 'Rebars' },
+            { id: 'concrete_mix', file: 'data/concrete_mix.json', schema: 'concrete_mix', label: 'Concrete Mix' },
+            { id: 'equipment', file: 'data/equipment.json', schema: 'equipment', label: 'Equipment' },
+            { id: 'pipes', file: 'data/pipes.json', schema: 'pipes', label: 'Pipes' }
+        ];
+
+        // Our unified, normalized database: { "unique_id": { name, price, unit, category } }
+        let MASTER_DB = {}; 
+        let cart = []; // Array of assigned { id, materialId, quantity }
+
+        // ============================================================
+        // 2. INITIALIZATION & DATA FETCHING
+        // ============================================================
+        document.addEventListener("DOMContentLoaded", () => {
             if (typeof Auth !== 'undefined') Auth.requireLogin();
-        };
+            fetchAllDatabases();
+        });
+
+        async function fetchAllDatabases() {
+            const statusEl = document.getElementById('db-status');
+            let loadedCount = 0;
+
+            // Fetch all 14 categories in parallel
+            await Promise.all(DB_CONFIG.map(async (config) => {
+                const urls = [
+                    `/${config.file}`,
+                    `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`
+                ];
+
+                for (const url of urls) {
+                    try {
+                        const res = await fetch(url);
+                        if (res.ok) {
+                            const rawData = await res.json();
+                            normalizeMaterialData(config, rawData);
+                            loadedCount++;
+                            break; // Stop trying URLs if successful
+                        }
+                    } catch (e) {
+                        // Suppress individual errors, rely on fallback mechanism
+                    }
+                }
+            }));
+
+            // Build the Category dropdown
+            populateCategoryDropdown();
+
+            if (loadedCount > 0) {
+                statusEl.textContent = `Live DB Active (${loadedCount} modules loaded)`;
+                statusEl.className = "text-xs font-semibold text-emerald-600 mt-1";
+            } else {
+                statusEl.textContent = "Offline Mode: No materials loaded.";
+                statusEl.className = "text-xs font-semibold text-rose-500 mt-1";
+            }
+        }
+
+        // ============================================================
+        // 3. SCHEMA NORMALIZATION
+        // Translates your 6 different JSON structures into 1 standard
+        // ============================================================
+        function normalizeMaterialData(config, data) {
+            if (!data) return;
+
+            const addEntry = (id, name, price, unit) => {
+                MASTER_DB[id] = { name, price: price || 0, unit: unit || 'unit', category: config.id };
+            };
+
+            try {
+                if (config.schema === 'simple') {
+                    data.forEach((item, idx) => {
+                        addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit);
+                    });
+                } 
+                else if (config.schema === 'masonry') {
+                    if (data.prices) {
+                        data.prices.forEach((item, idx) => {
+                            addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit);
+                        });
+                    }
+                } 
+                else if (config.schema === 'rebars') {
+                    data.forEach((item, idx) => {
+                        const name = `${item.spec} - ${item.size} (${item.length})`;
+                        addEntry(`${config.id}_${idx}`, name, item.price_php, "pc");
+                    });
+                } 
+                else if (config.schema === 'concrete_mix') {
+                    data.forEach((item, idx) => {
+                        const name = `${item.product} (${item.curing_time})`;
+                        addEntry(`${config.id}_${idx}`, name, item.price_php, "cu.m");
+                    });
+                } 
+                else if (config.schema === 'equipment') {
+                    data.forEach((item, idx) => {
+                        // Defaulting to the minimum rate for the estimate baseline
+                        const name = `[${item.category}] ${item.name}`;
+                        addEntry(`${config.id}_${idx}`, name, item.rate_min_php, item.unit);
+                    });
+                } 
+                else if (config.schema === 'pipes') {
+                    let pipeIdx = 0;
+                    if (data.nominal_size_unit_price) {
+                        data.nominal_size_unit_price.forEach(item => {
+                            addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english} (${item.metric_mm}mm)`, item.price_per_6m_php, "6m");
+                        });
+                    }
+                    if (data.seamless_galvanized_steel) {
+                        data.seamless_galvanized_steel.forEach(item => {
+                            addEntry(`pipes_${pipeIdx++}`, `Seamless: ${item.description}`, item.price_per_length_php, "length");
+                        });
+                    }
+                    if (data.erw_welded_galvanized_steel) {
+                        data.erw_welded_galvanized_steel.forEach(item => {
+                            addEntry(`pipes_${pipeIdx++}`, `ERW Welded: ${item.description}`, item.price_per_length_php, "length");
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error(`Error normalizing schema for ${config.id}:`, error);
+            }
+        }
+
+        // ============================================================
+        // 4. UI POPULATION & EVENT LISTENERS
+        // ============================================================
+        function populateCategoryDropdown() {
+            const select = document.getElementById('category-selector');
+            DB_CONFIG.forEach(config => {
+                // Only show categories that successfully loaded data
+                const hasData = Object.values(MASTER_DB).some(mat => mat.category === config.id);
+                if (hasData) {
+                    const option = document.createElement('option');
+                    option.value = config.id;
+                    option.textContent = config.label;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function updateMaterialDropdown() {
+            const catId = document.getElementById('category-selector').value;
+            const container = document.getElementById('material-checkbox-list');
+            
+            container.innerHTML = ''; // Clear current
+
+            if (!catId) {
+                container.innerHTML = '<div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>';
+                return;
+            }
+            
+            // Populate with checkboxes matching the category
+            for (const [key, mat] of Object.entries(MASTER_DB)) {
+                if (mat.category === catId) {
+                    const label = document.createElement('label');
+                    label.className = "flex items-start gap-3 p-2 hover:bg-neutral-50 rounded cursor-pointer border border-transparent hover:border-neutral-200 transition-colors";
+                    label.innerHTML = `
+                        <input type="checkbox" value="${key}" class="mt-0.5 material-checkbox w-4 h-4 text-blue-600 rounded border-neutral-300 focus:ring-blue-500 cursor-pointer">
+                        <div class="flex-1 select-none">
+                            <div class="font-medium text-neutral-800 leading-tight">${mat.name}</div>
+                            <div class="text-xs text-blue-600 font-semibold mt-0.5">₱${mat.price.toLocaleString(undefined, {minimumFractionDigits: 2})} <span class="text-neutral-400 font-normal">/ ${mat.unit}</span></div>
+                        </div>
+                    `;
+                    container.appendChild(label);
+                }
+            }
+        }
+
+        // ============================================================
+        // 5. CART LOGIC & RENDER
+        // ============================================================
+        function addSelectedToCart() {
+            const checkboxes = document.querySelectorAll('.material-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                return alert("Please check at least one material to add.");
+            }
+
+            let addedCount = 0;
+
+            checkboxes.forEach(cb => {
+                const materialId = cb.value;
+                const exists = cart.find(item => item.materialId === materialId);
+                
+                // Only add if it isn't already in the cart
+                if (!exists) {
+                    cart.push({
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                        materialId: materialId,
+                        quantity: 0 // Default quantity is 0, user edits in cart
+                    });
+                    addedCount++;
+                }
+                cb.checked = false; // Reset checkbox after adding
+            });
+
+            if (addedCount === 0) {
+                alert("The selected materials are already in your cart!");
+            } else {
+                renderCart();
+            }
+        }
+
+        function removeFromCart(cartItemId) {
+            cart = cart.filter(item => item.id !== cartItemId);
+            renderCart();
+        }
+
+        function updateCartItemQuantity(cartItemId, newQuantity) {
+            const item = cart.find(item => item.id === cartItemId);
+            if (item) {
+                item.quantity = parseFloat(newQuantity) || 0;
+                renderCart();
+            }
+        }
+
+        function renderCart() {
+            const cartContainer = document.getElementById('cart-items');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            let grandTotal = 0;
+
+            cartContainer.innerHTML = '';
+
+            if (cart.length === 0) {
+                cartContainer.appendChild(emptyMsg);
+                document.getElementById('grand-total').textContent = '₱0.00';
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            cart.forEach(item => {
+                const material = MASTER_DB[item.materialId];
+                if (!material) return; 
+
+                const totalCost = item.quantity * material.price;
+                grandTotal += totalCost;
+
+                const div = document.createElement('div');
+                div.className = "bg-white p-3.5 rounded-xl border border-neutral-200 shadow-sm relative group transition-all";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-bold text-neutral-900 pr-4 leading-tight">${material.name}</div>
+                        <button onclick="removeFromCart('${item.id}')" class="text-neutral-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100 bg-white rounded-full p-0.5">✕</button>
+                    </div>
+                    
+                    <div class="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
+                        <div class="flex items-center gap-2">
+                            <input type="number" min="0" value="${item.quantity || ''}" placeholder="0" 
+                                   oninput="updateCartItemQuantity('${item.id}', this.value)" 
+                                   class="w-16 px-2 py-1 text-sm text-center border border-neutral-300 rounded focus:border-blue-500 outline-none" />
+                            <span class="text-xs text-neutral-500 font-medium">${material.unit}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-neutral-400">@ ₱${material.price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                            <div class="text-sm font-black text-neutral-800">₱${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        </div>
+                    </div>
+                `;
+                cartContainer.appendChild(div);
+            });
+
+            document.getElementById('grand-total').textContent = `₱${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
 
         function goBackMain() {
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';
             setTimeout(function() {
-                if (typeof Auth !== 'undefined') {
-                    sessionStorage.removeItem('ccc_token');
-                    sessionStorage.removeItem('ccc_email');
-                }
-                window.location.href = 'index.html';
+                if (typeof Auth !== 'undefined') Auth.logout();
+                else window.location.href = 'index.html';
             }, 200);
         }
     </script>

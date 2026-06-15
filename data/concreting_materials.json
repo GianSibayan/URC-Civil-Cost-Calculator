@@ -153,5 +153,10 @@
     "name": "testing",
     "unit": "ml",
     "price_php": 100
+  },
+  {
+    "name": "testing 2",
+    "unit": "lbs",
+    "price_php": 7
   }
 ]

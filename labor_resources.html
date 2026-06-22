@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URC CCC — Labor & Resources</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script src="/src/auth.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter','-apple-system','BlinkMacSystemFont','"SF Pro"','"SF Pro Text"','"SF Pro Display"','"Segoe UI"','Roboto','Helvetica','Arial','sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #fff; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .dim-input {
+            width: 100%; background: white; border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 12px; padding: 8px 14px; font-size: 15px; font-weight: 600;
+            color: #111; font-family: 'Inter', sans-serif; text-align: center; outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .dim-input:focus { border-color: rgba(0,0,0,0.25); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+        .dim-input::placeholder { color: #bbb; font-weight: 400; }
+    </style>
+</head>
+<body class="h-full flex bg-white font-sans overflow-hidden select-none">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
+        <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
+        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
+
+        <nav class="flex-1 mt-8 space-y-1">
+            <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Building Calculator
+            </button>
+            <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Footing &amp; Pedestal Cal.
+            </button>
+            <button onclick="window.location.href='cost_estimate_scope.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Cost Estimate Scope
+            </button>
+            <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">
+                Labor &amp; Resources
+            </button>
+        </nav>
+
+        <div class="pt-4 border-t border-neutral-100 mt-auto">
+            <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+                Main Page
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+
+        <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
+            <h2 class="text-2xl font-bold text-neutral-900">Labor &amp; Resources</h2>
+            <div class="flex items-center gap-2">
+                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
+                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
+            </div>
+        </header>
+
+        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
+
+            <!-- LEFT: labor tables -->
+            <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Labor &amp; Equipment Rates</h3>
+                    <p class="text-sm text-neutral-500 mt-1">Define manpower headcount and days required to compute total labor costs.</p>
+                </div>
+
+                <!-- Regional -->
+                <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm mb-8">
+                    <div class="bg-slate-700 px-5 py-3"><h4 class="text-sm font-semibold text-white tracking-wide">Regional Labor Rates</h4></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead><tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-xs text-neutral-500 uppercase tracking-wider">
+                                <th class="py-3 px-4 font-semibold border-r border-neutral-200/80">Region</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-32">Rate / Day (₱)</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Headcount</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Days</th>
+                                <th class="py-3 px-4 font-semibold text-right w-36">Total (₱)</th>
+                            </tr></thead>
+                            <tbody class="text-sm font-medium text-neutral-800">
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                    <td class="py-3 px-4 border-r border-neutral-100">NCR</td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="695" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('ncr','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('ncr','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
+                                    <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-ncr">0.00</td>
+                                </tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                                    <td class="py-3 px-4 border-r border-neutral-100">VISAYAS</td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="500" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('visayas','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('visayas','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
+                                    <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-visayas">0.00</td>
+                                </tr>
+                                <tr class="hover:bg-neutral-50 transition-colors">
+                                    <td class="py-3 px-4 border-r border-neutral-100">MINDANAO</td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="500" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mindanao','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
+                                    <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mindanao','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
+                                    <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-mindanao">0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Skilled Workers -->
+                <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm mb-8">
+                    <div class="bg-slate-700 px-5 py-3"><h4 class="text-sm font-semibold text-white tracking-wide">Skilled Workers</h4></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead><tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-xs text-neutral-500 uppercase tracking-wider">
+                                <th class="py-3 px-4 font-semibold border-r border-neutral-200/80">Skill</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-32">Rate / Day (₱)</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Headcount</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Days</th>
+                                <th class="py-3 px-4 font-semibold text-right w-36">Total (₱)</th>
+                            </tr></thead>
+                            <tbody class="text-sm font-medium text-neutral-800">
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">CARPENTER</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('carpenter','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('carpenter','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-carpenter">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">MASON</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mason','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mason','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-mason">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">WELDER</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="815" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('welder','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('welder','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-welder">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">ELECTRICIAN</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="875" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electrician','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electrician','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-electrician">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">PLUMBER</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('plumber','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('plumber','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-plumber">0.00</td></tr>
+                                <tr class="hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">PIPE FITTER</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('pipeFitter','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('pipeFitter','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-pipeFitter">0.00</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Engineers -->
+                <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm mb-8">
+                    <div class="bg-slate-700 px-5 py-3"><h4 class="text-sm font-semibold text-white tracking-wide">Senior Engineers &amp; Specialists</h4></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[700px]">
+                            <thead><tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-xs text-neutral-500 uppercase tracking-wider">
+                                <th class="py-3 px-4 font-semibold border-r border-neutral-200/80">Engineer</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-32">Rate / Day (₱)</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Headcount</th>
+                                <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Days</th>
+                                <th class="py-3 px-4 font-semibold text-right w-36">Total (₱)</th>
+                            </tr></thead>
+                            <tbody class="text-sm font-medium text-neutral-800">
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">CIVIL</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="2700" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('civilEng','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('civilEng','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-civilEng">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">ELECTRICAL</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="2100" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electricalEng','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electricalEng','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-electricalEng">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">MECHANICAL</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="2500" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mechanicalEng','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mechanicalEng','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-mechanicalEng">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">GENERAL ENGINEER</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="1700" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('generalEng','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('generalEng','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-generalEng">0.00</td></tr>
+                                <tr class="border-b border-neutral-100 hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">IT / SOFTWARE ENGINEER</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="2500" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('itEng','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('itEng','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-itEng">0.00</td></tr>
+                                <tr class="hover:bg-neutral-50"><td class="py-3 px-4 border-r border-neutral-100">CONSULTANT</td><td class="py-2 px-2 border-r text-center"><input type="number" readonly value="5000" class="dim-input !py-1.5 !px-2 !text-sm border-transparent bg-neutral-100" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('consultant','count',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-2 px-2 border-r text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('consultant','days',this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td><td class="py-3 px-4 text-right text-neutral-500" id="labor-total-consultant">0.00</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Equipment + Profit -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                        <h4 class="text-base font-bold text-neutral-800 mb-2">Est. Equipment Costs (₱)</h4>
+                        <input id="input-globalEquipment" type="number" min="0" placeholder="0" oninput="handleInput('globalEquipment', this.value)" class="dim-input select-text" />
+                    </div>
+                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                        <h4 class="text-base font-bold text-neutral-800 mb-2">Target Profit Margin (%)</h4>
+                        <input id="input-globalProfit" type="number" min="0" max="100" placeholder="0" oninput="handleInput('globalProfit', this.value)" class="dim-input select-text" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: summary -->
+            <div class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
+                <div class="sticky top-0 space-y-6">
+                    <div>
+                        <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
+                        <p class="text-lg font-bold text-neutral-800 mt-1">Cost Ledger</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
+                        <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
+                        <div class="space-y-2 text-sm text-neutral-600">
+                            <div class="flex justify-between"><span>Labor Costs</span><span id="summary-labor" class="font-bold text-blue-600">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Equipment Costs</span><span id="summary-equipment" class="font-bold text-neutral-900">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Overhead &amp; Profit</span><span id="summary-profit" class="font-bold text-neutral-900">₱0.00</span></div>
+                        </div>
+                        <div class="border-t border-neutral-200 pt-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
+                                <p class="text-[10px] text-neutral-400">Labor + Equipment + Profit</p>
+                            </div>
+                            <div class="text-2xl font-black text-neutral-900" id="summary-total">₱0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var laborState = {
+            ncr:          { rate: 695,  count: 0, days: 0 },
+            visayas:      { rate: 500,  count: 0, days: 0 },
+            mindanao:     { rate: 500,  count: 0, days: 0 },
+            carpenter:    { rate: 700,  count: 0, days: 0 },
+            mason:        { rate: 700,  count: 0, days: 0 },
+            welder:       { rate: 815,  count: 0, days: 0 },
+            electrician:  { rate: 875,  count: 0, days: 0 },
+            plumber:      { rate: 700,  count: 0, days: 0 },
+            pipeFitter:   { rate: 700,  count: 0, days: 0 },
+            civilEng:     { rate: 2700, count: 0, days: 0 },
+            electricalEng:{ rate: 2100, count: 0, days: 0 },
+            mechanicalEng:{ rate: 2500, count: 0, days: 0 },
+            generalEng:   { rate: 1700, count: 0, days: 0 },
+            itEng:        { rate: 2500, count: 0, days: 0 },
+            consultant:   { rate: 5000, count: 0, days: 0 }
+        };
+        var globalEquipment = 0, globalProfit = 0;
+
+        function handleLabor(role, field, value) {
+            var parsed = parseFloat(value);
+            laborState[role][field] = isNaN(parsed) ? 0 : parsed;
+            var rowTotal = laborState[role].rate * laborState[role].count * laborState[role].days;
+            var rowEl = document.getElementById('labor-total-' + role);
+            if (rowEl) {
+                rowEl.textContent = rowTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                rowEl.classList.toggle('font-bold', rowTotal > 0);
+                rowEl.classList.toggle('text-neutral-900', rowTotal > 0);
+            }
+            saveToCache(); updateSummary();
+        }
+
+        function handleInput(field, value) {
+            var parsed = parseFloat(value);
+            if (field === 'globalEquipment') globalEquipment = isNaN(parsed) ? 0 : parsed;
+            if (field === 'globalProfit')    globalProfit    = isNaN(parsed) ? 0 : parsed;
+            saveToCache(); updateSummary();
+        }
+
+        function updateSummary() {
+            var laborCost = 0;
+            Object.keys(laborState).forEach(function(role) {
+                var r = laborState[role];
+                laborCost += r.rate * r.count * r.days;
+            });
+            var base       = laborCost + globalEquipment;
+            var profitCost = base * (globalProfit / 100);
+            var grandTotal = base + profitCost;
+            function fmt(n) { return '\u20b1' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            document.getElementById('summary-labor').textContent     = fmt(laborCost);
+            document.getElementById('summary-equipment').textContent = fmt(globalEquipment);
+            document.getElementById('summary-profit').textContent    = fmt(profitCost);
+            document.getElementById('summary-total').textContent     = fmt(grandTotal);
+        }
+
+        function saveToCache() {
+            try {
+                localStorage.setItem('urc_ccc_labor_2026', JSON.stringify({
+                    laborState: laborState, globalEquipment: globalEquipment, globalProfit: globalProfit
+                }));
+            } catch(e) {}
+        }
+
+        function loadFromCache() {
+            try {
+                var raw = localStorage.getItem('urc_ccc_labor_2026');
+                if (!raw) return;
+                var p = JSON.parse(raw);
+                if (p.laborState) {
+                    Object.keys(p.laborState).forEach(function(role) {
+                        if (laborState[role]) {
+                            laborState[role].count = p.laborState[role].count || 0;
+                            laborState[role].days  = p.laborState[role].days  || 0;
+                        }
+                    });
+                }
+                if (p.globalEquipment) globalEquipment = p.globalEquipment;
+                if (p.globalProfit)    globalProfit    = p.globalProfit;
+                // Restore inputs
+                Object.keys(laborState).forEach(function(role) {
+                    var r = laborState[role];
+                    var ic = document.querySelector('input[oninput="handleLabor(\'' + role + '\',\'count\',this.value)"]');
+                    var id = document.querySelector('input[oninput="handleLabor(\'' + role + '\',\'days\',this.value)"]');
+                    if (ic && r.count !== 0) ic.value = r.count;
+                    if (id && r.days  !== 0) id.value = r.days;
+                    if (r.count > 0 && r.days > 0) {
+                        var rt = r.rate * r.count * r.days;
+                        var rowEl = document.getElementById('labor-total-' + role);
+                        if (rowEl) { rowEl.textContent = rt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); rowEl.classList.add('font-bold','text-neutral-900'); }
+                    }
+                });
+                var eqEl = document.getElementById('input-globalEquipment');
+                var prEl = document.getElementById('input-globalProfit');
+                if (eqEl && globalEquipment !== 0) eqEl.value = globalEquipment;
+                if (prEl && globalProfit    !== 0) prEl.value = globalProfit;
+            } catch(e) {}
+            updateSummary();
+        }
+
+        function goBackMain() {
+            document.body.style.transition = 'opacity 0.2s';
+            document.body.style.opacity = '0';
+            setTimeout(function() { Auth.logout(); }, 200);
+        }
+
+        window.onload = function() {
+            if (typeof Auth !== 'undefined') Auth.requireLogin();
+            loadFromCache();
+        };
+    </script>
+</body>
+</html>

@@ -1366,6 +1366,22 @@ async function applyEscalation() {
     btn.textContent = 'Saving…'; btn.disabled = true;
 
     let failed = 0;
+
+    // SNAPSHOT: save pre-escalation prices before overwriting
+    const prevYear = year - 1;
+    const pricesJsonItem = _escalationPreviewData.find(i => i.key === '__prices_json__');
+    if (pricesJsonItem && pricesJsonItem.scaledData) {
+        if (!pricesJsonItem.scaledData.meta.price_snapshots)
+            pricesJsonItem.scaledData.meta.price_snapshots = {};
+        const snapshot = { year: prevYear, captured: new Date().toISOString().split('T')[0], categories: {} };
+        for (const item of _escalationPreviewData) {
+            if (item.error || item.key === '__prices_json__') continue;
+            if (categoryData[item.key]) snapshot.categories[item.key] = JSON.parse(JSON.stringify(categoryData[item.key]));
+        }
+        if (window.PRICES) snapshot.core_rates = JSON.parse(JSON.stringify(window.PRICES.tab1_tab2));
+        pricesJsonItem.scaledData.meta.price_snapshots[prevYear] = snapshot;
+    }
+
     for (const item of _escalationPreviewData) {
         if (item.error || !item.scaledData) continue;
         if (item.key === '__prices_json__') {
@@ -1401,19 +1417,74 @@ function renderEscalationHistory() {
     const el = document.getElementById('escalation-history');
     if (!el) return;
     const history = window.PRICES?.meta?.escalation_history;
+    const snapshots = window.PRICES?.meta?.price_snapshots || {};
     if (!history || !history.length) {
         el.innerHTML = '<p class="text-xs text-neutral-400 italic">No escalation history found.</p>';
         return;
     }
-    el.innerHTML = [...history].reverse().map(h =>
-        `<div class="flex items-center justify-between px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm">
+    el.innerHTML = [...history].reverse().map(h => {
+        const prevYear = h.year - 1;
+        const hasSnapshot = !!snapshots[prevYear];
+        return `<div class="flex items-center justify-between px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm">
             <div>
                 <span class="font-bold text-neutral-800">${h.year}</span>
                 <span class="text-neutral-400 ml-2 text-xs">applied ${h.date} by ${h.applied_by||'admin'}</span>
             </div>
-            <span class="font-bold text-emerald-600">+${h.rate}%</span>
-        </div>`
-    ).join('');
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-emerald-600">+${h.rate}%</span>
+                ${hasSnapshot
+                    ? `<button onclick="revertToYear(${prevYear})"
+                        class="text-xs px-2.5 py-1 border border-neutral-300 rounded-lg text-neutral-500 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer font-semibold">
+                        Revert to ${prevYear}
+                      </button>`
+                    : `<span class="text-[10px] text-neutral-300 italic">no snapshot</span>`
+                }
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function revertToYear(snapYear) {
+    const snapshots = window.PRICES?.meta?.price_snapshots;
+    if (!snapshots || !snapshots[snapYear]) {
+        showToast('No snapshot found for ' + snapYear + '.', 'error'); return;
+    }
+    if (!confirm('Revert ALL prices to the ' + snapYear + ' snapshot? This overwrites current prices on GitHub and cannot be undone.')) return;
+
+    const snapshot = snapshots[snapYear];
+    let failed = 0;
+
+    // Revert each category JSON
+    for (const key of Object.keys(snapshot.categories || {})) {
+        const data = snapshot.categories[key];
+        const ok = await Parser.saveBulk(key, data);
+        if (ok) categoryData[key] = data; else failed++;
+    }
+
+    // Revert core rates in prices.json
+    if (snapshot.core_rates && window.PRICES) {
+        const p = JSON.parse(JSON.stringify(window.PRICES));
+        p.tab1_tab2 = snapshot.core_rates;
+        // Log the revert in escalation history
+        if (!p.meta.escalation_history) p.meta.escalation_history = [];
+        p.meta.escalation_history.push({
+            year: snapYear,
+            rate: 0,
+            date: new Date().toISOString().split('T')[0],
+            applied_by: (typeof Auth !== 'undefined' ? Auth.getEmail?.() : null) || 'admin',
+            note: 'REVERTED from ' + (snapYear + 1) + ' snapshot'
+        });
+        p.meta.last_updated = new Date().toISOString().split('T')[0];
+        const ok = await Parser.savePricesJson(p);
+        if (ok) window.PRICES = p; else failed++;
+    }
+
+    if (failed === 0) {
+        showToast('Reverted to ' + snapYear + ' prices successfully.', 'success');
+        renderEscalationHistory();
+    } else {
+        showToast('Revert done with ' + failed + ' error(s). Check console.', 'error');
+    }
 }
 
 function showToast(message, type = 'success') {

@@ -1,7 +1,7 @@
 # Civil Cost Calculator (CCC)
 > Engineering Services Department — Universal Robina Corporation / JG Summit Holdings
 
-A web-based civil project cost estimation tool built to replace the department's existing Excel-based calculator (`WAREHOUSE_BUILDING_CALCULATOR.xlsx`). Engineers input building parameters and receive detailed cost estimates. Admins manage the price database through a protected panel.
+A web-based civil project cost estimation tool built to replace the department's existing Excel-based workflow (`WAREHOUSE_BUILDING_CALCULATOR.xlsx`). Engineers input building parameters and receive detailed cost estimates. Admins manage the price database through a protected panel.
 
 ## Status
 🚧 In active development — June 2026
@@ -10,26 +10,33 @@ A web-based civil project cost estimation tool built to replace the department's
 
 ## What This App Does
 
-Four modules, all in one app:
+Five modules across four HTML pages:
 
-**1. Building Calculator** — Engineer inputs dimensions (length, width, clear height, stories, mezzanine %), structure selections (structure type, roof, wall cladding, slab thickness), bay spacing, and capacity parameters. App auto-calculates floor area, building volume, total bay spacing, storage area, rack levels, and total pallet positions live as you type.
+**1. Building Calculator** (`calculator.html`)
+Engineer inputs dimensions (length, width, clear height, stories, mezzanine %), structure selections (structure type, roof, wall cladding, slab thickness), bay spacing, and capacity parameters. App auto-calculates floor area, building volume, total connection nodes, storage area, rack levels, and total pallet positions live. Right panel shows a live bar chart and Bill of Quantities breakdown.
 
-**2. Footing & Pedestal Calculator** — Engineer inputs footing/pedestal dimensions and selects concrete class. App auto-calculates concrete volume, rebar weight, excavation volume, formwork area, labor rate, and total cost in ₱ using rates from `prices.json`.
+**2. Footing & Pedestal Calculator** (`calculator.html`)
+Engineer inputs footing/pedestal dimensions and selects concrete class. App auto-calculates concrete volume, rebar weight, excavation volume, formwork area, labor rate, and total cost in ₱ using rates fetched from `prices.json`.
 
-**3. Cost Estimate Scope** — A full line-item breakdown of every construction cost category across multiple buildings (site clearance, yard utilities, building shell, interior finishing, mechanical, electrical, engineering management, risk funds, etc.). Engineer inputs a lump sum cost per line item; app sums by category and applies escalation and place factors to produce a Total Predicted Cost.
+**3. Cost Estimate Scope** (`cost_estimate_scope.html`)
+Structured line-item form replicating the `COST ESTIMATE SCOPE` sheet from the Excel reference. Organized into accordion sections by scope category (Yard & Underground, Yard Utilities, Plant Utilities, Substation, Building Shell, Interior Finishing, Electrical, Mechanical). Engineer checks off items in scope. Material cart with live DB lookup from the 14 category JSONs. Subtotals by category, grand total, and adjusted total (× escalation factor × place factor from `prices.json`).
 
-**4. Benchmark Data** — Read-only reference table showing historical real-world project costs (P&G data, 11 international projects) for engineers to sanity-check their estimates.
+**4. Labor & Resources** (`labor_resources.html`)
+Engineer enters headcount and days per labor type (regional workers, skilled trades, senior engineers, consultants) at fixed daily rates. App computes row totals and a grand total live. Equipment costs and profit margin inputs. Separate localStorage cache so it persists independently from the calculator.
+
+**5. Admin Panel** (`admin.html`)
+Protected price management interface. Admins can view, edit, save individual rows, add rows, import from Excel/CSV, and export all 14 category price lists. Core rates (concrete class prices, rebar, excavation, labor, escalation/place factors) are edited directly. Includes an Annual Escalation tool (see below).
 
 ---
 
 ## Access & Auth
 
 - All users log in with a **URC email + password**
-- No public access — login required to use any part of the app
-- User credentials stored in Vercel environment variables (`USERS`)
-- Once logged in, full access to calculator and admin panel
+- No public access — login required for all pages
+- User credentials stored in Vercel environment variable (`USERS`)
 - Session stored in `sessionStorage` — clears on browser close
-- Password changes: contact Gian (Vercel owner) to update
+- `Auth.logout()` clears session and redirects to `index.html`
+- Password changes: contact Gian (Vercel owner) to update the `USERS` env var
 
 ---
 
@@ -38,11 +45,13 @@ Four modules, all in one app:
 | Layer | Technology |
 |---|---|
 | Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Excel Parsing | SheetJS (xlsx) — CDN |
+| Styling | Tailwind CSS (CDN) |
+| Charts | Chart.js (CDN) |
+| Excel parsing | SheetJS / xlsx (CDN) |
 | Hosting | Vercel |
-| Source Control | GitHub (private repo) |
-| Price Database | `prices.json` + 14 category JSONs in `/data/` |
-| Auth + Price Updates | Vercel Serverless Functions |
+| Source control | GitHub (private repo) |
+| Price database | `prices.json` + 14 category JSONs in `/data/` |
+| Auth + price saves | Vercel Serverless Functions |
 | Currency | Philippine Peso (₱) |
 
 ---
@@ -51,104 +60,138 @@ Four modules, all in one app:
 
 ```
 URC-Civil-Cost-Calculator/
-├── index.html              # Landing / login page
-├── calculator.html         # Main app — calculator tabs
-├── admin.html              # Admin panel — price management
-├── prices.json             # Footing & Pedestal rates + Tab 3 unit rates
-│                           # concrete classes, rebar, labor, escalation factor, etc.
-├── data/                   # Price list reference JSONs (14 files)
+├── index.html                  # Landing / login page
+├── calculator.html             # Building + Footing calculator tabs
+├── cost_estimate_scope.html    # Cost Estimate Scope page (separate from calculator)
+├── labor_resources.html        # Labor & Resources rates page
+├── admin.html                  # Admin panel — price management + escalation tool
+├── prices.json                 # Core rates used in calculations:
+│                               #   concrete class prices, rebar, excavation,
+│                               #   forms, labor, overhead rate, escalation factor,
+│                               #   place factor, escalation history, price snapshots
+├── data/                       # 14 price list JSONs (sourced from CONSTRUCTION_PRICE_LIST_2.xlsx)
 │   ├── concreting_materials.json
 │   ├── timber_formworks.json
 │   ├── roofing.json
 │   ├── steel_truss.json
 │   ├── painting_works.json
 │   ├── electrical.json
-│   ├── masonry.json        # Includes concrete proportion table
+│   ├── masonry.json            # Has prices[] + concrete_proportion_table[]
 │   ├── fencing.json
 │   ├── ceiling.json
 │   ├── plumbing.json
 │   ├── rebars.json
 │   ├── concrete_mix.json
-│   ├── equipment.json      # Rate ranges (min/max per hour)
-│   └── pipes.json          # 3 sub-tables: nominal, seamless, ERW welded
-├── assets/
-│   └── style.css           # Global styles
+│   ├── equipment.json          # Rate ranges: rate_min_php / rate_max_php
+│   └── pipes.json              # 3 sub-tables: nominal, seamless, ERW welded
 ├── src/
-│   ├── script.js           # All calculation logic
-│   │                       # Fetches prices.json on load
-│   ├── parser.js           # Category JSON loading, saving, export
-│   │                       # Handles all 14 /data/ JSONs + prices.json
-│   └── auth.js             # Frontend session token handling
+│   ├── auth.js                 # Frontend session handling (requireLogin, logout, getEmail)
+│   └── parser.js               # loadCategory, saveBulk, savePricesJson, downloadCategory
 ├── api/
-│   ├── auth.js             # Vercel function — validates email + password
-│   └── update-prices.js    # Vercel function — pushes any JSON file to GitHub
-│                           # Accepts filename param, validated against whitelist
-└── README.md
+│   ├── auth.js                 # Vercel serverless — validates credentials, returns token
+│   └── update-prices.js        # Vercel serverless — pushes any whitelisted JSON to GitHub
+├── assets/
+│   └── style.css
+└── vercel.json                 # Framework preset: "Other" (no build step)
 ```
 
 ---
 
 ## Vercel Environment Variables
 
-Set these in the Vercel dashboard before deploying:
+Set these in the Vercel dashboard (Settings → Environment Variables) before deploying:
 
-| Variable | Purpose |
+| Variable | Value |
 |---|---|
-| `USERS` | JSON string of allowed users — `[{"email":"...","password":"..."}]` |
-| `GITHUB_TOKEN` | Personal access token with repo write access |
+| `USERS` | JSON string — `[{"email":"...","password":"..."}]` |
+| `GITHUB_TOKEN` | Classic PAT with full `repo` scope |
 | `GITHUB_REPO` | `GianSibayan/URC-Civil-Cost-Calculator` |
-| `ADMIN_SECRET` | Secret used for session token validation |
+| `ADMIN_SECRET` | Secret string for session token signing |
 
-> Note: `GITHUB_FILE_PATH` is no longer used — `update-prices.js` now accepts the target filename in the request body and validates it against an internal whitelist.
+> After adding or changing env vars, redeploy for them to take effect: Deployments → latest → `...` → Redeploy.
+
+> `GITHUB_FILE_PATH` is no longer used — `update-prices.js` accepts the filename in the request body and validates against an internal whitelist.
 
 ---
 
 ## How Prices Work
 
 ### `prices.json`
-Single source of truth for rates used in calculations:
-- **Footing & Pedestal rates** — concrete class prices, rebar price/kg, excavation cost/m³, forms price/m², labor cost/day, overhead & profit rate, escalation factor, place factor
-- **Tab 3 unit rates** — PhilConstruct rates per line item (pending confirmation from Sir Tony, currently all 0)
+Single source of truth for all rates used in live calculations:
+- **`tab1_tab2`** — concrete class prices per m³ (keyed by class e.g. `C30/37`), rebar price/kg, excavation cost/m³, forms price/m², labor cost/day, overhead & profit rate, escalation factor, place factor, steel density, rebar weights per meter
+- **`meta`** — last_updated, escalation_history (array), price_snapshots (object keyed by year)
 
-### `/data/` folder (14 JSONs)
-Construction price list reference data sourced from `CONSTRUCTION_PRICE_LIST_2.xlsx`. Used as a reference panel in the admin panel and future Tab 3 material helper. Not used in live calculations yet.
+### `/data/` folder — 14 category JSONs
+Construction price list reference data. Each file has its own schema:
 
-Each file has its own schema:
-- **Simple** (10 files) — `{ name, unit, price_php }`
-- **rebars.json** — `{ spec, size, length, price_php }`
-- **concrete_mix.json** — `{ product, curing_time, price_php }`
-- **equipment.json** — `{ name, category, unit, rate_min_php, rate_max_php }`
-- **masonry.json** — `{ prices: [...], concrete_proportion_table: [...] }`
-- **pipes.json** — `{ nominal_size_unit_price, seamless_galvanized_steel, erw_welded_galvanized_steel }`
+| File | Schema |
+|---|---|
+| concreting_materials, timber_formworks, roofing, steel_truss, painting_works, electrical, fencing, ceiling, plumbing | `{ name, unit, price_php }` |
+| `rebars.json` | `{ spec, size, length, price_php }` |
+| `concrete_mix.json` | `{ product, curing_time, price_php }` |
+| `equipment.json` | `{ name, category, unit, rate_min_php, rate_max_php }` |
+| `masonry.json` | `{ prices: [{name, unit, price_php}], concrete_proportion_table: [...] }` |
+| `pipes.json` | `{ nominal_size_unit_price, seamless_galvanized_steel, erw_welded_galvanized_steel }` |
 
-Admins update prices via `admin.html` — edit inline per row or use "Save all changes". All changes are pushed to GitHub via Vercel serverless function and take effect on the next page load for all users. Each category can also be exported as Excel from the admin panel.
+Admins update prices via `admin.html`. All saves push to GitHub via the Vercel serverless function and take effect on the next page load for all users.
 
 ---
 
-## Known Blockers
+## Annual Price Escalation
 
-1. **Stretch + Estimated Total Cost formulas** (Tab 1) — dependent on `BuildingsBenchmarking rev 3.9 07.xlsm` stored locally on Sir Tony's machine. Currently manual input fields.
-2. **3 extra Total Bay Spacing outputs** (Tab 1) — formula unclear, needs Sir Tony clarification.
-3. **Tab 3 PhilConstruct unit rates** — all currently set to 0 in `prices.json` pending Sir Tony sharing the rate list.
-4. **Forms Area formula** (Tab 2) — needs verification with Sir Tony.
-5. **Benchmark Data** — Mean Spending Date, Business Area, Functionality rows broken due to missing linked `.xlsm` file. Cosmetic only.
+The Admin Panel includes an **Annual Escalation** tool (sidebar → Tools → Annual Escalation):
+
+1. Enter the **year** the new prices apply to (e.g. 2027) and the **escalation rate %** (e.g. 10)
+2. Click **Preview Changes** — loads all 14 JSONs and `prices.json`, applies the multiplier, and shows a before→after table per category
+3. Review the preview, then click **Confirm & Apply**
+
+**What it does on confirm:**
+- Multiplies every price field in all 14 category JSONs by `(1 + rate/100)`, rounded to 2 decimal places
+- Multiplies core rates in `prices.json` (concrete class prices, rebar, excavation, forms, labor) by the same factor
+- Saves a **price snapshot** of the pre-escalation values into `prices.json` under `meta.price_snapshots[year-1]`
+- Records the escalation in `meta.escalation_history` with year, rate, date, and who applied it
+
+**Reverting:**
+Each history entry shows a **"Revert to [year]"** button if a snapshot exists. Clicking it restores all category JSONs and core rates to the snapshotted values and logs the revert in escalation history. This is the only safe rollback path — GitHub commit history is the fallback if no snapshot exists.
+
+**Safeguard:** If escalation for the selected year was already applied, a warning banner appears before you can preview.
+
+---
+
+## Data Fetch Pattern
+
+All JSON fetches try two sources in order:
+1. **Relative path** (`/prices.json`, `/data/xxx.json`) — works on Vercel
+2. **Raw GitHub fallback** (`https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/...`) — fallback for local dev or CDN cache misses
 
 ---
 
 ## No Build Step
 
-Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open `index.html` in a browser or deploy directly to Vercel. Framework preset in Vercel dashboard must be set to **Other** (not Vite).
+Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open any `.html` file directly in a browser, or deploy to Vercel as-is. Framework preset in Vercel dashboard must be set to **Other** (not Vite, not Next.js).
+
+---
+
+## Known Blockers / Pending Items
+
+1. **Stretch + Estimated Total Cost formulas** (Building Calculator) — dependent on `BuildingsBenchmarking rev 3.9 07.xlsm` on Sir Tony's machine. Currently manual input fields.
+2. **3 extra Total Bay Spacing outputs** — formula unclear, needs Sir Tony clarification.
+3. **Tab 3 PhilConstruct unit rates** — pending Sir Tony sharing the rate list; currently `0` in `prices.json`.
+4. **Forms Area formula** (Footing Calculator) — needs verification.
+5. **Cost Estimate Scope cart integration** — right panel currently shows placeholder; shopping cart / per-item cost logic not yet wired.
+6. **Footing & Pedestal nav** in `calculator.html` — tab routing needs a flow fix (known, deferred).
+7. **Labor & Resources** data not yet fed back into the main cost breakdown in the calculator sidebar.
 
 ---
 
 ## Handover (For Future Interns)
 
-1. Ask Gian to add your URC email to `USERS` env variable in Vercel dashboard
-2. Ask Gian to add you as a GitHub repo collaborator
-3. Read `CLAUDE.md` in the repo for full dev context
-4. Read the Known Blockers section above — confirm status with Sir Tony
-5. Sir Tony owns the Excel reference file and PhilConstruct rate list
-6. All price list data lives in `/data/` — edit via `admin.html`, not directly in GitHub
+1. Ask Gian to add your URC email to the `USERS` env var in Vercel dashboard
+2. Ask Gian to add you as a GitHub repo collaborator (repo is private under `GianSibayan`)
+3. The repo stays under Gian's personal GitHub for post-internship portfolio continuity — Vercel and GitHub are on `gian.e.sibayan@gmail.com`
+4. All price list data lives in `/data/` — edit via `admin.html`, never directly on GitHub
+5. Run escalation in `admin.html` → Annual Escalation at the start of each new year
+6. Sir Tony owns the Excel reference file and PhilConstruct rate list — confirm any formula questions with him in the Monday 11AM drumbeat
 
 ---
 
@@ -156,8 +199,8 @@ Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open `index.htm
 
 | Role | Name |
 |---|---|
-| Backend, API, Logic, GitHub/Vercel | Gian Eugene P. Sibayan — GE Intern |
-| Frontend UI, Figma, HTML/CSS | Althea — GE Intern |
+| Backend, API, Logic, GitHub/Vercel | Gian Eugene P. Sibayan |
+| Frontend UI, Figma, Logic, HTML/CSS | Althea Antonio, Paolo Sarmiento |
 | Project Owner | Engr. Tony Pabilan |
 | Direct Supervisor | Engr. Emir Manansala |
 

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-    <!-- comment -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Cost Estimate Scope</title>
@@ -40,13 +39,13 @@
             width: 100%;
             background: white;
             border: 1.5px solid rgba(0,0,0,0.08);
-            border-radius: 12px;
-            padding: 8px 14px;
-            font-size: 15px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 14px;
             font-weight: 600;
             color: #111;
             font-family: 'Inter', sans-serif;
-            text-align: center;
+            text-align: right;
             outline: none;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
@@ -54,12 +53,32 @@
             border-color: rgba(0,0,0,0.25);
             box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
         }
-        .dim-input::placeholder { color: #bbb; font-weight: 400; }
+        .dim-input::placeholder { color: #bbb; font-weight: 400; text-align: center; }
+        
+        .tab-content { animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #summary-modal { backdrop-filter: blur(4px); }
     </style>
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
 
-    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="summary-modal" class="fixed inset-0 z-50 bg-black/40 hidden items-center justify-center opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="summary-modal-content">
+            <div class="px-6 py-4 border-b border-neutral-100 flex justify-between items-center bg-[#f8f9fa]">
+                <h3 class="text-lg font-bold text-neutral-900">Estimate Summary</h3>
+                <button onclick="closeSummary()" class="text-neutral-400 hover:text-neutral-800 transition">✕</button>
+            </div>
+            <div class="p-6 max-h-[60vh] overflow-y-auto" id="summary-list"></div>
+            <div class="px-6 py-4 border-t border-neutral-100 bg-neutral-50 flex justify-between items-center">
+                <span class="text-sm font-bold text-neutral-500 uppercase">Scope Total</span>
+                <span id="modal-grand-total" class="text-xl font-black text-neutral-900">₱0.00</span>
+            </div>
+        </div>
+    </div>
 
     <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
         <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
@@ -75,110 +94,36 @@
             <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">
                 Cost Estimate Scope
             </button>
-            <div class="pt-6">
-                <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-                <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">History</div>
-            </div>
         </nav>
-
-        <div class="pt-4 border-t border-neutral-100 mt-auto">
-            <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
-                <span>Main Page</span>
-            </button>
-        </div>
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
-
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
             <h2 class="text-2xl font-bold text-neutral-900">Cost Estimate Scope</h2>
-            <div class="flex items-center gap-2">
-                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
-                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
+            <div class="flex items-center gap-3">
+                <button onclick="openSummary()" class="px-4 py-2 text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition shadow-sm border border-emerald-200 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    View Summary
+                </button>
+                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Export</button>
             </div>
         </header>
 
         <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
-
-            <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
-                <div class="mb-6">
-                    <h3 class="text-2xl font-bold text-neutral-900">Cost Estimate Scope</h3>
-                    <p class="text-sm text-neutral-500 mt-1">Yard &amp; Underground - is work outside of the building that is classifiable as real estate.</p>
+            <div class="xl:col-span-8 flex flex-col overflow-hidden border-r border-neutral-100">
+                
+                <div class="p-6 pb-2 border-b border-neutral-100 bg-[#fbfbfc]">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="relative flex-1 max-w-md">
+                            <input type="text" id="category-search" placeholder="Search scopes..." onkeyup="filterCategories()" class="w-full pl-10 pr-4 py-2 text-sm border border-neutral-200 rounded-lg focus:border-blue-500 outline-none bg-white">
+                            <svg class="w-4 h-4 absolute left-3 top-2.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                    </div>
+                    <div id="tab-nav-container" class="flex space-x-2 overflow-x-auto pb-3 custom-scrollbar"></div>
                 </div>
 
-                <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-sm text-neutral-500">
-                                <th class="py-3 px-4 font-semibold text-center w-12">#</th>
-                                <th class="py-3 px-4 font-semibold">Description</th>
-                                <th class="py-3 px-4 font-semibold text-center w-32">Input</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm font-medium text-neutral-800">
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">1</td><td class="py-3 px-4">Site grading &amp; drainage</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">2</td><td class="py-3 px-4">Landscaping</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">3</td><td class="py-3 px-4">Retention Basins / Storm water</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">4</td><td class="py-3 px-4">Fire Loop and hydrants</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">5</td><td class="py-3 px-4">Fire Water Tank, pumps</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">6</td><td class="py-3 px-4">Paving - Roadway</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">7</td><td class="py-3 px-4">Paving - Parking Lot</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">8</td><td class="py-3 px-4">Paving - Truck Dock</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">9</td><td class="py-3 px-4">Outdoor Lighting</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">10</td><td class="py-3 px-4">Fencing</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">11</td><td class="py-3 px-4">Railroad Sidings</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">12</td><td class="py-3 px-4">Truck Scales</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">13</td><td class="py-3 px-4">Site Security</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">14</td><td class="py-3 px-4">Fire road</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                            <tr class="hover:bg-neutral-50 transition-colors">
-                                <td class="py-3 px-4 text-center text-neutral-400">15</td><td class="py-3 px-4">Other</td>
-                                <td class="py-2 px-4 text-center"><input type="number" min="0" placeholder="0" class="dim-input" /></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div id="dynamic-content-area" class="flex-1 overflow-y-auto p-6 pb-32 bg-white"></div>
+
             </div>
 
             <div class="xl:col-span-4 bg-[#f8f9fa] p-8 flex flex-col h-full border-t xl:border-t-0 border-neutral-200">
@@ -189,13 +134,11 @@
 
                 <div class="flex flex-col gap-3 mb-6">
                     <label class="text-xs font-bold text-neutral-500 uppercase">1. Search Database</label>
-                    
-                    <select id="category-selector" onchange="updateMaterialDropdown()" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
+                    <select id="material-category-selector" onchange="updateMaterialDropdown()" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
                         <option value="">-- Select Material Category --</option>
-                        </select>
+                    </select>
 
                     <label class="text-xs font-bold text-neutral-500 uppercase mt-2">2. Select Materials</label>
-                    
                     <div id="material-checkbox-list" class="w-full bg-white border border-neutral-200 rounded-lg p-2 text-sm h-56 overflow-y-auto flex flex-col shadow-inner">
                         <div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>
                     </div>
@@ -210,20 +153,17 @@
                 </div>
 
                 <div class="mt-4 pt-4 border-t border-neutral-200 flex items-center justify-between bg-[#f8f9fa] sticky bottom-0 z-10">
-                    <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Grand Total</span>
-                    <span id="grand-total" class="text-2xl font-bold text-neutral-900">₱0.00</span>
+                    <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Cart Total</span>
+                    <span id="cart-grand-total" class="text-2xl font-bold text-neutral-900">₱0.00</span>
                 </div>
             </div>
-
         </div>
     </main>
 
     <script>
         // ============================================================
-        // 1. STATE & CONFIGURATION
+        // 1. MATERIAL CART LOGIC (RESTORED)
         // ============================================================
-        
-        // This array mirrors your `CATEGORY_FILES` from parser.js
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
             { id: 'timber_formworks', file: 'data/timber_formworks.json', schema: 'simple', label: 'Timber Formworks' },
@@ -241,23 +181,13 @@
             { id: 'pipes', file: 'data/pipes.json', schema: 'pipes', label: 'Pipes' }
         ];
 
-        // Our unified, normalized database: { "unique_id": { name, price, unit, category } }
         let MASTER_DB = {}; 
-        let cart = []; // Array of assigned { id, materialId, quantity }
-
-        // ============================================================
-        // 2. INITIALIZATION & DATA FETCHING
-        // ============================================================
-        document.addEventListener("DOMContentLoaded", () => {
-            if (typeof Auth !== 'undefined') Auth.requireLogin();
-            fetchAllDatabases();
-        });
+        let cart = []; 
 
         async function fetchAllDatabases() {
             const statusEl = document.getElementById('db-status');
             let loadedCount = 0;
 
-            // Fetch all 14 categories in parallel
             await Promise.all(DB_CONFIG.map(async (config) => {
                 const urls = [
                     `/${config.file}`,
@@ -271,16 +201,13 @@
                             const rawData = await res.json();
                             normalizeMaterialData(config, rawData);
                             loadedCount++;
-                            break; // Stop trying URLs if successful
+                            break; 
                         }
-                    } catch (e) {
-                        // Suppress individual errors, rely on fallback mechanism
-                    }
+                    } catch (e) {}
                 }
             }));
 
-            // Build the Category dropdown
-            populateCategoryDropdown();
+            populateMaterialCategoryDropdown();
 
             if (loadedCount > 0) {
                 statusEl.textContent = `Live DB Active (${loadedCount} modules loaded)`;
@@ -291,81 +218,36 @@
             }
         }
 
-        // ============================================================
-        // 3. SCHEMA NORMALIZATION
-        // Translates your 6 different JSON structures into 1 standard
-        // ============================================================
         function normalizeMaterialData(config, data) {
             if (!data) return;
-
             const addEntry = (id, name, price, unit) => {
                 MASTER_DB[id] = { name, price: price || 0, unit: unit || 'unit', category: config.id };
             };
 
             try {
                 if (config.schema === 'simple') {
-                    data.forEach((item, idx) => {
-                        addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit);
-                    });
-                } 
-                else if (config.schema === 'masonry') {
-                    if (data.prices) {
-                        data.prices.forEach((item, idx) => {
-                            addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit);
-                        });
-                    }
-                } 
-                else if (config.schema === 'rebars') {
-                    data.forEach((item, idx) => {
-                        const name = `${item.spec} - ${item.size} (${item.length})`;
-                        addEntry(`${config.id}_${idx}`, name, item.price_php, "pc");
-                    });
-                } 
-                else if (config.schema === 'concrete_mix') {
-                    data.forEach((item, idx) => {
-                        const name = `${item.product} (${item.curing_time})`;
-                        addEntry(`${config.id}_${idx}`, name, item.price_php, "cu.m");
-                    });
-                } 
-                else if (config.schema === 'equipment') {
-                    data.forEach((item, idx) => {
-                        // Defaulting to the minimum rate for the estimate baseline
-                        const name = `[${item.category}] ${item.name}`;
-                        addEntry(`${config.id}_${idx}`, name, item.rate_min_php, item.unit);
-                    });
-                } 
-                else if (config.schema === 'pipes') {
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
+                } else if (config.schema === 'masonry' && data.prices) {
+                    data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
+                } else if (config.schema === 'rebars') {
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size} (${item.length})`, item.price_php, "pc"));
+                } else if (config.schema === 'concrete_mix') {
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, item.price_php, "cu.m"));
+                } else if (config.schema === 'equipment') {
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, item.rate_min_php, item.unit));
+                } else if (config.schema === 'pipes') {
                     let pipeIdx = 0;
-                    if (data.nominal_size_unit_price) {
-                        data.nominal_size_unit_price.forEach(item => {
-                            addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english} (${item.metric_mm}mm)`, item.price_per_6m_php, "6m");
-                        });
-                    }
-                    if (data.seamless_galvanized_steel) {
-                        data.seamless_galvanized_steel.forEach(item => {
-                            addEntry(`pipes_${pipeIdx++}`, `Seamless: ${item.description}`, item.price_per_length_php, "length");
-                        });
-                    }
-                    if (data.erw_welded_galvanized_steel) {
-                        data.erw_welded_galvanized_steel.forEach(item => {
-                            addEntry(`pipes_${pipeIdx++}`, `ERW Welded: ${item.description}`, item.price_per_length_php, "length");
-                        });
-                    }
+                    if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english} (${item.metric_mm}mm)`, item.price_per_6m_php, "6m"));
+                    if (data.seamless_galvanized_steel) data.seamless_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Seamless: ${item.description}`, item.price_per_length_php, "length"));
+                    if (data.erw_welded_galvanized_steel) data.erw_welded_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `ERW Welded: ${item.description}`, item.price_per_length_php, "length"));
                 }
-            } catch (error) {
-                console.error(`Error normalizing schema for ${config.id}:`, error);
-            }
+            } catch (error) { console.error(error); }
         }
 
-        // ============================================================
-        // 4. UI POPULATION & EVENT LISTENERS
-        // ============================================================
-        function populateCategoryDropdown() {
-            const select = document.getElementById('category-selector');
+        function populateMaterialCategoryDropdown() {
+            const select = document.getElementById('material-category-selector');
             DB_CONFIG.forEach(config => {
-                // Only show categories that successfully loaded data
-                const hasData = Object.values(MASTER_DB).some(mat => mat.category === config.id);
-                if (hasData) {
+                if (Object.values(MASTER_DB).some(mat => mat.category === config.id)) {
                     const option = document.createElement('option');
                     option.value = config.id;
                     option.textContent = config.label;
@@ -375,17 +257,15 @@
         }
 
         function updateMaterialDropdown() {
-            const catId = document.getElementById('category-selector').value;
+            const catId = document.getElementById('material-category-selector').value;
             const container = document.getElementById('material-checkbox-list');
-            
-            container.innerHTML = ''; // Clear current
+            container.innerHTML = ''; 
 
             if (!catId) {
                 container.innerHTML = '<div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>';
                 return;
             }
             
-            // Populate with checkboxes matching the category
             for (const [key, mat] of Object.entries(MASTER_DB)) {
                 if (mat.category === catId) {
                     const label = document.createElement('label');
@@ -402,39 +282,21 @@
             }
         }
 
-        // ============================================================
-        // 5. CART LOGIC & RENDER
-        // ============================================================
         function addSelectedToCart() {
             const checkboxes = document.querySelectorAll('.material-checkbox:checked');
-            
-            if (checkboxes.length === 0) {
-                return alert("Please check at least one material to add.");
-            }
+            if (checkboxes.length === 0) return alert("Please check at least one material to add.");
 
             let addedCount = 0;
-
             checkboxes.forEach(cb => {
-                const materialId = cb.value;
-                const exists = cart.find(item => item.materialId === materialId);
-                
-                // Only add if it isn't already in the cart
-                if (!exists) {
-                    cart.push({
-                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                        materialId: materialId,
-                        quantity: 0 // Default quantity is 0, user edits in cart
-                    });
+                if (!cart.find(item => item.materialId === cb.value)) {
+                    cart.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), materialId: cb.value, quantity: 0 });
                     addedCount++;
                 }
-                cb.checked = false; // Reset checkbox after adding
+                cb.checked = false; 
             });
 
-            if (addedCount === 0) {
-                alert("The selected materials are already in your cart!");
-            } else {
-                renderCart();
-            }
+            if (addedCount === 0) alert("The selected materials are already in your cart!");
+            else renderCart();
         }
 
         function removeFromCart(cartItemId) {
@@ -453,13 +315,13 @@
         function renderCart() {
             const cartContainer = document.getElementById('cart-items');
             const emptyMsg = document.getElementById('empty-cart-msg');
-            let grandTotal = 0;
+            let cartTotal = 0;
 
             cartContainer.innerHTML = '';
 
             if (cart.length === 0) {
                 cartContainer.appendChild(emptyMsg);
-                document.getElementById('grand-total').textContent = '₱0.00';
+                document.getElementById('cart-grand-total').textContent = '₱0.00';
                 emptyMsg.style.display = 'block';
                 return;
             }
@@ -469,7 +331,7 @@
                 if (!material) return; 
 
                 const totalCost = item.quantity * material.price;
-                grandTotal += totalCost;
+                cartTotal += totalCost;
 
                 const div = document.createElement('div');
                 div.className = "bg-white p-3.5 rounded-xl border border-neutral-200 shadow-sm relative group transition-all";
@@ -478,7 +340,6 @@
                         <div class="text-sm font-bold text-neutral-900 pr-4 leading-tight">${material.name}</div>
                         <button onclick="removeFromCart('${item.id}')" class="text-neutral-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100 bg-white rounded-full p-0.5">✕</button>
                     </div>
-                    
                     <div class="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
                         <div class="flex items-center gap-2">
                             <input type="number" min="0" value="${item.quantity || ''}" placeholder="0" 
@@ -495,17 +356,302 @@
                 cartContainer.appendChild(div);
             });
 
-            document.getElementById('grand-total').textContent = `₱${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('cart-grand-total').textContent = `₱${cartTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         }
 
-        function goBackMain() {
-            document.body.style.transition = 'opacity 0.2s';
-            document.body.style.opacity = '0';
-            setTimeout(function() {
-                if (typeof Auth !== 'undefined') Auth.logout();
-                else window.location.href = 'index.html';
+        // ============================================================
+        // 2. DYNAMIC SCOPE TABLES LOGIC
+        // ============================================================
+        
+        const commonShell = [
+            { code: "105", desc: "Excavation & Fill" }, { code: "110", desc: "Foundations" }, { code: "115", desc: "Superstructure Slabs" },
+            { code: "120", desc: "Slab on Grade" }, { code: "125", desc: "Floor and wall caulk" }, { code: "130", desc: "Frame - Steel" },
+            { code: "135", desc: "Frame - Concrete, steel, wood (incl. Stairs)" }, { code: "140", desc: "Roof Deck" }, { code: "150", desc: "Roofing & Sheetmetal" },
+            { code: "155", desc: "Platforms" }, { code: "160", desc: "Siding" }, { code: "165", desc: "Exterior Wall" },
+            { code: "170", desc: "Conc. Tilt-up Walls" }, { code: "175", desc: "Interior Load-bearing Wall & Fire Walls" },
+            { code: "180", desc: "Windows and Doors" }, { code: "185", desc: "Truck Doors" }, { code: "190", desc: "Painting Exterior Walls" },
+            { code: "195", desc: "Stair and Elevator Enclosures" }, { code: "199", desc: "Others" }
+        ];
+
+        const commonInterior = [
+            { code: "210", desc: "Partitions" }, { code: "215", desc: "Office Shell" }, { code: "220", desc: "Interior Window / Window Glazing" },
+            { code: "230", desc: "Walls Finishes" }, { code: "235", desc: "Flooring" }, { code: "240", desc: "Floor Sealer" },
+            { code: "245", desc: "Doors" }, { code: "250", desc: "Ceiling" }, { code: "260", desc: "Built-in Items (Carpentry)" },
+            { code: "270", desc: "Specialties" }, { code: "299", desc: "Others" }
+        ];
+
+        const commonMechanical = [
+            { code: "310", desc: "HVAC incl. System Ancillaries, Chiller and Cooling Tower" }, { code: "320", desc: "Plumbing" },
+            { code: "330", desc: "Fire Protection (Sprinkler System, Smoke Exhaust System)" }, { code: "340", desc: "Fire Hose Racks" },
+            { code: "350", desc: "Laboratory Utilities" }, { code: "360", desc: "Elevators, Escalators" }, { code: "399", desc: "Others" }
+        ];
+
+        const commonElectrical = [
+            { code: "410", desc: "Lighting" }, { code: "420", desc: "Power Wiring" }, { code: "430", desc: "Communications Syst. (incl. Phone and Computer Wiring)" },
+            { code: "440", desc: "Building Grounding" }, { code: "450", desc: "Security" }, { code: "499", desc: "Other" }
+        ];
+
+        const SCOPE_CATEGORIES = [
+            {
+                id: "yard-underground", label: "Yard & Underground",
+                sections: [{
+                    title: "Yard & Underground", color: "bg-blue-50 text-blue-800",
+                    items: [
+                        { code: "1", desc: "Site grading & drainage" }, { code: "2", desc: "Landscaping" }, { code: "3", desc: "Retention Basins / Storm water" },
+                        { code: "4", desc: "Fire Loop and hydrants" }, { code: "5", desc: "Fire Water Tank, pumps" }, { code: "6", desc: "Paving - Roadway" },
+                        { code: "7", desc: "Paving - Parking Lot" }, { code: "8", desc: "Paving - Truck Dock" }, { code: "9", desc: "Outdoor Lighting" },
+                        { code: "10", desc: "Fencing" }, { code: "11", desc: "Railroad Sidings" }, { code: "12", desc: "Truck Scales" },
+                        { code: "13", desc: "Site Security" }, { code: "14", desc: "Fire road" }, { code: "15", desc: "Other" }
+                    ]
+                }]
+            },
+            {
+                id: "yard-utilities", label: "Yard Utilities",
+                sections: [{
+                    title: "Yard Utilities", color: "bg-blue-50 text-blue-800",
+                    items: [{ code: "1", desc: "Potable Water" }, { code: "2", desc: "City Water" }, { code: "3", desc: "Sanitary Sewer" }, { code: "4", desc: "Gas - Natural" }]
+                }]
+            },
+            {
+                id: "plant-utilities", label: "Plant Utilities",
+                sections: [{
+                    title: "Plant Utilities", color: "bg-blue-50 text-blue-800",
+                    items: [{ code: "1", desc: "Hot Water" }, { code: "2", desc: "Steam" }, { code: "3", desc: "Process Sewer" }, { code: "4", desc: "Gas - LPG" }, { code: "5", desc: "Fuel Oil" }]
+                }]
+            },
+            {
+                id: "substation", label: "Substation & Power",
+                sections: [{
+                    title: "Substation and Primary Power Distribution", color: "bg-blue-50 text-blue-800",
+                    items: [{ code: "1", desc: "Power - High Voltage" }, { code: "2", desc: "Substation/PDP/LV Powerfeed" }, { code: "3", desc: "Backup Generator" }]
+                }]
+            },
+            {
+                id: "rm-warehouse", label: "RM Warehouse",
+                sections: [
+                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: "", items: commonShell },
+                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: "", items: commonInterior },
+                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " RMW", items: commonMechanical },
+                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " RMW", items: commonElectrical }
+                ]
+            },
+            {
+                id: "making", label: "Making",
+                sections: [
+                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " MAK", items: commonShell },
+                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " MAK", items: commonInterior },
+                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " MAK", items: commonMechanical },
+                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " MAK", items: commonElectrical }
+                ]
+            },
+            {
+                id: "converting", label: "Converting",
+                sections: [
+                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " Conv", items: commonShell },
+                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " Conv", items: commonInterior },
+                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " Conv", items: commonMechanical },
+                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " Conv", items: commonElectrical }
+                ]
+            },
+            {
+                id: "pub", label: "PUB",
+                sections: [
+                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " PUB", items: commonShell },
+                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " PUB", items: commonInterior },
+                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " PUB", items: commonMechanical },
+                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " PUB", items: commonElectrical }
+                ]
+            },
+            {
+                id: "admin", label: "Admin Building",
+                sections: [
+                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " Admin", items: commonShell },
+                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " Admin", items: commonInterior },
+                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " Admin", items: commonMechanical },
+                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " Admin", items: commonElectrical }
+                ]
+            },
+            {
+                id: "others", label: "Others & Management",
+                sections: [
+                    { title: "Others (Equipment)", color: "bg-yellow-50 text-yellow-800", items: [{code:"510",desc:"Truck Dock Doors/Levelers"}, {code:"520",desc:"Furnishings"}, {code:"530",desc:"Canopies"}, {code:"940",desc:"Racks"}, {code:"950",desc:"Warehouse Management System"}] },
+                    { title: "Other Buildings", color: "bg-stone-50 text-stone-800", items: [{code:"610",desc:"Transformer Building"}, {code:"620",desc:"Guard House"}, {code:"630",desc:"Fire Pump House"}, {code:"640",desc:"Boiler House"}, {code:"650",desc:"Flammable Material Storage"}, {code:"660",desc:"Empty Pallet Storage"}, {code:"670",desc:"Scrap Building"}, {code:"680",desc:"Cafeteria"}, {code:"690",desc:"Waste Water Treatment"}, {code:"699",desc:"Others"}] },
+                    { title: "Engineering & Construction", color: "bg-indigo-50 text-indigo-800", items: [{code:"Const",desc:"Construction Management (Temp facilities, permits)"}, {code:"Com",desc:"Commissioning"}, {code:"Con Eng",desc:"Contractor Engineering"}, {code:"Plant Eng",desc:"Plant Engineering"}, {code:"PG Eng",desc:"P&G Engineering"}] },
+                    { title: "Risk Funds", color: "bg-rose-50 text-rose-800", items: [{code:"Und",desc:"Undefined"}, {code:"Cont",desc:"Contingency"}, {code:"Pot",desc:"Potential Items"}] },
+                    { title: "Operational Taxes & Prem", color: "bg-neutral-100 text-neutral-800", items: [{code:"Main",desc:"Maintaining Production"}, {code:"Prem",desc:"Premium Time"}, {code:"Tax",desc:"Taxes"}] }
+                ]
+            }
+        ];
+
+        let activeTabId = SCOPE_CATEGORIES[0].id;
+        let categoryTotals = {}; 
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchAllDatabases(); // Initialize DB for Cart
+            initTotals(); // Initialize Totals for Scope
+            renderNavigation();
+            renderContent();
+        });
+
+        function initTotals() { SCOPE_CATEGORIES.forEach(cat => categoryTotals[cat.id] = 0); }
+
+        function renderNavigation() {
+            const navContainer = document.getElementById('tab-nav-container');
+            navContainer.innerHTML = '';
+
+            SCOPE_CATEGORIES.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `cat-nav-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${cat.id === activeTabId ? 'bg-black text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'}`;
+                btn.dataset.id = cat.id;
+                btn.onclick = () => switchTab(cat.id);
+                
+                const badge = document.createElement('span');
+                badge.id = `badge-${cat.id}`;
+                badge.className = `text-[10px] px-1.5 py-0.5 rounded-md ${cat.id === activeTabId ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-500'}`;
+                badge.textContent = '₱0';
+
+                btn.appendChild(document.createTextNode(cat.label));
+                btn.appendChild(badge);
+                navContainer.appendChild(btn);
+            });
+        }
+
+        function renderContent() {
+            const contentArea = document.getElementById('dynamic-content-area');
+            contentArea.innerHTML = '';
+
+            const activeCategory = SCOPE_CATEGORIES.find(c => c.id === activeTabId);
+            if (!activeCategory) return;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = "mb-6 flex justify-between items-end";
+            headerDiv.innerHTML = `
+                <div>
+                    <h3 class="text-2xl font-bold text-neutral-900">${activeCategory.label}</h3>
+                    <p class="text-sm text-neutral-500 mt-1">Enter estimated costs for each scope item below.</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs font-bold text-neutral-400 uppercase">Category Total</div>
+                    <div class="text-2xl font-black text-blue-600" id="display-total-${activeCategory.id}">₱${categoryTotals[activeCategory.id].toLocaleString()}</div>
+                </div>
+            `;
+            contentArea.appendChild(headerDiv);
+
+            activeCategory.sections.forEach((section, secIdx) => {
+                const sectionWrapper = document.createElement('div');
+                sectionWrapper.className = "mb-8 bg-white border border-neutral-200/80 rounded-xl overflow-hidden shadow-sm tab-content";
+                
+                let tbodyHTML = section.items.map((item, i) => {
+                    const displayCode = item.code + (section.prefix || '');
+                    return `
+                        <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                            <td class="py-2.5 px-4 text-center text-xs font-semibold text-neutral-400 w-20">${displayCode}</td>
+                            <td class="py-2.5 px-4 text-sm text-neutral-800 font-medium">${item.desc}</td>
+                            <td class="py-2 px-4 w-40">
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1.5 text-neutral-400 text-sm">₱</span>
+                                    <input type="number" min="0" placeholder="0" class="dim-input scope-input pl-8" 
+                                           data-category="${activeCategory.id}" 
+                                           oninput="calculateTotals('${activeCategory.id}')" />
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                sectionWrapper.innerHTML = `
+                    <div class="px-4 py-3 ${section.color} border-b border-neutral-200/50 flex justify-between items-center">
+                        <h4 class="font-bold text-sm tracking-wide uppercase">${section.title}</h4>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <tbody class="bg-white">${tbodyHTML}</tbody>
+                    </table>
+                `;
+                contentArea.appendChild(sectionWrapper);
+            });
+        }
+
+        function switchTab(tabId) {
+            activeTabId = tabId;
+            renderNavigation();
+            renderContent();
+        }
+
+        function filterCategories() {
+            const query = document.getElementById('category-search').value.toLowerCase();
+            const btns = document.querySelectorAll('.cat-nav-btn');
+            btns.forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                btn.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function calculateTotals(catId) {
+            const inputs = document.querySelectorAll(`.scope-input[data-category="${catId}"]`);
+            let sum = 0;
+            inputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) sum += val;
+            });
+
+            categoryTotals[catId] = sum;
+            
+            const displayTotal = document.getElementById(`display-total-${catId}`);
+            if (displayTotal) displayTotal.textContent = `₱${sum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2})}`;
+            
+            const badge = document.getElementById(`badge-${catId}`);
+            if (badge) badge.textContent = `₱${formatCompact(sum)}`;
+        }
+
+        function formatCompact(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num;
+        }
+
+        function openSummary() {
+            const modal = document.getElementById('summary-modal');
+            const modalContent = document.getElementById('summary-modal-content');
+            const listDiv = document.getElementById('summary-list');
+            let scopeGrandTotal = 0;
+
+            listDiv.innerHTML = '';
+
+            SCOPE_CATEGORIES.forEach(cat => {
+                const val = categoryTotals[cat.id] || 0;
+                scopeGrandTotal += val;
+                
+                listDiv.innerHTML += `
+                    <div class="flex justify-between items-center py-3 border-b border-neutral-100 last:border-0">
+                        <span class="text-sm font-medium text-neutral-700">${cat.label}</span>
+                        <span class="text-sm font-bold text-neutral-900">₱${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('modal-grand-total').textContent = `₱${scopeGrandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeSummary() {
+            const modal = document.getElementById('summary-modal');
+            const modalContent = document.getElementById('summary-modal-content');
+            
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
             }, 200);
         }
+
     </script>
 </body>
 </html>

@@ -175,14 +175,32 @@
             </div>
             <div class="flex items-center gap-2">
                 <!-- IMPORT -->
-                <label class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer">
+                <label id="import-btn-label" class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer">
                     Import
                     <input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importFile(this)">
                 </label>
                 <!-- EXPORT -->
-                <button onclick="exportCurrent()"
+                <button id="export-btn" onclick="exportCurrent()"
                     class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer">
                     Export
+                </button>
+                <!-- SELECT / CANCEL -->
+                <button id="select-btn" onclick="toggleSelectMode()"
+                    class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer">
+                    Select
+                </button>
+                <!-- REMOVE SELECTED — only visible in select mode -->
+                <button id="remove-selected-btn" onclick="removeSelectedRows()" class="hidden px-4 py-2 text-sm font-medium bg-rose-50 border border-rose-200 text-rose-700 rounded-lg hover:bg-rose-100 transition cursor-pointer">
+                    Remove selected (<span id="remove-count">0</span>)
+                </button>
+                <!-- SELECT / CANCEL -->
+                <button id="select-btn" onclick="toggleSelectMode()"
+                    class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer">
+                    Select
+                </button>
+                <!-- REMOVE SELECTED — only visible in select mode -->
+                <button id="remove-selected-btn" onclick="removeSelectedRows()" class="hidden px-4 py-2 text-sm font-medium bg-rose-50 border border-rose-200 text-rose-700 rounded-lg hover:bg-rose-100 transition cursor-pointer">
+                    Remove selected (<span id="remove-count">0</span>)
                 </button>
                 <button onclick="saveAll()" id="save-all-btn"
                     class="px-4 py-2 text-sm font-semibold bg-black text-white rounded-lg hover:bg-neutral-800 transition cursor-pointer">
@@ -391,68 +409,91 @@
             </div>
 
             <!-- ESCALATION VIEW -->
-            <div id="view-escalation" class="hidden max-w-2xl">
-                <div class="mb-6">
-                    <h3 class="text-xl font-bold text-neutral-900">Annual Price Escalation</h3>
-                    <p class="text-sm text-neutral-500 mt-1">Applies a percentage increase to every price across all 14 category JSONs and <code class="text-xs bg-neutral-100 px-1 py-0.5 rounded">prices.json</code>. Run once per year.</p>
-                </div>
-
-                <!-- Guard banner -->
-                <div id="escalation-guard-banner" class="hidden mb-5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-medium flex items-center gap-2">
-                    <span>⚠️</span>
-                    <span id="escalation-guard-msg"></span>
-                </div>
-
-                <div class="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm mb-6">
-                    <div class="px-5 py-4 border-b border-neutral-100 bg-[#f8f9fa]">
-                        <h4 class="text-sm font-bold text-neutral-700 uppercase tracking-wide">Escalation Parameters</h4>
+            <div id="view-escalation" class="hidden max-w-3xl">
+                <div class="mb-6 flex items-end justify-between gap-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-neutral-900">Price Escalation Viewer</h3>
+                        <p class="text-sm text-neutral-500 mt-1">View how prices change across years. 2026 = current base prices stored in the database.</p>
                     </div>
-                    <div class="p-6 space-y-5">
-                        <div class="grid grid-cols-2 gap-5">
-                            <div>
-                                <label class="text-xs font-bold text-neutral-500 uppercase tracking-wide block mb-1.5">Escalation Year</label>
-                                <input id="input-escYear" type="number" min="2026" max="2040" placeholder="2027"
-                                    class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50" />
+                    <!-- Year + rate controls -->
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <div>
+                            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide block mb-1">% per year</label>
+                            <input id="esc-rate-input" type="number" min="0" max="100" step="0.1" value="10"
+                                oninput="renderEscalationViewer()"
+                                class="w-20 border border-neutral-200 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400 text-center" />
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide block mb-1">Year</label>
+                            <select id="esc-year-select" onchange="renderEscalationViewer()"
+                                class="border border-neutral-200 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:border-blue-400 cursor-pointer bg-white">
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026 (base)</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                                <option value="2029">2029</option>
+                                <option value="2030">2030</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price viewer table — populated by renderEscalationViewer() -->
+                <div class="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm mb-6">
+                    <div class="px-5 py-3 border-b border-neutral-100 bg-[#f8f9fa] flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-neutral-700 uppercase tracking-wide" id="esc-viewer-title">All Categories — 2026</h4>
+                        <span id="esc-viewer-badge" class="text-xs text-neutral-400"></span>
+                    </div>
+                    <div id="esc-viewer-body" class="divide-y divide-neutral-100">
+                        <div class="px-5 py-8 text-center text-sm text-neutral-400">Select a year above to preview prices.</div>
+                    </div>
+                </div>
+
+                <!-- Apply section — collapsed by default, expand to apply -->
+                <details class="group">
+                    <summary class="cursor-pointer list-none flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wide mb-3 select-none">
+                        <svg class="w-3.5 h-3.5 group-open:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Apply escalation to database (once per year)
+                    </summary>
+                    <div class="mt-3 space-y-3">
+                        <!-- Guard banner -->
+                        <div id="escalation-guard-banner" class="hidden px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-medium flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span id="escalation-guard-msg"></span>
+                        </div>
+                        <p class="text-xs text-neutral-500">This permanently overwrites all prices in GitHub. Use the viewer above to confirm the numbers look right first.</p>
+                        <div class="flex gap-3">
+                            <button onclick="previewEscalation()"
+                                class="flex-1 py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
+                                Preview &amp; Confirm
+                            </button>
+                        </div>
+                        <!-- Preview table (reused from before) -->
+                        <div id="escalation-preview" class="hidden bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="px-5 py-4 border-b border-neutral-100 bg-[#f8f9fa] flex items-center justify-between">
+                                <h4 class="text-sm font-bold text-neutral-700 uppercase tracking-wide">Preview</h4>
+                                <span id="escalation-preview-label" class="text-xs text-neutral-500"></span>
                             </div>
-                            <div>
-                                <label class="text-xs font-bold text-neutral-500 uppercase tracking-wide block mb-1.5">Escalation Rate (%)</label>
-                                <input id="input-escRate" type="number" min="0" max="100" step="0.1" placeholder="e.g. 10"
-                                    class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50" />
+                            <table class="w-full text-sm border-collapse">
+                                <thead><tr class="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold text-neutral-400 uppercase tracking-wide">
+                                    <th class="py-2.5 px-5 text-left">Category</th>
+                                    <th class="py-2.5 px-5 text-center">Items</th>
+                                    <th class="py-2.5 px-5 text-right">Sample: current → new</th>
+                                </tr></thead>
+                                <tbody id="escalation-preview-body"></tbody>
+                            </table>
+                            <div class="px-5 py-4 border-t border-neutral-100 bg-rose-50 flex items-start gap-3">
+                                <span class="text-rose-500 text-lg leading-none mt-0.5">⚠</span>
+                                <p class="text-xs text-rose-700 font-medium">This action is <strong>irreversible</strong>. It will overwrite all prices in all JSONs on GitHub.</p>
                             </div>
                         </div>
-                        <button onclick="previewEscalation()"
-                            class="w-full py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
-                            Preview Changes
+                        <button id="escalation-confirm-btn" onclick="applyEscalation()" class="hidden w-full py-3 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
+                            Confirm &amp; Apply Escalation to All Price Lists
                         </button>
                     </div>
-                </div>
-
-                <!-- Preview table -->
-                <div id="escalation-preview" class="hidden bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm mb-6">
-                    <div class="px-5 py-4 border-b border-neutral-100 bg-[#f8f9fa] flex items-center justify-between">
-                        <h4 class="text-sm font-bold text-neutral-700 uppercase tracking-wide">Preview</h4>
-                        <span id="escalation-preview-label" class="text-xs text-neutral-500"></span>
-                    </div>
-                    <table class="w-full text-sm border-collapse">
-                        <thead>
-                            <tr class="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold text-neutral-400 uppercase tracking-wide">
-                                <th class="py-2.5 px-5 text-left">Category</th>
-                                <th class="py-2.5 px-5 text-center">Items</th>
-                                <th class="py-2.5 px-5 text-right">Sample: current → new</th>
-                            </tr>
-                        </thead>
-                        <tbody id="escalation-preview-body"></tbody>
-                    </table>
-                    <div class="px-5 py-4 border-t border-neutral-100 bg-rose-50 flex items-start gap-3">
-                        <span class="text-rose-500 text-lg leading-none mt-0.5">⚠</span>
-                        <p class="text-xs text-rose-700 font-medium">This action is <strong>irreversible</strong>. It will overwrite all prices in all JSONs on GitHub. Make sure the year and rate are correct before confirming.</p>
-                    </div>
-                </div>
-
-                <!-- Confirm button — only shown after preview -->
-                <button id="escalation-confirm-btn" onclick="applyEscalation()" class="hidden w-full py-3 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
-                    Confirm &amp; Apply Escalation to All Price Lists
-                </button>
+                </details>
 
                 <!-- History -->
                 <div class="mt-8">
@@ -509,6 +550,9 @@ function switchCategory(key) {
     document.getElementById('escalation-guard-banner').classList.add('hidden');
     document.getElementById('escalation-preview').classList.add('hidden');
     document.getElementById('escalation-confirm-btn').classList.add('hidden');
+    if (typeof _selectMode !== 'undefined' && _selectMode) toggleSelectMode();
+    // Exit select mode on nav switch
+    if (_selectMode) toggleSelectMode();
 
     currentCategory = key;
     dirtyRows.clear();
@@ -527,6 +571,7 @@ function switchCategory(key) {
         document.getElementById('page-badge').textContent = '';
         document.getElementById('view-escalation').classList.remove('hidden');
         renderEscalationHistory();
+        renderEscalationViewer();
         return;
     }
     if (key === 'core') { renderCore(); } else { loadAndRender(key); }
@@ -1253,8 +1298,10 @@ const ESCALATION_LABELS = {
 let _escalationPreviewData = null;
 
 async function previewEscalation() {
-    const year = parseInt(document.getElementById('input-escYear').value);
-    const rate = parseFloat(document.getElementById('input-escRate').value);
+    const yearEl = document.getElementById('esc-year-select');
+    const rateEl  = document.getElementById('esc-rate-input');
+    const year = parseInt(yearEl ? yearEl.value : 2027);
+    const rate = parseFloat(rateEl ? rateEl.value : 10);
     if (!year || year < 2026 || year > 2040) { showToast('Enter a valid year (2026–2040).', 'error'); return; }
     if (isNaN(rate) || rate <= 0 || rate > 100) { showToast('Enter a valid escalation rate.', 'error'); return; }
 
@@ -1360,8 +1407,10 @@ async function previewEscalation() {
 
 async function applyEscalation() {
     if (!_escalationPreviewData) { showToast('Run Preview first.', 'error'); return; }
-    const year = parseInt(document.getElementById('input-escYear').value);
-    const rate = parseFloat(document.getElementById('input-escRate').value);
+    const yearEl = document.getElementById('esc-year-select');
+    const rateEl  = document.getElementById('esc-rate-input');
+    const year = parseInt(yearEl ? yearEl.value : 2027);
+    const rate = parseFloat(rateEl ? rateEl.value : 10);
     const btn  = document.getElementById('escalation-confirm-btn');
     btn.textContent = 'Saving…'; btn.disabled = true;
 
@@ -1486,6 +1535,179 @@ async function revertToYear(snapYear) {
         showToast('Revert done with ' + failed + ' error(s). Check console.', 'error');
     }
 }
+
+// ============================================================
+// ESCALATION VIEWER — read-only price preview by year
+// ============================================================
+async function renderEscalationViewer() {
+    const yearEl = document.getElementById('esc-year-select');
+    const rateEl = document.getElementById('esc-rate-input');
+    if (!yearEl || !rateEl) return;
+
+    const selectedYear = parseInt(yearEl.value);
+    const ratePerYear  = parseFloat(rateEl.value) || 10;
+    const BASE_YEAR    = 2026;
+    const steps        = selectedYear - BASE_YEAR; // negative = past, positive = future
+    const multiplier   = Math.pow(1 + ratePerYear / 100, steps);
+
+    document.getElementById('esc-viewer-title').textContent =
+        `All Categories — ${selectedYear}${selectedYear === BASE_YEAR ? ' (base)' : ''}`;
+    document.getElementById('esc-viewer-badge').textContent =
+        steps === 0 ? 'Current stored prices'
+        : steps > 0 ? `×${multiplier.toFixed(4)} from base (+${(ratePerYear * steps).toFixed(1)}% compound)`
+                    : `×${multiplier.toFixed(4)} from base (${(ratePerYear * steps).toFixed(1)}% compound)`;
+
+    const bodyEl = document.getElementById('esc-viewer-body');
+    bodyEl.innerHTML = '<div class="px-5 py-6 text-center text-xs text-neutral-400">Loading price lists…</div>';
+
+    const rows = [];
+    for (const s of ESCALATION_SCHEMAS) {
+        let data = categoryData[s.key] || await Parser.loadCategory(s.key);
+        if (data) categoryData[s.key] = data;
+        if (!data) continue;
+
+        let items = [];
+        if (s.schema === 'simple')       items = Array.isArray(data) ? data : [];
+        else if (s.schema === 'masonry') items = data.prices || [];
+        else if (s.schema === 'equipment') items = Array.isArray(data) ? data : [];
+        else if (s.schema === 'pipes') {
+            ['nominal_size_unit_price','seamless_galvanized_steel','erw_welded_galvanized_steel'].forEach(tk => {
+                (data[tk] || []).forEach(item => items.push(item));
+            });
+        } else items = Array.isArray(data) ? data : [];
+
+        items.slice(0, 3).forEach(item => {
+            const basePrice = item.price_php || item.rate_min_php || item.price_per_6m_php || item.price_per_length_php || 0;
+            const scaledPrice = Math.round(basePrice * multiplier * 100) / 100;
+            const name = item.name || item.spec || item.product || item.description || '—';
+            rows.push({ category: ESCALATION_LABELS[s.key] || s.key, name, basePrice, scaledPrice });
+        });
+        if (items.length > 3) rows.push({ category: ESCALATION_LABELS[s.key] || s.key, name: `…and ${items.length - 3} more`, basePrice: null, scaledPrice: null, moreRow: true });
+    }
+
+    if (rows.length === 0) {
+        bodyEl.innerHTML = '<div class="px-5 py-6 text-center text-xs text-neutral-400">No price data loaded.</div>';
+        return;
+    }
+
+    let lastCat = '';
+    bodyEl.innerHTML = rows.map(row => {
+        if (row.moreRow) return `<div class="px-5 py-1.5 text-xs text-neutral-400 italic">${row.name}</div>`;
+        const catHeader = row.category !== lastCat
+            ? `<div class="px-5 pt-3 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">${(lastCat = row.category, row.category)}</div>`
+            : (lastCat = row.category, '');
+        const priceCell = row.basePrice === null ? '' :
+            steps === 0
+                ? `<span class="font-semibold text-neutral-800">₱${row.basePrice.toLocaleString('en-US',{minimumFractionDigits:2})}</span>`
+                : `<span class="text-neutral-400 line-through text-xs mr-2">₱${row.basePrice.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
+                   <span class="font-bold text-neutral-900">₱${row.scaledPrice.toLocaleString('en-US',{minimumFractionDigits:2})}</span>`;
+        return `${catHeader}<div class="flex items-center justify-between px-5 py-2 hover:bg-neutral-50 text-sm">
+            <span class="text-neutral-700">${row.name}</span>
+            <span class="text-right">${priceCell}</span>
+        </div>`;
+    }).join('');
+}
+
+// ============================================================
+// SELECT MODE — row checkboxes + remove selected
+// ============================================================
+let _selectMode = false;
+
+function toggleSelectMode() {
+    _selectMode = !_selectMode;
+    const selectBtn      = document.getElementById('select-btn');
+    const removeBtn      = document.getElementById('remove-selected-btn');
+    const importLabel    = document.getElementById('import-btn-label');
+    const exportBtn      = document.getElementById('export-btn');
+
+    if (_selectMode) {
+        selectBtn.textContent = 'Cancel';
+        selectBtn.className = 'px-4 py-2 text-sm font-medium bg-neutral-100 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-200 transition cursor-pointer';
+        removeBtn.classList.remove('hidden');
+        if (importLabel) importLabel.classList.add('opacity-40', 'pointer-events-none');
+        if (exportBtn)   exportBtn.classList.add('opacity-40', 'pointer-events-none');
+        injectRowCheckboxes();
+    } else {
+        selectBtn.textContent = 'Select';
+        selectBtn.className = 'px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer';
+        removeBtn.classList.add('hidden');
+        document.getElementById('remove-count').textContent = '0';
+        if (importLabel) importLabel.classList.remove('opacity-40', 'pointer-events-none');
+        if (exportBtn)   exportBtn.classList.remove('opacity-40', 'pointer-events-none');
+        removeRowCheckboxes();
+    }
+}
+
+function injectRowCheckboxes() {
+    // Find all data rows across all visible tbodies
+    const tbodies = document.querySelectorAll('.price-table tbody');
+    tbodies.forEach(tbody => {
+        tbody.querySelectorAll('tr[data-index]').forEach(tr => {
+            if (tr.querySelector('.row-select-cb')) return; // already injected
+            const td = document.createElement('td');
+            td.className = 'text-center w-10 pl-3';
+            td.style.width = '36px';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'row-select-cb cursor-pointer';
+            cb.style.cssText = 'width:16px;height:16px;accent-color:#3b82f6;';
+            cb.addEventListener('change', updateRemoveCount);
+            td.appendChild(cb);
+            tr.insertBefore(td, tr.firstChild);
+        });
+    });
+    updateRemoveCount();
+}
+
+function removeRowCheckboxes() {
+    document.querySelectorAll('.row-select-cb').forEach(cb => cb.closest('td').remove());
+}
+
+function updateRemoveCount() {
+    const count = document.querySelectorAll('.row-select-cb:checked').length;
+    document.getElementById('remove-count').textContent = count;
+}
+
+async function removeSelectedRows() {
+    if (!currentCategory) { showToast('Select a category first.', 'error'); return; }
+    const checkedTrs = [...document.querySelectorAll('.row-select-cb:checked')].map(cb => cb.closest('tr'));
+    if (checkedTrs.length === 0) { showToast('No rows selected.', 'info'); return; }
+    if (!confirm(`Remove ${checkedTrs.length} row(s)? This will save immediately to GitHub.`)) return;
+
+    const indices = checkedTrs.map(tr => parseInt(tr.dataset.index)).filter(i => !isNaN(i)).sort((a,b) => b-a);
+    const key     = currentCategory;
+    const schema  = key === 'masonry' ? 'masonry'
+                  : key === 'rebars'  ? 'rebars'
+                  : key === 'concrete_mix' ? 'concrete_mix'
+                  : key === 'equipment'    ? 'equipment'
+                  : key === 'pipes'        ? 'pipes'
+                  : 'simple';
+
+    // Splice from in-memory data (highest index first to preserve lower indices)
+    indices.forEach(idx => {
+        if (schema === 'masonry') {
+            if (categoryData[key] && categoryData[key].prices) categoryData[key].prices.splice(idx, 1);
+        } else if (schema === 'pipes') {
+            // pipes rows are across sub-tables — just re-render; don't splice directly
+        } else {
+            if (Array.isArray(categoryData[key])) categoryData[key].splice(idx, 1);
+        }
+    });
+
+    const saveBtn = document.getElementById('save-all-btn');
+    saveBtn.textContent = 'Saving…'; saveBtn.disabled = true;
+    const ok = await Parser.saveBulk(key, categoryData[key]);
+    saveBtn.textContent = 'Save all changes'; saveBtn.disabled = false;
+
+    if (ok) {
+        showToast(`${indices.length} row(s) removed and saved.`, 'success');
+        toggleSelectMode(); // exit select mode
+        switchCategory(key); // re-render
+    } else {
+        showToast('Remove failed. Check console.', 'error');
+    }
+}
+
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');

@@ -9,15 +9,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
+    <!-- Auth guard — must load before any JS runs -->
+    <script src="/src/auth.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter','-apple-system','BlinkMacSystemFont','"SF Pro"','"SF Pro Text"','"SF Pro Display"','"Segoe UI"','Roboto','Helvetica','Arial','sans-serif']
-                    },
-                    transitionTimingFunction: {
-                        'apple': 'cubic-bezier(0.25, 0.1, 0.25, 1)',
                     }
                 }
             }
@@ -58,1254 +58,698 @@
         }
         .dim-input::placeholder { color: #bbb; font-weight: 400; }
         .struct-select { text-align-last: center; cursor: pointer; appearance: none; }
-        
-        /* Custom Checkbox Styling */
-        input[type=checkbox] {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            background-color: white;
-            border: 1.5px solid #d1d5db;
-            border-radius: 6px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease-in-out;
-        }
-        input[type=checkbox]:checked {
-            background-color: #3b82f6;
-            border-color: #3b82f6;
-        }
-        input[type=checkbox]:checked::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: translate(-50%, -60%) rotate(45deg);
-        }
-        input[type=checkbox]:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .result-badge {
-            width: 100%;
-            background: #e5e7eb;
-            border-radius: 16px;
-            padding: 10px 16px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: 700;
-            color: #1f2937;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
-        }
     </style>
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <div id="page-calculator" class="w-full h-full flex transition-opacity duration-300">
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
+        <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
+        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Delightful Day!</p>
 
-        <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6 z-20">
-            <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
-            <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
-            
-            <nav class="flex-1 mt-8 space-y-1 relative">
-                <button id="nav-building" onclick="switchModule('building')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors">
-                    Building Calculator
-                </button>
-                <button id="nav-footing" onclick="switchModule('footing')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                    Footing & Pedestal Cal.
-                </button>
-                <button id="nav-scope" onclick="switchModule('scope')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                    Cost Estimate Scope
-                </button>
-                <button id="nav-rates" onclick="switchModule('rates')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                    Labor & Resources
-                </button>
-                <div class="pt-6">
-                    <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-                    <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">History</div>
-                </div>
-            </nav>
-            
-            <div class="pt-4 border-t border-neutral-100 mt-auto">
-                <button onclick="window.location.href='index.html'" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
-                    <span>Main Page</span>
-                </button>
+        <nav class="flex-1 mt-8 space-y-1">
+            <button id="nav-building" onclick="switchModule('building')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors">
+                Building Calculator
+            </button>
+            <button id="nav-footing" onclick="switchModule('footing')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Footing &amp; Pedestal Cal.
+            </button>
+            <button onclick="window.location.href='cost_estimate_scope.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Cost Estimate Scope
+            </button>
+            <div class="pt-6">
+                <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
+                <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">History</div>
             </div>
-        </aside>
+        </nav>
 
-        <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
-            
-            <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
-                <div class="flex items-center gap-6">
-                    <h2 id="header-title" class="text-2xl font-bold text-neutral-900 transition-opacity duration-300">Building Calculator</h2>
-                    <div id="header-tabs-container" class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40 transition-opacity duration-300">
-                        <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
-                        <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
-                        <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
-                    </div>
+        <div class="pt-4 border-t border-neutral-100 mt-auto">
+            <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+                <span>Main Page</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- WORKSPACE AREA -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+
+        <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
+            <div class="flex items-center gap-6">
+                <h2 id="header-title" class="text-2xl font-bold text-neutral-900">Building Calculator</h2>
+                <div id="header-tabs-container" class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40">
+                    <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
+                    <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
+                    <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
-                    <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
-                </div>
-            </header>
-
-            <div id="main-fade-wrapper" class="flex-1 w-full h-full relative transition-all duration-300 ease-apple opacity-100 transform scale-100 translate-y-0 overflow-hidden flex">
-
-                <div id="module-calculator-grid" class="flex-1 w-full h-full grid grid-cols-1 xl:grid-cols-12 absolute inset-0">
-                    
-                    <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
-                        
-                        <div id="calc-sections-container" class="transition-all duration-300 ease-apple opacity-100 transform translate-x-0 w-full">
-                            
-                            <div id="section-dimension" class="flex flex-col gap-6">
-                                <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Length</h4>
-                                        <input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Width</h4>
-                                        <input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Clear Height</h4>
-                                        <input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">No. of Stories</h4>
-                                        <input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">floors</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[140px] md:col-span-2">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">% Mezzanine</h4>
-                                        <input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">percent (%)</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="section-structure" class="hidden flex flex-col gap-6">
-                                <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Structure Type</h4>
-                                        <select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
-                                            <option value="steel_rigid">Steel Rigid Frames</option>
-                                            <option value="steel_joist">Steel Joist and Column</option>
-                                            <option value="tilt_up">Tilt-Up Concrete</option>
-                                            <option value="pre_cast">Pre-Cast Concrete</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Roof Type</h4>
-                                        <select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
-                                            <option value="standing_seam">Standing Seam Metal</option>
-                                            <option value="r_panel">R Panel Metal</option>
-                                            <option value="tpo_membrane">TPO Membrane</option>
-                                            <option value="epdm_membrane">EPDM Membrane</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Wall Cladding</h4>
-                                        <select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
-                                            <option value="metal_panel">Metal Panel</option>
-                                            <option value="tilt_up_wall">Tilt-Up Concrete</option>
-                                            <option value="pre_cast_wall">Pre-Cast Panel</option>
-                                            <option value="masonry_block">Masonry Block</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Slab Thickness</h4>
-                                        <select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
-                                            <option value="100mm">100mm Light Storage</option>
-                                            <option value="150mm">150mm Standard</option>
-                                            <option value="200mm">200mm Heavy Loads</option>
-                                            <option value="250mm">250mm Very Heavy</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Dock Doors</h4>
-                                        <input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Drive-In Doors</h4>
-                                        <input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Skylights / Windows</h4>
-                                        <select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
-                                            <option value="standard">Standard</option>
-                                            <option value="none">None</option>
-                                            <option value="minimal">Minimal</option>
-                                            <option value="many">Many</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (L)</h4>
-                                        <input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (W)</h4>
-                                        <input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="section-capacity" class="hidden flex flex-col gap-6">
-                                <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Height</h4>
-                                        <input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Size</h4>
-                                        <input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Isle Width</h4>
-                                        <input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bottom Clearance</h4>
-                                        <input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Storage Efficiency</h4>
-                                        <input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Dock / Staging Area</h4>
-                                        <input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Level Height</h4>
-                                        <input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Depth</h4>
-                                        <input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="section-footing-geometry" class="hidden flex flex-col gap-6">
-                                <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Length</h4>
-                                        <input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Width</h4>
-                                        <input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Depth</h4>
-                                        <input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Length</h4>
-                                        <input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Width</h4>
-                                        <input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Height</h4>
-                                        <input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="section-footing-materials" class="hidden flex flex-col gap-6">
-                                <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Concrete Class</h4>
-                                        <select id="select-concreteClass" class="struct-select" onchange="handleSelect('concreteClass', this.value)">
-                                            <option value="16/20">16/20</option>
-                                            <option value="20/25">20/25</option>
-                                            <option value="25/30">25/30</option>
-                                            <option value="30/37" selected>30/37</option>
-                                            <option value="35/45">35/45</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Price / m³</h4>
-                                        <input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Depth</h4>
-                                        <input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Cost / m³</h4>
-                                        <input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Rate / m³</h4>
-                                        <input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Ratio</h4>
-                                        <input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">percent Ratio (%)</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Price / kg</h4>
-                                        <input id="input-rebarPriceKg" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('rebarPriceKg', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Overhead Profit</h4>
-                                        <input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Forms Price / m²</h4>
-                                        <input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Cost / day</h4>
-                                        <input id="input-laborCostDay" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('laborCostDay', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Steel Density</h4>
-                                        <input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div id="module-calculator-sidebar" class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
-                        <div class="sticky top-0 space-y-6">
-                            <div>
-                                <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
-                                <p class="text-lg font-bold text-neutral-800 mt-1">Estimation Line Ledger</p>
-                            </div>
-
-                            <div class="bg-white p-4 rounded-2xl border border-neutral-200/60 shadow-sm">
-                                <canvas id="costChart" height="200"></canvas>
-                            </div>
-
-                            <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4 text-sm">
-                                <div>
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Floor Area</span>
-                                        <span id="side-floorArea" class="font-semibold text-neutral-900">0.00 sqm</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length × Width</p>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Gross Area</span>
-                                        <span id="side-grossArea" class="font-semibold text-neutral-900">0.00 sqm</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor + (Floor × Mezzanine %)</p>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Building Volume</span>
-                                        <span id="side-bldgVolume" class="font-semibold text-neutral-900">0.00 cu.m</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area × H) + (Area × Mezz % × 6)</p>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Perimeter Line</span>
-                                        <span id="side-perimeter" class="font-semibold text-neutral-900">0.00 m</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 × (Length + Width)</p>
-                                </div>
-                                <div class="pt-3 border-t border-neutral-100">
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Concrete Volume</span>
-                                        <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m³</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) × Nodes</p>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Total Nodes</span>
-                                        <span id="side-baySpacing" class="font-semibold text-neutral-900">0</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (L / Space L) + (W / Space W)</p>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Total Pallet Slots</span>
-                                        <span id="side-pallets" class="font-semibold text-neutral-900">0</span>
-                                    </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Pallet Footprint) × Levels</p>
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
-                                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
-                                <div class="space-y-2 text-sm text-neutral-600">
-                                    <div class="flex justify-between"><span>Material Costs</span><span class="cost-materials font-bold text-neutral-900">₱0.00</span></div>
-                                    <div class="flex justify-between"><span>Labor Costs</span><span class="cost-labor font-bold text-blue-600">₱0.00</span></div>
-                                    <div class="flex justify-between"><span>Equipment Costs</span><span class="cost-equipment font-bold text-neutral-900">₱0.00</span></div>
-                                    <div class="flex justify-between"><span>Overhead & Profit</span><span class="cost-profit font-bold text-neutral-900">₱0.00</span></div>
-                                </div>
-                                <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center">
-                                    <div>
-                                        <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
-                                        <p class="text-[10px] text-neutral-400 leading-tight">Calculated Estimate</p>
-                                    </div>
-                                    <div class="text-2xl font-black text-neutral-900 cost-total">₱0.00</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="module-scope-grid" class="hidden w-full h-full absolute inset-0 grid grid-cols-1 xl:grid-cols-12 bg-white">
-                    
-                    <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
-                        <div class="mb-6">
-                            <h3 class="text-2xl font-bold text-neutral-900">Cost Estimate Scope</h3>
-                            <p class="text-sm text-neutral-500 mt-1">Select the required utility classifications for your project scope.</p>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-yard-underground">
-                            <button onclick="toggleScope('yard-underground')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">Yard & Underground<span class="block text-xs text-slate-300 font-normal mt-0.5">Outside building work classifiable as real estate</span></h4>
-                                    <span id="badge-yard-underground" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-yard-underground" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-yard-underground" class="grid grid-rows-[1fr] opacity-100 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">1. Site grading & drainage</td>
-                                                <td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">2. Landscaping</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">3. Retention Basins / Storm water</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">4. Fire Loop and hydrants</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">5. Fire Water Tank, pumps</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">6. Paving - Roadway</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">7. Paving - Parking Lot</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">8. Paving - Truck Dock</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">9. Outdoor Lighting</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">10. Fencing</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">11. Railroad Sidings</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">12. Truck Scales</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">13. Site Security</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">14. Fire road</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors">
-                                                <td class="py-3 px-5 border-r border-neutral-100">15. Other</td>
-                                                <td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-yard-utilities">
-                            <button onclick="toggleScope('yard-utilities')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">Yard Utilities</h4>
-                                    <span id="badge-yard-utilities" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-yard-utilities" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-yard-utilities" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. Potable Water</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. City Water</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Sanitary Sewer</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">4. Gas - Natural</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-plant-utilities">
-                            <button onclick="toggleScope('plant-utilities')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">Plant Utilities</h4>
-                                    <span id="badge-plant-utilities" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-plant-utilities" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-plant-utilities" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. Hot Water</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. Steam</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Process Sewer</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">4. Gas - LPG</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">5. Fuel Oil</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-substation">
-                            <button onclick="toggleScope('substation')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">Substation & Power<span class="block text-xs text-slate-300 font-normal mt-0.5">Electrical service entrance to site until LV feeder</span></h4>
-                                    <span id="badge-substation" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-substation" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-substation" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. Power - High Voltage</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. Substation/PDP/LV Powerfeed</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Backup Generator</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-building-shell">
-                            <button onclick="toggleScope('building-shell')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">Making Building Shell<span class="block text-xs text-slate-300 font-normal mt-0.5">All structural building scope and exterior barrier</span></h4>
-                                    <span id="badge-building-shell" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-building-shell" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-building-shell" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. Excavation & Fill</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. Foundations</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Superstructure Slabs</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">4. Slab on Grade</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">5. Floor and wall caulk</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">6. Frame - Steel</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">7. Frame - Concrete, steel, wood</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">8. Roof Deck</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">9. Roofing & Sheetmetal</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">10. Platforms</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">11. Siding</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">12. Exterior Wall</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">13. Conc. Tilt-up Walls</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">14. Interior Load-bearing Wall & Fire Walls</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">15. Windows and Doors</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">16. Truck Doors</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">17. Painting Exterior Walls</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">18. Stair and Elevator Enclosures</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">19. Others</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-building-interior">
-                            <button onclick="toggleScope('building-interior')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">RM Warehouse Interior Finishing<span class="block text-xs text-slate-300 font-normal mt-0.5">Non-structural interior scope that finishes space for occupancy</span></h4>
-                                    <span id="badge-building-interior" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-building-interior" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-building-interior" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. Partitions</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. Office Shell</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Interior Windows / Window Glazing</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">4. Walls Finishes</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">5. Flooring</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">6. Floor Sealer</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">7. Doors</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">8. Ceiling</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">9. Built-in Items (Carpentry)</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">10. Specialties</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">11. Others</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-building-electrical">
-                            <button onclick="toggleScope('building-electrical')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">RM Warehouse Building Electrical<span class="block text-xs text-slate-300 font-normal mt-0.5">Scope that provides electrical power supply for non-manufacturing uses</span></h4>
-                                    <span id="badge-building-electrical" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-building-electrical" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-building-electrical" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. Lighting</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. Power Wiring</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Communications Syst. (incl. Phone and Computer Wiring)</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">4. Building Grounding</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">5. Security</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">6. Other</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white border border-neutral-200/80 rounded-2xl shadow-sm mb-4 overflow-hidden" id="table-building-mechanical">
-                            <button onclick="toggleScope('building-mechanical')" class="w-full bg-slate-700 px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-600 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <h4 class="text-sm font-semibold text-white tracking-wide text-left">RM Warehouse Building Mechanical<span class="block text-xs text-slate-300 font-normal mt-0.5">Scope that provides interior climate control and fire protection for inhabitants</span></h4>
-                                    <span id="badge-building-mechanical" class="hidden bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"></span>
-                                </div>
-                                <svg id="icon-building-mechanical" class="w-5 h-5 text-slate-300 transform transition-transform duration-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                            <div id="wrapper-building-mechanical" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-in-out">
-                                <div class="overflow-hidden">
-                                    <table class="w-full text-left border-collapse">
-                                        <tbody class="text-sm font-medium text-neutral-800">
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">1. HVAC incl. System Ancillaries, Chiller and Cooling Tower</td><td class="py-2 px-4 text-center w-24"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">2. Plumbing</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">3. Fire Protection (Sprinkler System, Smoke Exhaust System)</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">4. Fire Hose Racks</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">5. Laboratory Utilities</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">6. Elevators, Escalators</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                            <tr class="hover:bg-neutral-50 transition-colors"><td class="py-3 px-5 border-r border-neutral-100">7. Others</td><td class="py-2 px-4 text-center"><input type="checkbox" onchange="updateScopeCounters()" /></td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                <div id="module-scope-sidebar" class="hidden xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
-                    <div class="sticky top-0 space-y-6">
-                        <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm flex items-center justify-between">
-                            <span class="text-sm font-bold text-neutral-500 uppercase tracking-widest">Total Items Selected</span>
-                            <span id="scope-total-selected" class="font-bold text-blue-600 text-3xl">0</span>
-                        </div>
-                        
-                        <div class="h-64 w-full flex flex-col items-center justify-center opacity-40">
-                            <p class="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-2">Cart / Summary</p>
-                            <p class="text-xs text-neutral-400">(Awaiting Shopping Cart Integration)</p>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+            <div class="flex items-center gap-2">
+                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
+                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
+            </div>
+        </header>
 
-            <div id="module-rates-grid" class="hidden w-full h-full absolute inset-0 grid grid-cols-1 xl:grid-cols-12 bg-white">
-                <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
-                    <div class="mb-6 flex justify-between items-end">
-                        <div>
-                            <h3 class="text-2xl font-bold text-neutral-900">Labor & Equipment Rates</h3>
-                            <p class="text-sm text-neutral-500 mt-1">Define manpower headcount and days required to compute total labor costs.</p>
+        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
+
+            <!-- SCROLLABLE INPUTS COLUMN -->
+            <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
+
+                <!-- MODULE: BUILDING -> DIMENSION -->
+                <div id="section-dimension" class="flex flex-col gap-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Length</h4>
+                            <input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" />
+                            <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Width</h4>
+                            <input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" />
+                            <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Clear Height</h4>
+                            <input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" />
+                            <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">No. of Stories</h4>
+                            <input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" />
+                            <span class="text-xs text-neutral-400 mt-1 text-center font-medium">floors</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[140px] md:col-span-2">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">% Mezzanine</h4>
+                            <input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" />
+                            <span class="text-xs text-neutral-400 mt-1 text-center font-medium">percent (%)</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm mb-8">
-                        <div class="bg-slate-700 px-5 py-3">
-                            <h4 class="text-sm font-semibold text-white tracking-wide">Regional Labor Rates</h4>
+                <!-- MODULE: BUILDING -> STRUCTURE -->
+                <div id="section-structure" class="hidden flex flex-col gap-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Structure Type</h4>
+                            <select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
+                                <option value="steel_rigid">Steel Rigid Frames</option>
+                                <option value="steel_joist">Steel Joist and Column</option>
+                                <option value="tilt_up">Tilt-Up Concrete</option>
+                                <option value="pre_cast">Pre-Cast Concrete</option>
+                            </select>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse min-w-[700px]">
-                                <thead>
-                                    <tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-xs text-neutral-500 uppercase tracking-wider">
-                                        <th class="py-3 px-4 font-semibold border-r border-neutral-200/80">Region</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-32">Rate / Day (₱)</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Headcount</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Days</th>
-                                        <th class="py-3 px-4 font-semibold text-right w-36">Total (₱)</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm font-medium text-neutral-800">
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">NCR</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="695" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('ncr', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('ncr', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-ncr">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">VISAYAS</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="500" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('visayas', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('visayas', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-visayas">0.00</td>
-                                    </tr>
-                                    <tr class="hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">MINDANAO</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="500" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mindanao', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mindanao', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-mindanao">0.00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Roof Type</h4>
+                            <select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
+                                <option value="standing_seam">Standing Seam Metal</option>
+                                <option value="r_panel">R Panel Metal</option>
+                                <option value="tpo_membrane">TPO Membrane</option>
+                                <option value="epdm_membrane">EPDM Membrane</option>
+                            </select>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Wall Cladding</h4>
+                            <select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
+                                <option value="metal_panel">Metal Panel</option>
+                                <option value="tilt_up_wall">Tilt-Up Concrete</option>
+                                <option value="pre_cast_wall">Pre-Cast Panel</option>
+                                <option value="masonry_block">Masonry Block</option>
+                            </select>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Slab Thickness</h4>
+                            <select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
+                                <option value="100mm">100mm Light Storage</option>
+                                <option value="150mm">150mm Standard</option>
+                                <option value="200mm">200mm Heavy Loads</option>
+                                <option value="250mm">250mm Very Heavy</option>
+                            </select>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Dock Doors</h4>
+                            <input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Drive-In Doors</h4>
+                            <input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Skylights / Windows</h4>
+                            <select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
+                                <option value="standard">Standard</option>
+                                <option value="none">None</option>
+                                <option value="minimal">Minimal</option>
+                                <option value="many">Many</option>
+                            </select>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (L)</h4>
+                            <input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (W)</h4>
+                            <input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
                         </div>
                     </div>
+                </div>
 
-                    <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm mb-8">
-                        <div class="bg-slate-700 px-5 py-3">
-                            <h4 class="text-sm font-semibold text-white tracking-wide">Skilled Workers</h4>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse min-w-[700px]">
-                                <thead>
-                                    <tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-xs text-neutral-500 uppercase tracking-wider">
-                                        <th class="py-3 px-4 font-semibold border-r border-neutral-200/80">Skill</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-32">Rate / Day (₱)</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Headcount</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Days</th>
-                                        <th class="py-3 px-4 font-semibold text-right w-36">Total (₱)</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm font-medium text-neutral-800">
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">CARPENTER</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('carpenter', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('carpenter', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-carpenter">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">MASON</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mason', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mason', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-mason">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">WELDER</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="815" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('welder', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('welder', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-welder">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">ELECTRICIAN</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="875" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electrician', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electrician', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-electrician">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">PLUMBER</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('plumber', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('plumber', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-plumber">0.00</td>
-                                    </tr>
-                                    <tr class="hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">PIPE FITTER</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="700" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('pipeFitter', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('pipeFitter', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-pipeFitter">0.00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm mb-8">
-                        <div class="bg-slate-700 px-5 py-3">
-                            <h4 class="text-sm font-semibold text-white tracking-wide">Senior Engineers & Specialists</h4>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse min-w-[700px]">
-                                <thead>
-                                    <tr class="bg-[#f4f5f8] border-b border-neutral-200/80 text-xs text-neutral-500 uppercase tracking-wider">
-                                        <th class="py-3 px-4 font-semibold border-r border-neutral-200/80">Engineer</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-32">Rate / Day (₱)</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Headcount</th>
-                                        <th class="py-3 px-4 font-semibold text-center border-r border-neutral-200/80 w-28">Days</th>
-                                        <th class="py-3 px-4 font-semibold text-right w-36">Total (₱)</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm font-medium text-neutral-800">
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">CIVIL</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="2700" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('civilEng', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('civilEng', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-civilEng">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">ELECTRICAL</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="2100" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electricalEng', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('electricalEng', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-electricalEng">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">MECHANICAL</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="2500" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mechanicalEng', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('mechanicalEng', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-mechanicalEng">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">GENERAL ENGINEER</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="1700" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('generalEng', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('generalEng', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-generalEng">0.00</td>
-                                    </tr>
-                                    <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">IT / SOFTWARE ENGINEER</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="2500" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('itEng', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('itEng', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-itEng">0.00</td>
-                                    </tr>
-                                    <tr class="hover:bg-neutral-50 transition-colors">
-                                        <td class="py-3 px-4 border-r border-neutral-100">CONSULTANT</td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" readonly value="5000" class="dim-input !py-1.5 !px-2 !text-sm !shadow-none border-transparent bg-neutral-100" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('consultant', 'count', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-2 px-2 border-r border-neutral-100 text-center"><input type="number" min="0" placeholder="0" oninput="handleLabor('consultant', 'days', this.value)" class="dim-input !py-1.5 !px-2 !text-sm focus:border-blue-500" /></td>
-                                        <td class="py-3 px-4 text-right text-neutral-500" id="labor-total-consultant">0.00</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
+                <!-- MODULE: BUILDING -> CAPACITY -->
+                <div id="section-capacity" class="hidden flex flex-col gap-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                            <h4 class="text-base font-bold text-neutral-800 mb-2">Est. Equipment Costs (₱)</h4>
-                            <input id="input-global-equipment" type="number" min="0" placeholder="0" oninput="handleInput('globalEquipment', this.value)" class="dim-input select-text" />
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Height</h4>
+                            <input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
                         </div>
                         <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                            <h4 class="text-base font-bold text-neutral-800 mb-2">Target Profit Margin (%)</h4>
-                            <input id="input-global-profit" type="number" min="0" max="100" placeholder="0" oninput="handleInput('globalProfit', this.value)" class="dim-input select-text" />
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Size</h4>
+                            <input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Isle Width</h4>
+                            <input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Bottom Clearance</h4>
+                            <input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Storage Efficiency</h4>
+                            <input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Dock / Staging Area</h4>
+                            <input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Level Height</h4>
+                            <input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Depth</h4>
+                            <input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
                         </div>
                     </div>
-
                 </div>
 
-                <div id="module-rates-sidebar" class="hidden xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
-                    <div class="sticky top-0 space-y-6">
-                        <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
-                            <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
-                            <div class="space-y-2 text-sm text-neutral-600">
-                                <div class="flex justify-between"><span>Material Costs</span><span class="cost-materials font-bold text-neutral-900">₱0.00</span></div>
-                                <div class="flex justify-between"><span>Labor Costs</span><span class="cost-labor font-bold text-blue-600">₱0.00</span></div>
-                                <div class="flex justify-between"><span>Equipment Costs</span><span class="cost-equipment font-bold text-neutral-900">₱0.00</span></div>
-                                <div class="flex justify-between"><span>Overhead & Profit</span><span class="cost-profit font-bold text-neutral-900">₱0.00</span></div>
-                            </div>
-                            <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center">
-                                <div>
-                                    <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
-                                    <p class="text-[10px] text-neutral-400 leading-tight">Calculated Estimate</p>
-                                </div>
-                                <div class="text-2xl font-black text-neutral-900 cost-total">₱0.00</div>
-                            </div>
+                <!-- MODULE: FOOTING -> GEOMETRY -->
+                <div id="section-footing-geometry" class="hidden flex flex-col gap-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Length</h4>
+                            <input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Width</h4>
+                            <input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Depth</h4>
+                            <input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Length</h4>
+                            <input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Width</h4>
+                            <input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Height</h4>
+                            <input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE: FOOTING -> MATERIALS -->
+                <div id="section-footing-materials" class="hidden flex flex-col gap-6">
+                    <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 flex flex-col justify-start min-h-[120px]">
+                            <h4 class="text-base font-bold text-neutral-800 mb-2">Concrete Class</h4>
+                            <select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
+                                <option value="C16/20">C16/20 — Lean/Blinding</option>
+                                <option value="C20/25">C20/25 — Light Slabs</option>
+                                <option value="C25/30">C25/30 — General</option>
+                                <option value="C30/37" selected>C30/37 — Heavy Columns</option>
+                                <option value="C35/45">C35/45 — High-Rise</option>
+                            </select>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Price / m3</h4>
+                            <input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Depth</h4>
+                            <input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Cost / m3</h4>
+                            <input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Rate / m3</h4>
+                            <input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Ratio</h4>
+                            <input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" />
+                            <span class="text-xs text-neutral-400 text-center font-medium">percent Ratio (%)</span>
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Price / kg</h4>
+                            <input id="input-rebarPriceKg" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('rebarPriceKg', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Overhead Profit</h4>
+                            <input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Forms Price / m2</h4>
+                            <input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Cost / day</h4>
+                            <input id="input-laborCostDay" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('laborCostDay', this.value)" />
+                        </div>
+                        <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
+                            <h4 class="text-lg font-bold text-neutral-900 mb-3">Steel Density</h4>
+                            <input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            </div> </main>
-    </div>
+            <!-- STICKY SIDEBAR VISUALIZATION & OUTPUT DASHBOARD -->
+            <div class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
+                <div class="sticky top-0 space-y-6">
+                    <div>
+                        <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
+                        <p class="text-lg font-bold text-neutral-800 mt-1">Estimation Line Ledger</p>
+                    </div>
+
+                    <!-- CHART.JS VISUALIZATION -->
+                    <div class="bg-white p-4 rounded-2xl border border-neutral-200/60 shadow-sm">
+                        <canvas id="costChart" height="200"></canvas>
+                    </div>
+
+                    <!-- SPATIAL OUTPUT METRICS -->
+                    <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4 text-sm">
+                        <div>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Floor Area</span>
+                                <span id="side-floorArea" class="font-semibold text-neutral-900">0.00 sqm</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length x Width</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Gross Area</span>
+                                <span id="side-grossArea" class="font-semibold text-neutral-900">0.00 sqm</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor + (Floor x Mezzanine %)</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Building Volume</span>
+                                <span id="side-bldgVolume" class="font-semibold text-neutral-900">0.00 cu.m</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area x H) + (Area x Mezz % x 6)</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Perimeter Line</span>
+                                <span id="side-perimeter" class="font-semibold text-neutral-900">0.00 m</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 x (Length + Width)</p>
+                        </div>
+                        <div class="pt-3 border-t border-neutral-100">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Concrete Volume</span>
+                                <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m3</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) x Nodes</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Total Nodes</span>
+                                <span id="side-baySpacing" class="font-semibold text-neutral-900">0</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (L / Space L) + (W / Space W)</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-neutral-500 font-medium">Total Pallet Slots</span>
+                                <span id="side-pallets" class="font-semibold text-neutral-900">0</span>
+                            </div>
+                            <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Pallet Footprint) x Levels</p>
+                        </div>
+                    </div>
+
+                    <!-- FINANCIAL SUMMARY -->
+                    <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
+                        <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
+                        <div class="space-y-2 text-sm text-neutral-600">
+                            <div class="flex justify-between"><span>Material Base</span><span id="cost-breakdown-materials" class="font-bold text-neutral-900">P0.00</span></div>
+                            <div class="flex justify-between"><span>Excavation</span><span id="cost-breakdown-excavation" class="font-bold text-neutral-900">P0.00</span></div>
+                            <div class="flex justify-between"><span>Labor Overhead</span><span id="cost-breakdown-labor" class="font-bold text-neutral-900">P0.00</span></div>
+                        </div>
+                        <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center">
+                            <div>
+                                <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
+                                <p class="text-[10px] text-neutral-400 leading-tight">Awaiting DB connection</p>
+                            </div>
+                            <div class="text-2xl font-black text-neutral-900" id="cost-breakdown-total">P0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
 
     <script>
+        // ============================================================
+        // STATE
+        // ============================================================
+        window.PRICES = null;
+
         let estimateState = {
             length: 0, width: 0, clearHeight: 0, stories: 0, mezzanine: 0,
             structureType: 'steel_rigid', roofType: 'standing_seam', wallCladding: 'metal_panel', slabThickness: '100mm',
             dockDoors: 0, driveInDoors: 0, skylights: 'standard', baySpacingL: 0, baySpacingW: 0,
-            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0, storageEfficiency: 0, dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
-            footingLength: 0, footingWidth: 0, footingDepth: 0, pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
-            concreteClass: '30/37', concretePriceM3: 0, excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
-            rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0, formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850,
-            globalEquipment: 0, globalProfit: 0,
-            
-            labor: {
-                ncr: { rate: 695, count: 0, days: 0 },
-                visayas: { rate: 500, count: 0, days: 0 },
-                mindanao: { rate: 500, count: 0, days: 0 },
-                carpenter: { rate: 700, count: 0, days: 0 },
-                mason: { rate: 700, count: 0, days: 0 },
-                welder: { rate: 815, count: 0, days: 0 },
-                electrician: { rate: 875, count: 0, days: 0 },
-                plumber: { rate: 700, count: 0, days: 0 },
-                pipeFitter: { rate: 700, count: 0, days: 0 },
-                civilEng: { rate: 2700, count: 0, days: 0 },
-                electricalEng: { rate: 2100, count: 0, days: 0 },
-                mechanicalEng: { rate: 2500, count: 0, days: 0 },
-                generalEng: { rate: 1700, count: 0, days: 0 },
-                itEng: { rate: 2500, count: 0, days: 0 },
-                consultant: { rate: 5000, count: 0, days: 0 }
-            }
+            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0, storageEfficiency: 0,
+            dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
+            footingLength: 0, footingWidth: 0, footingDepth: 0,
+            pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
+            concreteClass: 'C30/37', concretePriceM3: 0,
+            excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
+            rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0,
+            formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850
         };
 
         let currentActiveModule = 'building';
-        let costChart = null;
 
-        function toggleScope(id) {
-            const wrapper = document.getElementById('wrapper-' + id);
-            const icon = document.getElementById('icon-' + id);
-            
-            if(wrapper.classList.contains('grid-rows-[0fr]')) {
-                wrapper.classList.remove('grid-rows-[0fr]', 'opacity-0');
-                wrapper.classList.add('grid-rows-[1fr]', 'opacity-100');
-                icon.classList.add('rotate-180');
-            } else {
-                wrapper.classList.remove('grid-rows-[1fr]', 'opacity-100');
-                wrapper.classList.add('grid-rows-[0fr]', 'opacity-0');
-                icon.classList.remove('rotate-180');
+        // ============================================================
+        // CHART.JS
+        // ============================================================
+        const ctx = document.getElementById('costChart').getContext('2d');
+        const costChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Floor Area (sqm)', 'Concrete (m3)', 'Perimeter (m)'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
             }
-        }
+        });
 
-        function initCharts() {
+        // ============================================================
+        // PRICES.JSON — relative first, then raw GitHub fallback
+        // ============================================================
+        async function loadPrices() {
             try {
-                if (document.getElementById('costChart')) {
-                    const ctx = document.getElementById('costChart').getContext('2d');
-                    costChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Floor Area', 'Concrete', 'Perimeter'],
-                            datasets: [{
-                                data: [0, 0, 0],
-                                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                                borderRadius: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { display: false } },
-                            scales: {
-                                y: { beginAtZero: true, grid: { display: false } },
-                                x: { grid: { display: false } }
-                            }
-                        }
-                    });
+                let res = await fetch('/prices.json');
+                if (!res.ok) throw new Error('relative failed');
+                window.PRICES = await res.json();
+            } catch (_) {
+                try {
+                    const res = await fetch(
+                        'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json'
+                    );
+                    if (res.ok) window.PRICES = await res.json();
+                } catch (e) {
+                    console.warn('Could not load prices.json:', e);
                 }
-            } catch(e) { console.warn("Chart.js rendering failed:", e); }
-        }
-
-        function updateScopeCounters() {
-            const scopes = [
-                { id: 'yard-underground', table: 'table-yard-underground' },
-                { id: 'yard-utilities', table: 'table-yard-utilities' },
-                { id: 'plant-utilities', table: 'table-plant-utilities' },
-                { id: 'substation', table: 'table-substation' },
-                { id: 'building-shell', table: 'table-building-shell' },
-                { id: 'building-interior', table: 'table-building-interior' },
-                { id: 'building-electrical', table: 'table-building-electrical' },
-                { id: 'building-mechanical', table: 'table-building-mechanical' }
-            ];
-
-            let total = 0;
-
-            scopes.forEach((scope) => {
-                const checkEls = document.querySelectorAll(`#${scope.table} input[type="checkbox"]:checked`);
-                const count = checkEls ? checkEls.length : 0;
-                total += count;
-
-                const badge = document.getElementById(`badge-${scope.id}`);
-                if(badge) {
-                    badge.textContent = count;
-                    if(count > 0) badge.classList.remove('hidden');
-                    else badge.classList.add('hidden');
-                }
-            });
-
-            const totalEl = document.getElementById('scope-total-selected');
-            if(totalEl) totalEl.textContent = total;
-        }
-
-        function switchModule(mod) {
-            if (currentActiveModule === mod && mod !== 'building') return; // Prevent double clicking
-            currentActiveModule = mod;
-            
-            const fadeWrapper = document.getElementById('main-fade-wrapper');
-            const headerTitle = document.getElementById('header-title');
-            const headerTabs = document.getElementById('header-tabs-container');
-            const calcGrid = document.getElementById('module-calculator-grid');
-            const scopeGrid = document.getElementById('module-scope-grid');
-            const ratesGrid = document.getElementById('module-rates-grid');
-            const calcSidebar = document.getElementById('module-calculator-sidebar');
-            const scopeSidebar = document.getElementById('module-scope-sidebar');
-            const ratesSidebar = document.getElementById('module-rates-sidebar');
-            
-            ['building', 'footing', 'scope', 'rates'].forEach(m => {
-                const navBtn = document.getElementById('nav-' + m);
-                if (navBtn) navBtn.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors pointer-events-none';
-            });
-            
-            const activeNav = document.getElementById('nav-' + mod);
-            if (activeNav) activeNav.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors pointer-events-none';
-
-            fadeWrapper.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
-            fadeWrapper.classList.add('opacity-0', 'translate-y-2', 'scale-[0.99]');
-
-            setTimeout(() => {
-                if(calcGrid) calcGrid.classList.add('hidden');
-                if(calcSidebar) calcSidebar.classList.add('hidden');
-                if(scopeGrid) scopeGrid.classList.add('hidden');
-                if(scopeSidebar) scopeSidebar.classList.add('hidden');
-                if(ratesGrid) ratesGrid.classList.add('hidden');
-                if(ratesSidebar) ratesSidebar.classList.add('hidden');
-                if(headerTabs) headerTabs.classList.add('hidden');
-
-                if (mod === 'scope') {
-                    if(scopeGrid) scopeGrid.classList.remove('hidden');
-                    if(scopeSidebar) scopeSidebar.classList.remove('hidden');
-                    if(headerTitle) headerTitle.textContent = "Cost Estimate Scope";
-                    updateScopeCounters(); 
-                } else if (mod === 'rates') {
-                    if(ratesGrid) ratesGrid.classList.remove('hidden');
-                    if(ratesSidebar) ratesSidebar.classList.remove('hidden');
-                    if(headerTitle) headerTitle.textContent = "Labor & Resources";
-                } else {
-                    if(calcGrid) calcGrid.classList.remove('hidden');
-                    if(calcSidebar) calcSidebar.classList.remove('hidden');
-                    if(headerTabs) headerTabs.classList.remove('hidden');
-                    
-                    ['dimension','structure','capacity','footing-geometry','footing-materials'].forEach(s => {
-                        const el = document.getElementById('section-' + s);
-                        if (el) el.classList.add('hidden');
-                    });
-
-                    if (mod === 'building') {
-                        if(headerTitle) headerTitle.textContent = "Building Calculator";
-                        if(headerTabs) headerTabs.innerHTML = `
-                            <button onclick="switchSection('dimension')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
-                            <button onclick="switchSection('structure')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
-                            <button onclick="switchSection('capacity')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
-                        `;
-                        const sec = document.getElementById('section-dimension');
-                        if(sec) sec.classList.remove('hidden');
-                    } else if (mod === 'footing') {
-                        if(headerTitle) headerTitle.textContent = "Footing & Pedestal";
-                        if(headerTabs) headerTabs.innerHTML = `
-                            <button onclick="switchSection('footing-geometry')" id="tab-footing-geometry" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>
-                            <button onclick="switchSection('footing-materials')" id="tab-footing-materials" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>
-                        `;
-                        const sec = document.getElementById('section-footing-geometry');
-                        if(sec) sec.classList.remove('hidden');
-                    }
-                }
-                
-                updateUI();
-                
-                void fadeWrapper.offsetWidth;
-                fadeWrapper.classList.remove('opacity-0', 'translate-y-2', 'scale-[0.99]');
-                fadeWrapper.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                
-                ['building', 'footing', 'scope', 'rates'].forEach(m => {
-                    const navBtn = document.getElementById('nav-' + m);
-                    if (navBtn) navBtn.classList.remove('pointer-events-none');
-                });
-
-            }, 250);
-        }
-
-        function switchSection(section) {
-            const container = document.getElementById('calc-sections-container');
-            
-            if(container) {
-                container.classList.remove('opacity-100', 'translate-x-0');
-                container.classList.add('opacity-0', '-translate-x-2');
             }
 
-            setTimeout(() => {
-                const subSections = currentActiveModule === 'building' ? ['dimension','structure','capacity'] : ['footing-geometry','footing-materials'];
-                subSections.forEach(s => {
-                    const el = document.getElementById('section-' + s);
-                    if (el) el.classList.add('hidden');
-                    const tab = document.getElementById('tab-' + s);
-                    if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
-                });
-                
-                const activeSec = document.getElementById('section-' + section);
-                if (activeSec) activeSec.classList.remove('hidden');
-                const targetTab = document.getElementById('tab-' + section);
-                if (targetTab) targetTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
-                
-                if(container) {
-                    void container.offsetWidth;
-                    container.classList.remove('opacity-0', '-translate-x-2');
-                    container.classList.add('opacity-100', 'translate-x-0');
-                }
-            }, 200);
+            if (window.PRICES) {
+                applyPricesToState();
+                showToast('Price data loaded.', 'success');
+            } else {
+                showToast('Could not load live prices. Using cached/default values.', 'error');
+            }
+
+            syncInputs();
+            updateUI();
         }
 
-        function handleInput(field, value) {
-            const parsed = parseFloat(value);
-            estimateState[field] = isNaN(parsed) ? 0 : parsed;
+        // Applies prices.json values into estimateState.
+        // Only overwrites fields still at 0 (respects user-cached values).
+        function applyPricesToState() {
+            if (!window.PRICES) return;
+            const p = window.PRICES.tab1_tab2;
+            const cls = estimateState.concreteClass || 'C30/37';
+            const concretePrice = (p.concrete_classes && p.concrete_classes[cls])
+                ? p.concrete_classes[cls].price_per_m3
+                : 0;
+
+            const defaults = {
+                concretePriceM3:  concretePrice,
+                excavationCostM3: p.excavation_cost_per_m3,
+                rebarPriceKg:     p.rebar_price_per_kg,
+                overheadProfit:   Math.round((p.overhead_profit_rate || 0) * 100),
+                formsPriceM2:     p.forms_price_per_m2,
+                laborCostDay:     p.labor_cost_per_day,
+                steelDensity:     p.steel_density_kg_per_m3,
+            };
+
+            Object.entries(defaults).forEach(([k, v]) => {
+                if (estimateState[k] === 0) estimateState[k] = v;
+            });
+
+            // Reflect concrete price in the readonly input immediately
+            const concEl = document.getElementById('input-concretePriceM3');
+            if (concEl && concretePrice) concEl.value = concretePrice;
+
+            saveToCache();
+        }
+
+        // Concrete class change — looks up live price from PRICES
+        function handleConcreteClassChange(value) {
+            estimateState.concreteClass = value;
+            if (window.PRICES) {
+                const cls = window.PRICES.tab1_tab2.concrete_classes;
+                if (cls && cls[value]) {
+                    estimateState.concretePriceM3 = cls[value].price_per_m3;
+                    const el = document.getElementById('input-concretePriceM3');
+                    if (el) el.value = estimateState.concretePriceM3;
+                }
+            } else {
+                estimateState.concretePriceM3 = 0;
+                const el = document.getElementById('input-concretePriceM3');
+                if (el) el.value = '';
+            }
             saveToCache();
             updateUI();
         }
 
-        function handleLabor(role, field, value) {
-            const parsed = parseFloat(value);
-            estimateState.labor[role][field] = isNaN(parsed) ? 0 : parsed;
+        // ============================================================
+        // NAVIGATION
+        // ============================================================
+        function goBackMain() {
+            // document.body.style.transition = 'opacity 0.2s';
+            // document.body.style.opacity = '0';
+            // setTimeout(function() { window.location.href = 'index.html'; }, 200);
             
-            const rowTotal = estimateState.labor[role].rate * estimateState.labor[role].count * estimateState.labor[role].days;
-            const rowEl = document.getElementById(`labor-total-${role}`);
-            if(rowEl) {
-                rowEl.textContent = rowTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                rowEl.classList.toggle('font-bold', rowTotal > 0);
-                rowEl.classList.toggle('text-neutral-900', rowTotal > 0);
+            document.body.style.transition = 'opacity 0.2s';
+            document.body.style.opacity = '0';
+            setTimeout(function() {
+                Auth.logout();
+            }, 200);
+        }
+
+        function switchModule(mod) {
+            currentActiveModule = mod;
+            var headerTitle = document.getElementById('header-title');
+            var headerTabs  = document.getElementById('header-tabs-container');
+
+            ['dimension','structure','capacity','footing-geometry','footing-materials'].forEach(function(s) {
+                var el = document.getElementById('section-' + s);
+                if (el) el.classList.add('hidden');
+            });
+
+            ['building','footing'].forEach(function(m) {
+                var btn = document.getElementById('nav-' + m);
+                if (btn) btn.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors';
+            });
+
+            var activeNav = document.getElementById('nav-' + mod);
+            if (activeNav) activeNav.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors';
+
+            if (mod === 'building') {
+                headerTitle.textContent = 'Building Calculator';
+                headerTabs.classList.remove('hidden');
+                headerTabs.innerHTML =
+                    '<button onclick="switchSection(\'dimension\')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>' +
+                    '<button onclick="switchSection(\'structure\')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>' +
+                    '<button onclick="switchSection(\'capacity\')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>';
+                document.getElementById('section-dimension').classList.remove('hidden');
+            } else if (mod === 'footing') {
+                headerTitle.textContent = 'Footing & Pedestal';
+                headerTabs.classList.remove('hidden');
+                headerTabs.innerHTML =
+                    '<button onclick="switchSection(\'footing-geometry\')" id="tab-footing-geometry" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>' +
+                    '<button onclick="switchSection(\'footing-materials\')" id="tab-footing-materials" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>';
+                document.getElementById('section-footing-geometry').classList.remove('hidden');
             }
-            
+            updateUI();
+        }
+
+        function switchSection(section) {
+            var subSections = currentActiveModule === 'building'
+                ? ['dimension','structure','capacity']
+                : ['footing-geometry','footing-materials'];
+
+            subSections.forEach(function(s) {
+                var el = document.getElementById('section-' + s);
+                if (el) el.classList.add('hidden');
+                var tab = document.getElementById('tab-' + s);
+                if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
+            });
+
+            var activeSec = document.getElementById('section-' + section);
+            if (activeSec) activeSec.classList.remove('hidden');
+            var targetTab = document.getElementById('tab-' + section);
+            if (targetTab) targetTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
+        }
+
+        // ============================================================
+        // INPUT HANDLERS
+        // ============================================================
+        function handleInput(field, value) {
+            var parsed = parseFloat(value);
+            estimateState[field] = isNaN(parsed) ? 0 : parsed;
             saveToCache();
             updateUI();
         }
 
         function handleSelect(field, value) {
             estimateState[field] = value;
-            if (field === 'concreteClass') {
-                estimateState.concretePriceM3 = 0; 
-                const concreteEl = document.getElementById('input-concretePriceM3');
-                if (concreteEl) concreteEl.value = "";
-            }
             saveToCache();
             updateUI();
         }
 
+        // ============================================================
+        // COMPUTATION + DOM UPDATE
+        // ============================================================
         function updateUI() {
-            const L = estimateState.length || 0;
-            const W = estimateState.width || 0;
-            const H = estimateState.clearHeight || 0;
-            const M = (estimateState.mezzanine || 0) / 100;
-            
-            const floorArea = L * W;
-            const grossArea = floorArea + (floorArea * M);
-            const bldgVolume = (L * W * H) + (L * W * M * 6);
-            const perimeter = 2 * (L + W);
+            var L    = estimateState.length      || 0;
+            var W    = estimateState.width       || 0;
+            var H    = estimateState.clearHeight || 0;
+            var M    = estimateState.mezzanine   || 0;
+            var mDec = M / 100;
 
-            const bsl = estimateState.baySpacingL || 0;
-            const bsw = estimateState.baySpacingW || 0;
-            let totalBaySpacing = 0;
+            var floorArea  = L * W;
+            var grossArea  = floorArea + (floorArea * mDec);
+            var bldgVolume = (L * W * H) + (L * W * mDec * 6);
+            var perimeter  = 2 * (L + W);
+
+            var bsl = estimateState.baySpacingL || 0;
+            var bsw = estimateState.baySpacingW || 0;
+            var totalBaySpacing = 0;
             if (bsl > 0 && bsw > 0) totalBaySpacing = (L / bsl) + (W / bsw);
-            const nodes = Math.ceil(totalBaySpacing);
+            var nodes = Math.ceil(totalBaySpacing);
 
-            const footingVol = (estimateState.footingLength || 0) * (estimateState.footingWidth || 0) * (estimateState.footingDepth || 0);
-            const pedestalVol = (estimateState.pedestalLength || 0) * (estimateState.pedestalWidth || 0) * (estimateState.pedestalHeight || 0);
-            const concreteVol = (footingVol + pedestalVol) * nodes;
+            var rh  = estimateState.rackHeight      || 0;
+            var ps  = estimateState.palletSize       || 0;
+            var bc  = estimateState.bottomClearance  || 0;
+            var se  = (estimateState.storageEfficiency || 0) / 100;
+            var ds  = (estimateState.dockStagingArea   || 0) / 100;
+            var rlh = estimateState.rackLevelHeight    || 0;
+            var pd  = estimateState.palletDepth        || 0;
 
-            if (currentActiveModule === 'building' || currentActiveModule === 'footing') {
-                const elFloor = document.getElementById('side-floorArea'); if(elFloor) elFloor.textContent = floorArea.toFixed(2) + ' sqm';
-                const elGross = document.getElementById('side-grossArea'); if(elGross) elGross.textContent = grossArea.toFixed(2) + ' sqm';
-                const elVol = document.getElementById('side-bldgVolume'); if(elVol) elVol.textContent = bldgVolume.toFixed(2) + ' cu.m';
-                const elPer = document.getElementById('side-perimeter'); if(elPer) elPer.textContent = perimeter.toFixed(2) + ' m';
-                const elConc = document.getElementById('side-concrete'); if(elConc) elConc.textContent = concreteVol.toFixed(2) + ' m³';
-                const elNodes = document.getElementById('side-baySpacing'); if(elNodes) elNodes.textContent = nodes;
-                
-                if(costChart) {
-                    costChart.data.datasets[0].data = [floorArea, concreteVol, perimeter];
-                    costChart.update();
-                }
+            var rackLevels = 0;
+            if (rlh > 0 && rh > bc) rackLevels = Math.floor((rh - bc) / rlh);
+
+            var totalPalletPositions = 0;
+            var singlePalletArea = ps * pd;
+            if (singlePalletArea > 0) {
+                var productiveFloorSpace = floorArea * se * (1 - ds);
+                totalPalletPositions = Math.floor(productiveFloorSpace / singlePalletArea) * rackLevels;
             }
-            
-            let materialCost = concreteVol * (estimateState.concretePriceM3 || 0);
-            let equipCost = estimateState.globalEquipment || 0;
 
-            let laborCost = 0;
-            Object.keys(estimateState.labor).forEach(role => {
-                const r = estimateState.labor[role];
-                laborCost += (r.rate * r.count * r.days);
-            });
+            var fl = estimateState.footingLength  || 0;
+            var fw = estimateState.footingWidth   || 0;
+            var fd = estimateState.footingDepth   || 0;
+            var pl = estimateState.pedestalLength || 0;
+            var pw = estimateState.pedestalWidth  || 0;
+            var ph = estimateState.pedestalHeight || 0;
 
-            let baseCost = materialCost + equipCost + laborCost;
-            let profitCost = baseCost * ((estimateState.globalProfit || 0) / 100);
-            let grandTotal = baseCost + profitCost;
+            var footingVol  = fl * fw * fd;
+            var pedestalVol = pl * pw * ph;
+            var concreteVol = (footingVol + pedestalVol) * nodes;
 
-            const formatMoney = (val) => '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            
-            document.querySelectorAll('.cost-materials').forEach(el => el.textContent = formatMoney(materialCost));
-            document.querySelectorAll('.cost-labor').forEach(el => el.textContent = formatMoney(laborCost));
-            document.querySelectorAll('.cost-equipment').forEach(el => el.textContent = formatMoney(equipCost));
-            document.querySelectorAll('.cost-profit').forEach(el => el.textContent = formatMoney(profitCost));
-            document.querySelectorAll('.cost-total').forEach(el => el.textContent = formatMoney(grandTotal));
+            // Cost computation from prices.json fields in estimateState
+            var priceConcretePerM3  = estimateState.concretePriceM3  || 0;
+            var costExcavationPerM3 = estimateState.excavationCostM3 || 0;
+            var laborRatePerM3      = estimateState.laborRateM3      || 0;
+            var overheadMargin      = (estimateState.overheadProfit  || 0) / 100;
+
+            var materialSubtotal   = concreteVol * priceConcretePerM3;
+            var excavationSubtotal = concreteVol * 1.2 * costExcavationPerM3;
+            var laborSubtotal      = concreteVol * laborRatePerM3;
+            var rawSum             = materialSubtotal + excavationSubtotal + laborSubtotal;
+            var grandTotal         = rawSum + (rawSum * overheadMargin);
+
+            function fmt(n) {
+                return 'P' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            // Sidebar metrics
+            document.getElementById('side-floorArea').textContent  = floorArea.toFixed(2)   + ' sqm';
+            document.getElementById('side-grossArea').textContent  = grossArea.toFixed(2)   + ' sqm';
+            document.getElementById('side-bldgVolume').textContent = bldgVolume.toFixed(2)  + ' cu.m';
+            document.getElementById('side-perimeter').textContent  = perimeter.toFixed(2)   + ' m';
+            document.getElementById('side-concrete').textContent   = concreteVol.toFixed(2) + ' m3';
+            document.getElementById('side-baySpacing').textContent = nodes;
+            document.getElementById('side-pallets').textContent    = totalPalletPositions.toLocaleString('en-US');
+
+            // Cost breakdown
+            document.getElementById('cost-breakdown-materials').textContent  = fmt(materialSubtotal);
+            document.getElementById('cost-breakdown-excavation').textContent = fmt(excavationSubtotal);
+            document.getElementById('cost-breakdown-labor').textContent      = fmt(laborSubtotal);
+            document.getElementById('cost-breakdown-total').textContent      = fmt(grandTotal);
+
+            // Chart
+            costChart.data.datasets[0].data = [floorArea, concreteVol, perimeter];
+            costChart.update();
         }
 
+        // ============================================================
+        // CACHE
+        // ============================================================
         function syncInputs() {
             [
                 'length','width','clearHeight','stories','mezzanine',
@@ -1314,61 +758,66 @@
                 'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth',
                 'footingLength','footingWidth','footingDepth',
                 'pedestalLength','pedestalWidth','pedestalHeight',
-                'excavationDepth','excavationCostM3', 'globalEquipment', 'globalProfit'
-            ].forEach(f => {
-                const el = document.getElementById('input-' + f);
-                const formattedId = f.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
-                const alternateEl = document.getElementById('input-' + formattedId);
-                
+                'excavationDepth','excavationCostM3','laborRateM3',
+                'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity'
+            ].forEach(function(f) {
+                var el = document.getElementById('input-' + f);
                 if (el && estimateState[f] !== 0) el.value = estimateState[f];
-                else if (alternateEl && estimateState[f] !== 0) alternateEl.value = estimateState[f];
             });
-
-            Object.keys(estimateState.labor).forEach(role => {
-                const r = estimateState.labor[role];
-                const inputCount = document.querySelector(`input[oninput="handleLabor('${role}', 'count', this.value)"]`);
-                const inputDays = document.querySelector(`input[oninput="handleLabor('${role}', 'days', this.value)"]`);
-                
-                if(inputCount && r.count !== 0) inputCount.value = r.count;
-                if(inputDays && r.days !== 0) inputDays.value = r.days;
-                
-                if(r.count > 0 && r.days > 0) handleLabor(role, 'count', r.count);
+            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass'].forEach(function(f) {
+                var el = document.getElementById('select-' + f);
+                if (el) el.value = estimateState[f];
             });
+            var concEl = document.getElementById('input-concretePriceM3');
+            if (concEl && estimateState.concretePriceM3 !== 0) concEl.value = estimateState.concretePriceM3;
         }
 
         function saveToCache() {
-            try { localStorage.setItem('urc_ccc_state_v10', JSON.stringify(estimateState)); } catch(e) {}
+            try { localStorage.setItem('urc_ccc_building_state_2026', JSON.stringify(estimateState)); } catch(e) {}
         }
 
         function loadFromCache() {
             try {
-                const raw = localStorage.getItem('urc_ccc_state_v10');
+                var raw = localStorage.getItem('urc_ccc_building_state_2026');
                 if (raw) {
-                    const p = JSON.parse(raw);
-                    Object.keys(estimateState).forEach(k => { 
-                        if (p[k] !== undefined && k !== 'labor') estimateState[k] = p[k]; 
-                    });
-                    if (p.labor) {
-                        Object.keys(p.labor).forEach(role => {
-                            if (estimateState.labor[role]) {
-                                estimateState.labor[role].count = p.labor[role].count || 0;
-                                estimateState.labor[role].days = p.labor[role].days || 0;
-                            }
-                        });
-                    }
+                    var p = JSON.parse(raw);
+                    Object.keys(estimateState).forEach(function(k) { if (p[k] !== undefined) estimateState[k] = p[k]; });
                 }
             } catch(e) {}
             syncInputs();
             updateUI();
         }
 
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type) {
+            type = type || 'success';
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+            var toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50','border-rose-100','text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50','border-neutral-100','text-slate-800');
+            else toast.classList.add('border-neutral-200','text-neutral-900');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(function() { toast.classList.remove('translate-y-2','opacity-0'); }, 10);
+            setTimeout(function() {
+                toast.classList.add('opacity-0','scale-95');
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        // ============================================================
+        // BOOT — auth guard -> cache -> live prices
+        // ============================================================
         window.onload = function() {
-            initCharts();
+            if (typeof Auth !== 'undefined') {
+                Auth.requireLogin();
+            }
             loadFromCache();
-            document.querySelectorAll('#module-scope-grid input[type="checkbox"]').forEach(cb => {
-                cb.addEventListener('change', updateScopeCounters);
-            });
-            updateScopeCounters(); 
+            loadPrices();
         };
     </script>
 </body>

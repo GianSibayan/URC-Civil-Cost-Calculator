@@ -5,6 +5,7 @@
     "currency": "PHP",
     "notes": "Tab 1 & 2 rates from Excel reference. Tab 3 unit rates pending PhilConstruct data from Sir Tony.",
     "year_rates": {
+      "2026": 10,
       "2027": 10
     },
     "active_year": 2026

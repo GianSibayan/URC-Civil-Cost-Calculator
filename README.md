@@ -186,12 +186,11 @@ Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open any `.html
 
 ## Handover (For Future Interns)
 
-1. Ask Gian to add your URC email to the `USERS` env var in Vercel dashboard
-2. Ask Gian to add you as a GitHub repo collaborator (repo is private under `GianSibayan`)
-3. The repo stays under Gian's personal GitHub for post-internship portfolio continuity — Vercel and GitHub are on `gian.e.sibayan@gmail.com`
-4. All price list data lives in `/data/` — edit via `admin.html`, never directly on GitHub
-5. Run escalation in `admin.html` → Annual Escalation at the start of each new year
-6. Sir Tony owns the Excel reference file and PhilConstruct rate list — confirm any formula questions with him in the Monday 11AM drumbeat
+1. Ask to add your URC email to the `USERS` env var in Vercel dashboard
+2. Ask to add you as a GitHub repo collaborator (repo is private under `GianSibayan`)
+3. All price list data lives in `/data/` — edit via `admin.html`, never directly on GitHub
+4. Run escalation in `admin.html` → Annual Escalation at the start of each new year
+5. Sir Tony owns the Excel reference file and PhilConstruct rate list — confirm any formula questions with him in the Monday 11AM drumbeat
 
 ---
 

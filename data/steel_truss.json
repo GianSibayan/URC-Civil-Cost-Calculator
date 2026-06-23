@@ -123,20 +123,5 @@
     "name": "Paint Thinner",
     "unit": "gal.",
     "price_php": 553.25
-  },
-  {
-    "name": "hatdog",
-    "unit": "dog",
-    "price_php": 0
-  },
-  {
-    "name": "hatdog ketchup",
-    "unit": "doggydog",
-    "price_php": 999
-  },
-  {
-    "name": "hatdog na malaki",
-    "unit": "doggydogdog",
-    "price_php": 10000
   }
 ]

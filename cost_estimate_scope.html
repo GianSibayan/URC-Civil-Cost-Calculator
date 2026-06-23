@@ -172,6 +172,41 @@
         // ============================================================
         // 1. MATERIAL CART LOGIC (RESTORED)
         // ============================================================
+        // ============================================================
+        // ESCALATION — mirrors admin.html logic exactly
+        // Reads active_year + year_rates from prices.json meta.
+        // Database JSONs always store 2026 base values unchanged.
+        // ============================================================
+        const BASE_YEAR = 2026;
+        let PRICES_META = null;
+
+        async function loadPricesMeta() {
+            try {
+                let res = await fetch('/prices.json');
+                if (!res.ok) throw new Error('relative failed');
+                PRICES_META = await res.json();
+            } catch (_) {
+                try {
+                    const res = await fetch('https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json');
+                    if (res.ok) PRICES_META = await res.json();
+                } catch (e) { console.error('Could not load prices.json meta:', e); }
+            }
+        }
+
+        function getYearMultiplier() {
+            const meta      = PRICES_META?.meta;
+            const activeYear = meta?.active_year ?? BASE_YEAR;
+            const rates     = meta?.year_rates   ?? {};
+            const rate      = rates[activeYear]  ?? 10;
+            const steps     = activeYear - BASE_YEAR;
+            return { multiplier: Math.pow(1 + rate / 100, steps), activeYear, rate, steps };
+        }
+
+        function scalePrice(basePrice) {
+            const { multiplier } = getYearMultiplier();
+            return Math.round(basePrice * multiplier * 100) / 100;
+        }
+
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
             { id: 'timber_formworks', file: 'data/timber_formworks.json', schema: 'simple', label: 'Timber Formworks' },
@@ -234,20 +269,20 @@
 
             try {
                 if (config.schema === 'simple') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, scalePrice(item.price_php), item.unit));
                 } else if (config.schema === 'masonry' && data.prices) {
-                    data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
+                    data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, scalePrice(item.price_php), item.unit));
                 } else if (config.schema === 'rebars') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size} (${item.length})`, item.price_php, "pc"));
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size} (${item.length})`, scalePrice(item.price_php), "pc"));
                 } else if (config.schema === 'concrete_mix') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, item.price_php, "cu.m"));
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, scalePrice(item.price_php), "cu.m"));
                 } else if (config.schema === 'equipment') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, item.rate_min_php, item.unit));
+                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, scalePrice(item.rate_min_php), item.unit));
                 } else if (config.schema === 'pipes') {
                     let pipeIdx = 0;
-                    if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english} (${item.metric_mm}mm)`, item.price_per_6m_php, "6m"));
-                    if (data.seamless_galvanized_steel) data.seamless_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Seamless: ${item.description}`, item.price_per_length_php, "length"));
-                    if (data.erw_welded_galvanized_steel) data.erw_welded_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `ERW Welded: ${item.description}`, item.price_per_length_php, "length"));
+                    if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english} (${item.metric_mm}mm)`, scalePrice(item.price_per_6m_php), "6m"));
+                    if (data.seamless_galvanized_steel) data.seamless_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Seamless: ${item.description}`, scalePrice(item.price_per_length_php), "length"));
+                    if (data.erw_welded_galvanized_steel) data.erw_welded_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `ERW Welded: ${item.description}`, scalePrice(item.price_per_length_php), "length"));
                 }
             } catch (error) { console.error(error); }
         }
@@ -494,7 +529,8 @@
         let activeTabId = SCOPE_CATEGORIES[0].id;
         let categoryTotals = {}; 
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadPricesMeta();  // must complete first so scalePrice() has meta
             fetchAllDatabases(); // Initialize DB for Cart
             initTotals(); // Initialize Totals for Scope
             renderNavigation();
@@ -645,6 +681,12 @@
                 modal.classList.remove('opacity-0');
                 modalContent.classList.remove('scale-95');
             }, 10);
+        }
+        
+        function goBackMain() {
+            document.body.style.transition = 'opacity 0.2s';
+            document.body.style.opacity = '0';
+            setTimeout(() => { Auth.logout(); }, 200);
         }
 
         function closeSummary() {

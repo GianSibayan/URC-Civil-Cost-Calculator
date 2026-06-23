@@ -437,7 +437,20 @@
                                 <option value="2030">2030</option>
                             </select>
                         </div>
+                        <div class="flex flex-col">
+                            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide block mb-1">Active year</label>
+                            <button onclick="setActiveYear()" id="set-active-year-btn"
+                                class="px-3 py-2 text-sm font-semibold bg-black text-white rounded-lg hover:bg-neutral-800 transition cursor-pointer whitespace-nowrap">
+                                Set active
+                            </button>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Active year badge -->
+                <div id="active-year-banner" class="hidden mb-3 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800 font-medium flex items-center justify-between">
+                    <span>🗓 Active year: <strong id="active-year-display">2026</strong> — all prices shown at this year&#x2019;s rates</span>
+                    <button onclick="clearActiveYear()" class="text-xs text-blue-400 hover:text-blue-700 cursor-pointer font-semibold">Reset to base</button>
                 </div>
 
                 <!-- Price viewer table — populated by renderEscalationViewer() -->
@@ -452,48 +465,7 @@
                 </div>
 
                 <!-- Apply section — collapsed by default, expand to apply -->
-                <details class="group">
-                    <summary class="cursor-pointer list-none flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wide mb-3 select-none">
-                        <svg class="w-3.5 h-3.5 group-open:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                        Apply escalation to database (once per year)
-                    </summary>
-                    <div class="mt-3 space-y-3">
-                        <!-- Guard banner -->
-                        <div id="escalation-guard-banner" class="hidden px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 font-medium flex items-center gap-2">
-                            <span>⚠️</span>
-                            <span id="escalation-guard-msg"></span>
-                        </div>
-                        <p class="text-xs text-neutral-500">This permanently overwrites all prices in GitHub. Use the viewer above to confirm the numbers look right first.</p>
-                        <div class="flex gap-3">
-                            <button onclick="previewEscalation()"
-                                class="flex-1 py-2.5 bg-neutral-900 hover:bg-neutral-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
-                                Preview &amp; Confirm
-                            </button>
-                        </div>
-                        <!-- Preview table (reused from before) -->
-                        <div id="escalation-preview" class="hidden bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
-                            <div class="px-5 py-4 border-b border-neutral-100 bg-[#f8f9fa] flex items-center justify-between">
-                                <h4 class="text-sm font-bold text-neutral-700 uppercase tracking-wide">Preview</h4>
-                                <span id="escalation-preview-label" class="text-xs text-neutral-500"></span>
-                            </div>
-                            <table class="w-full text-sm border-collapse">
-                                <thead><tr class="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold text-neutral-400 uppercase tracking-wide">
-                                    <th class="py-2.5 px-5 text-left">Category</th>
-                                    <th class="py-2.5 px-5 text-center">Items</th>
-                                    <th class="py-2.5 px-5 text-right">Sample: current → new</th>
-                                </tr></thead>
-                                <tbody id="escalation-preview-body"></tbody>
-                            </table>
-                            <div class="px-5 py-4 border-t border-neutral-100 bg-rose-50 flex items-start gap-3">
-                                <span class="text-rose-500 text-lg leading-none mt-0.5">⚠</span>
-                                <p class="text-xs text-rose-700 font-medium">This action is <strong>irreversible</strong>. It will overwrite all prices in all JSONs on GitHub.</p>
-                            </div>
-                        </div>
-                        <button id="escalation-confirm-btn" onclick="applyEscalation()" class="hidden w-full py-3 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition cursor-pointer">
-                            Confirm &amp; Apply Escalation to All Price Lists
-                        </button>
-                    </div>
-                </details>
+
 
                 <!-- History -->
                 <div class="mt-8">
@@ -536,6 +508,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const meta = window.PRICES ? window.PRICES.meta : null;
     if (meta) document.getElementById('last-updated-label').textContent = `Last updated: ${meta.last_updated}`;
+    updateActiveYearBanner();
 });
 
 // ============================================================
@@ -547,9 +520,6 @@ function switchCategory(key) {
     if (navBtn) navBtn.classList.add('nav-active');
 
     document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
-    document.getElementById('escalation-guard-banner').classList.add('hidden');
-    document.getElementById('escalation-preview').classList.add('hidden');
-    document.getElementById('escalation-confirm-btn').classList.add('hidden');
     if (typeof _selectMode !== 'undefined' && _selectMode) toggleSelectMode();
     // Exit select mode on nav switch
     if (_selectMode) toggleSelectMode();
@@ -662,23 +632,30 @@ function saveCoreRow(btn, type, key) {
 // ============================================================
 function renderSimple(key, data) {
     const arr = Array.isArray(data) ? data : [];
-    document.getElementById('page-badge').textContent = `${arr.length} items`;
+    const _yr = getYearMultiplier();
+    const _yrLabel = _yr.steps !== 0 ? ` — ${_yr.activeYear} prices` : '';
+    document.getElementById('page-badge').textContent = `${arr.length} items${_yrLabel}`;
     document.getElementById('view-simple').classList.remove('hidden');
-    document.getElementById('tbody-simple').innerHTML = arr.map((item, i) => `
-        <tr data-index="${i}">
+    const { multiplier, activeYear, steps } = getYearMultiplier();
+    document.getElementById('tbody-simple').innerHTML = arr.map((item, i) => {
+        const displayPrice = steps === 0 ? item.price_php : Math.round(item.price_php * multiplier * 100) / 100;
+        return `<tr data-index="${i}">
             <td>${item.name}</td>
             <td class="readonly-cell">${item.unit || ''}</td>
-            <td class="text-right"><input class="price-input" value="${item.price_php}" oninput="markDirty(this, '${key}')"></td>
+            <td class="text-right"><input class="price-input" value="${displayPrice}" oninput="markDirty(this, '${key}')" data-base="${item.price_php}"></td>
             <td class="text-right"><button class="save-btn" onclick="saveSimpleRow(this, '${key}', ${i})">save</button></td>
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
 }
 
 async function saveSimpleRow(btn, key, index) {
     const row = btn.closest('tr');
-    const val = parseFloat(row.querySelector('.price-input').value);
-    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+    const displayVal = parseFloat(row.querySelector('.price-input').value);
+    if (isNaN(displayVal)) { showToast('Invalid value.', 'error'); return; }
+    // Always save base (2026) value regardless of active year
+    const baseVal = unscalePrice(displayVal);
     btn.textContent = 'saving...'; btn.classList.add('saving');
-    const ok = await Parser.updateSimpleItem(key, index, 'price_php', val);
+    const ok = await Parser.updateSimpleItem(key, index, 'price_php', baseVal);
     btn.classList.remove('saving');
     if (ok) flashSaved(btn, row);
 }
@@ -689,13 +666,16 @@ async function saveSimpleRow(btn, key, index) {
 function renderMasonry(data) {
     document.getElementById('page-badge').textContent = `${data.prices.length} items + proportion table`;
     document.getElementById('view-masonry').classList.remove('hidden');
-    document.getElementById('tbody-masonry-prices').innerHTML = data.prices.map((item, i) => `
-        <tr data-index="${i}">
+    const _mM = getYearMultiplier();
+    document.getElementById('tbody-masonry-prices').innerHTML = data.prices.map((item, i) => {
+        const dp = _mM.steps === 0 ? item.price_php : Math.round(item.price_php * _mM.multiplier * 100) / 100;
+        return `<tr data-index="${i}">
             <td>${item.name}</td>
             <td class="readonly-cell">${item.unit || ''}</td>
-            <td class="text-right"><input class="price-input" value="${item.price_php}" oninput="markDirty(this, 'masonry')"></td>
+            <td class="text-right"><input class="price-input" value="${dp}" oninput="markDirty(this, 'masonry')" data-base="${item.price_php}"></td>
             <td class="text-right"><button class="save-btn" onclick="saveMasonryPrice(this, ${i})">save</button></td>
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
     document.getElementById('tbody-masonry-proportion').innerHTML = data.concrete_proportion_table.map(row => `
         <tr>
             <td class="font-medium">${row.mixture_class}</td>
@@ -711,10 +691,11 @@ function renderMasonry(data) {
 
 async function saveMasonryPrice(btn, index) {
     const row = btn.closest('tr');
-    const val = parseFloat(row.querySelector('.price-input').value);
-    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+    const displayVal = parseFloat(row.querySelector('.price-input').value);
+    if (isNaN(displayVal)) { showToast('Invalid value.', 'error'); return; }
+    const baseVal = unscalePrice(displayVal);
     btn.textContent = 'saving...'; btn.classList.add('saving');
-    categoryData['masonry'].prices[index].price_php = val;
+    categoryData['masonry'].prices[index].price_php = baseVal;
     const ok = await Parser.saveBulk('masonry', categoryData['masonry']);
     btn.classList.remove('saving');
     if (ok) flashSaved(btn, row);
@@ -1269,275 +1250,29 @@ function flashSaved(btn, row) {
     setTimeout(() => { btn.textContent = 'save'; btn.classList.remove('saved'); }, 2000);
 }
 
-// ============================================================
-// ESCALATION
-// ============================================================
-const ESCALATION_SCHEMAS = [
-    { key: 'concreting_materials', schema: 'simple',    fields: ['price_php'] },
-    { key: 'timber_formworks',     schema: 'simple',    fields: ['price_php'] },
-    { key: 'roofing',              schema: 'simple',    fields: ['price_php'] },
-    { key: 'steel_truss',          schema: 'simple',    fields: ['price_php'] },
-    { key: 'painting_works',       schema: 'simple',    fields: ['price_php'] },
-    { key: 'electrical',           schema: 'simple',    fields: ['price_php'] },
-    { key: 'masonry',              schema: 'masonry',   fields: ['price_php'] },
-    { key: 'fencing',              schema: 'simple',    fields: ['price_php'] },
-    { key: 'ceiling',              schema: 'simple',    fields: ['price_php'] },
-    { key: 'plumbing',             schema: 'simple',    fields: ['price_php'] },
-    { key: 'rebars',               schema: 'simple',    fields: ['price_php'] },
-    { key: 'concrete_mix',         schema: 'simple',    fields: ['price_php'] },
-    { key: 'equipment',            schema: 'equipment', fields: ['rate_min_php','rate_max_php'] },
-    { key: 'pipes',                schema: 'pipes',     fields: [] },
-];
-const ESCALATION_LABELS = {
-    concreting_materials:'Concreting Materials', timber_formworks:'Timber Formworks',
-    roofing:'Roofing', steel_truss:'Steel Truss', painting_works:'Painting Works',
-    electrical:'Electrical', masonry:'Masonry', fencing:'Fencing', ceiling:'Ceiling',
-    plumbing:'Plumbing', rebars:'Rebars', concrete_mix:'Concrete Mix',
-    equipment:'Equipment', pipes:'Pipes',
-};
-let _escalationPreviewData = null;
-
-async function previewEscalation() {
-    const yearEl = document.getElementById('esc-year-select');
-    const rateEl  = document.getElementById('esc-rate-input');
-    const year = parseInt(yearEl ? yearEl.value : 2027);
-    const rate = parseFloat(rateEl ? rateEl.value : 10);
-    if (!year || year < 2026 || year > 2040) { showToast('Enter a valid year (2026–2040).', 'error'); return; }
-    if (isNaN(rate) || rate <= 0 || rate > 100) { showToast('Enter a valid escalation rate.', 'error'); return; }
-
-    // Guard: already applied this year?
-    const banner = document.getElementById('escalation-guard-banner');
-    const guardMsg = document.getElementById('escalation-guard-msg');
-    banner.classList.add('hidden');
-    if (window.PRICES?.meta?.escalation_history) {
-        const done = window.PRICES.meta.escalation_history.find(h => h.year === year);
-        if (done) {
-            guardMsg.textContent = `Escalation for ${year} was already applied on ${done.date} at ${done.rate}%. Applying again will compound prices.`;
-            banner.classList.remove('hidden');
-        }
-    }
-
-    const multiplier = 1 + rate / 100;
-    showToast('Loading all price lists…', 'info');
-    _escalationPreviewData = [];
-    const tbodyEl = document.getElementById('escalation-preview-body');
-    tbodyEl.innerHTML = '<tr><td colspan="3" class="py-6 text-center text-xs text-neutral-400">Loading…</td></tr>';
-    document.getElementById('escalation-preview').classList.remove('hidden');
-    document.getElementById('escalation-confirm-btn').classList.add('hidden');
-
-    function scaleField(obj, field) {
-        if (obj[field] !== undefined && obj[field] > 0) {
-            const before = obj[field];
-            obj[field] = Math.round(obj[field] * multiplier * 100) / 100;
-            return { before, after: obj[field] };
-        }
-        return null;
-    }
-
-    for (const s of ESCALATION_SCHEMAS) {
-        let data = categoryData[s.key] || await Parser.loadCategory(s.key);
-        if (data) categoryData[s.key] = data;
-        if (!data) { _escalationPreviewData.push({ key: s.key, error: true }); continue; }
-        const scaled = JSON.parse(JSON.stringify(data));
-        let itemCount = 0, sampleBefore = 0, sampleAfter = 0;
-
-        if (s.schema === 'simple') {
-            (Array.isArray(scaled) ? scaled : []).forEach((item, i) => {
-                const r = scaleField(item, 'price_php');
-                if (r && i === 0) { sampleBefore = r.before; sampleAfter = r.after; }
-                itemCount++;
-            });
-        } else if (s.schema === 'masonry') {
-            (scaled.prices || []).forEach((item, i) => {
-                const r = scaleField(item, 'price_php');
-                if (r && i === 0) { sampleBefore = r.before; sampleAfter = r.after; }
-                itemCount++;
-            });
-        } else if (s.schema === 'equipment') {
-            (Array.isArray(scaled) ? scaled : []).forEach((item, i) => {
-                ['rate_min_php','rate_max_php'].forEach(f => {
-                    const r = scaleField(item, f);
-                    if (r && i === 0 && f === 'rate_min_php') { sampleBefore = r.before; sampleAfter = r.after; }
-                });
-                itemCount++;
-            });
-        } else if (s.schema === 'pipes') {
-            let first = true;
-            ['nominal_size_unit_price','seamless_galvanized_steel','erw_welded_galvanized_steel'].forEach(tk => {
-                const priceField = tk === 'nominal_size_unit_price' ? 'price_per_6m_php' : 'price_per_length_php';
-                (scaled[tk] || []).forEach(item => {
-                    const r = scaleField(item, priceField);
-                    if (r && first) { sampleBefore = r.before; sampleAfter = r.after; first = false; }
-                    itemCount++;
-                });
-            });
-        }
-        _escalationPreviewData.push({ key: s.key, scaledData: scaled, itemCount, sampleBefore, sampleAfter, error: false });
-    }
-
-    // Scale prices.json core rates
-    if (window.PRICES) {
-        const p = JSON.parse(JSON.stringify(window.PRICES));
-        const t = p.tab1_tab2;
-        ['rebar_price_per_kg','excavation_cost_per_m3','forms_price_per_m2','labor_cost_per_day'].forEach(f => {
-            if (t[f]) t[f] = Math.round(t[f] * multiplier * 100) / 100;
-        });
-        Object.keys(t.concrete_classes || {}).forEach(cls => {
-            if (t.concrete_classes[cls].price_per_m3)
-                t.concrete_classes[cls].price_per_m3 = Math.round(t.concrete_classes[cls].price_per_m3 * multiplier * 100) / 100;
-        });
-        _escalationPreviewData.push({ key: '__prices_json__', scaledData: p, itemCount: 'core rates', sampleBefore: 0, sampleAfter: 0, error: false });
-    }
-
-    document.getElementById('escalation-preview-label').textContent = `${rate}% → ×${multiplier.toFixed(4)}`;
-    tbodyEl.innerHTML = _escalationPreviewData.map(item => {
-        if (item.error) return `<tr class="border-b border-neutral-100"><td class="py-2.5 px-5 text-rose-500">${ESCALATION_LABELS[item.key]||item.key}</td><td colspan="2" class="py-2.5 px-5 text-rose-400 text-xs">Failed to load</td></tr>`;
-        if (item.key === '__prices_json__') return `<tr class="border-b border-neutral-100 bg-blue-50"><td class="py-2.5 px-5 font-semibold text-blue-700">prices.json (core rates)</td><td class="py-2.5 px-5 text-center text-neutral-500">core rates</td><td class="py-2.5 px-5 text-right text-neutral-500 text-xs">concrete, rebar, excavation, labor</td></tr>`;
-        return `<tr class="border-b border-neutral-100 hover:bg-neutral-50">
-            <td class="py-2.5 px-5 font-medium text-neutral-800">${ESCALATION_LABELS[item.key]||item.key}</td>
-            <td class="py-2.5 px-5 text-center text-neutral-500">${item.itemCount}</td>
-            <td class="py-2.5 px-5 text-right text-xs text-neutral-500">
-                ₱${item.sampleBefore.toLocaleString('en-US',{minimumFractionDigits:2})} → <span class="font-bold text-neutral-800">₱${item.sampleAfter.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
-            </td></tr>`;
-    }).join('');
-
-    document.getElementById('escalation-confirm-btn').classList.remove('hidden');
-    showToast('Preview ready. Review carefully before confirming.', 'info');
-}
-
-async function applyEscalation() {
-    if (!_escalationPreviewData) { showToast('Run Preview first.', 'error'); return; }
-    const yearEl = document.getElementById('esc-year-select');
-    const rateEl  = document.getElementById('esc-rate-input');
-    const year = parseInt(yearEl ? yearEl.value : 2027);
-    const rate = parseFloat(rateEl ? rateEl.value : 10);
-    const btn  = document.getElementById('escalation-confirm-btn');
-    btn.textContent = 'Saving…'; btn.disabled = true;
-
-    let failed = 0;
-
-    // SNAPSHOT: save pre-escalation prices before overwriting
-    const prevYear = year - 1;
-    const pricesJsonItem = _escalationPreviewData.find(i => i.key === '__prices_json__');
-    if (pricesJsonItem && pricesJsonItem.scaledData) {
-        if (!pricesJsonItem.scaledData.meta.price_snapshots)
-            pricesJsonItem.scaledData.meta.price_snapshots = {};
-        const snapshot = { year: prevYear, captured: new Date().toISOString().split('T')[0], categories: {} };
-        for (const item of _escalationPreviewData) {
-            if (item.error || item.key === '__prices_json__') continue;
-            if (categoryData[item.key]) snapshot.categories[item.key] = JSON.parse(JSON.stringify(categoryData[item.key]));
-        }
-        if (window.PRICES) snapshot.core_rates = JSON.parse(JSON.stringify(window.PRICES.tab1_tab2));
-        pricesJsonItem.scaledData.meta.price_snapshots[prevYear] = snapshot;
-    }
-
-    for (const item of _escalationPreviewData) {
-        if (item.error || !item.scaledData) continue;
-        if (item.key === '__prices_json__') {
-            if (!item.scaledData.meta.escalation_history) item.scaledData.meta.escalation_history = [];
-            item.scaledData.meta.escalation_history.push({
-                year, rate, date: new Date().toISOString().split('T')[0],
-                applied_by: (typeof Auth !== 'undefined' ? Auth.getEmail?.() : null) || 'admin'
-            });
-            item.scaledData.meta.last_updated = new Date().toISOString().split('T')[0];
-            const ok = await Parser.savePricesJson(item.scaledData);
-            if (ok) window.PRICES = item.scaledData; else failed++;
-        } else {
-            const ok = await Parser.saveBulk(item.key, item.scaledData);
-            if (ok) categoryData[item.key] = item.scaledData; else failed++;
-        }
-    }
-
-    btn.textContent = 'Confirm & Apply Escalation to All Price Lists';
-    btn.disabled = false;
-    _escalationPreviewData = null;
-    document.getElementById('escalation-confirm-btn').classList.add('hidden');
-    document.getElementById('escalation-preview').classList.add('hidden');
-
-    if (failed === 0) {
-        showToast(`Escalation for ${year} at ${rate}% applied successfully.`, 'success');
-        renderEscalationHistory();
-    } else {
-        showToast(`Done with ${failed} error(s). Check the console.`, 'error');
-    }
-}
-
 function renderEscalationHistory() {
     const el = document.getElementById('escalation-history');
     if (!el) return;
     const history = window.PRICES?.meta?.escalation_history;
-    const snapshots = window.PRICES?.meta?.price_snapshots || {};
     if (!history || !history.length) {
         el.innerHTML = '<p class="text-xs text-neutral-400 italic">No escalation history found.</p>';
         return;
     }
-    el.innerHTML = [...history].reverse().map(h => {
-        const prevYear = h.year - 1;
-        const hasSnapshot = !!snapshots[prevYear];
-        return `<div class="flex items-center justify-between px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm">
+    el.innerHTML = [...history].reverse().map(h =>
+        `<div class="flex items-center justify-between px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm">
             <div>
                 <span class="font-bold text-neutral-800">${h.year}</span>
                 <span class="text-neutral-400 ml-2 text-xs">applied ${h.date} by ${h.applied_by||'admin'}</span>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="font-bold text-emerald-600">+${h.rate}%</span>
-                ${hasSnapshot
-                    ? `<button onclick="revertToYear(${prevYear})"
-                        class="text-xs px-2.5 py-1 border border-neutral-300 rounded-lg text-neutral-500 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer font-semibold">
-                        Revert to ${prevYear}
-                      </button>`
-                    : `<span class="text-[10px] text-neutral-300 italic">no snapshot</span>`
-                }
-            </div>
-        </div>`;
-    }).join('');
-}
-
-async function revertToYear(snapYear) {
-    const snapshots = window.PRICES?.meta?.price_snapshots;
-    if (!snapshots || !snapshots[snapYear]) {
-        showToast('No snapshot found for ' + snapYear + '.', 'error'); return;
-    }
-    if (!confirm('Revert ALL prices to the ' + snapYear + ' snapshot? This overwrites current prices on GitHub and cannot be undone.')) return;
-
-    const snapshot = snapshots[snapYear];
-    let failed = 0;
-
-    // Revert each category JSON
-    for (const key of Object.keys(snapshot.categories || {})) {
-        const data = snapshot.categories[key];
-        const ok = await Parser.saveBulk(key, data);
-        if (ok) categoryData[key] = data; else failed++;
-    }
-
-    // Revert core rates in prices.json
-    if (snapshot.core_rates && window.PRICES) {
-        const p = JSON.parse(JSON.stringify(window.PRICES));
-        p.tab1_tab2 = snapshot.core_rates;
-        // Log the revert in escalation history
-        if (!p.meta.escalation_history) p.meta.escalation_history = [];
-        p.meta.escalation_history.push({
-            year: snapYear,
-            rate: 0,
-            date: new Date().toISOString().split('T')[0],
-            applied_by: (typeof Auth !== 'undefined' ? Auth.getEmail?.() : null) || 'admin',
-            note: 'REVERTED from ' + (snapYear + 1) + ' snapshot'
-        });
-        p.meta.last_updated = new Date().toISOString().split('T')[0];
-        const ok = await Parser.savePricesJson(p);
-        if (ok) window.PRICES = p; else failed++;
-    }
-
-    if (failed === 0) {
-        showToast('Reverted to ' + snapYear + ' prices successfully.', 'success');
-        renderEscalationHistory();
-    } else {
-        showToast('Revert done with ' + failed + ' error(s). Check console.', 'error');
-    }
+            <span class="font-bold text-emerald-600">+${h.rate}%</span>
+        </div>`
+    ).join('');
 }
 
 // ============================================================
-// ESCALATION VIEWER — read-only price preview by year
+// ESCALATION VIEWER — read-only front-end price preview
+// Base year = 2026. All other years are computed client-side.
+// Nothing is written to GitHub.
 // ============================================================
 async function renderEscalationViewer() {
     const yearEl = document.getElementById('esc-year-select');
@@ -1547,114 +1282,126 @@ async function renderEscalationViewer() {
     const selectedYear = parseInt(yearEl.value);
     const ratePerYear  = parseFloat(rateEl.value) || 10;
     const BASE_YEAR    = 2026;
-    const steps        = selectedYear - BASE_YEAR; // negative = past, positive = future
+    const steps        = selectedYear - BASE_YEAR;
     const multiplier   = Math.pow(1 + ratePerYear / 100, steps);
 
     document.getElementById('esc-viewer-title').textContent =
         `All Categories — ${selectedYear}${selectedYear === BASE_YEAR ? ' (base)' : ''}`;
     document.getElementById('esc-viewer-badge').textContent =
         steps === 0 ? 'Current stored prices'
-        : steps > 0 ? `×${multiplier.toFixed(4)} from base (+${(ratePerYear * steps).toFixed(1)}% compound)`
-                    : `×${multiplier.toFixed(4)} from base (${(ratePerYear * steps).toFixed(1)}% compound)`;
+        : steps > 0 ? `×${multiplier.toFixed(4)} from base (+${(ratePerYear * steps).toFixed(1)}% compound approx)`
+                    : `×${multiplier.toFixed(4)} from base`;
 
     const bodyEl = document.getElementById('esc-viewer-body');
     bodyEl.innerHTML = '<div class="px-5 py-6 text-center text-xs text-neutral-400">Loading price lists…</div>';
 
+    const ALL_KEYS = [
+        { key: 'concreting_materials', schema: 'simple',    label: 'Concreting Materials' },
+        { key: 'timber_formworks',     schema: 'simple',    label: 'Timber Formworks' },
+        { key: 'roofing',              schema: 'simple',    label: 'Roofing' },
+        { key: 'steel_truss',          schema: 'simple',    label: 'Steel Truss' },
+        { key: 'painting_works',       schema: 'simple',    label: 'Painting Works' },
+        { key: 'electrical',           schema: 'simple',    label: 'Electrical' },
+        { key: 'masonry',              schema: 'masonry',   label: 'Masonry' },
+        { key: 'fencing',              schema: 'simple',    label: 'Fencing' },
+        { key: 'ceiling',              schema: 'simple',    label: 'Ceiling' },
+        { key: 'plumbing',             schema: 'simple',    label: 'Plumbing' },
+        { key: 'rebars',               schema: 'rebars',    label: 'Rebars' },
+        { key: 'concrete_mix',         schema: 'concrete_mix', label: 'Concrete Mix' },
+        { key: 'equipment',            schema: 'equipment', label: 'Equipment' },
+        { key: 'pipes',                schema: 'pipes',     label: 'Pipes' },
+    ];
+
     const rows = [];
-    for (const s of ESCALATION_SCHEMAS) {
+    for (const s of ALL_KEYS) {
         let data = categoryData[s.key] || await Parser.loadCategory(s.key);
         if (data) categoryData[s.key] = data;
         if (!data) continue;
 
         let items = [];
-        if (s.schema === 'simple')       items = Array.isArray(data) ? data : [];
-        else if (s.schema === 'masonry') items = data.prices || [];
+        if (s.schema === 'simple' || s.schema === 'rebars' || s.schema === 'concrete_mix')
+            items = Array.isArray(data) ? data : [];
+        else if (s.schema === 'masonry')   items = data.prices || [];
         else if (s.schema === 'equipment') items = Array.isArray(data) ? data : [];
         else if (s.schema === 'pipes') {
-            ['nominal_size_unit_price','seamless_galvanized_steel','erw_welded_galvanized_steel'].forEach(tk => {
-                (data[tk] || []).forEach(item => items.push(item));
-            });
-        } else items = Array.isArray(data) ? data : [];
+            ['nominal_size_unit_price','seamless_galvanized_steel','erw_welded_galvanized_steel']
+                .forEach(tk => (data[tk] || []).forEach(item => items.push(item)));
+        }
 
-        items.slice(0, 3).forEach(item => {
-            const basePrice = item.price_php || item.rate_min_php || item.price_per_6m_php || item.price_per_length_php || 0;
-            const scaledPrice = Math.round(basePrice * multiplier * 100) / 100;
+        const SAMPLE = 3;
+        items.slice(0, SAMPLE).forEach(item => {
+            const base = item.price_php || item.rate_min_php || item.price_per_6m_php || item.price_per_length_php || 0;
+            const scaled = Math.round(base * multiplier * 100) / 100;
             const name = item.name || item.spec || item.product || item.description || '—';
-            rows.push({ category: ESCALATION_LABELS[s.key] || s.key, name, basePrice, scaledPrice });
+            rows.push({ cat: s.label, name, base, scaled });
         });
-        if (items.length > 3) rows.push({ category: ESCALATION_LABELS[s.key] || s.key, name: `…and ${items.length - 3} more`, basePrice: null, scaledPrice: null, moreRow: true });
+        if (items.length > SAMPLE)
+            rows.push({ cat: s.label, name: `…and ${items.length - SAMPLE} more items`, base: null, more: true });
     }
 
-    if (rows.length === 0) {
-        bodyEl.innerHTML = '<div class="px-5 py-6 text-center text-xs text-neutral-400">No price data loaded.</div>';
+    if (!rows.length) {
+        bodyEl.innerHTML = '<div class="px-5 py-6 text-center text-xs text-neutral-400">No data loaded.</div>';
         return;
     }
 
     let lastCat = '';
     bodyEl.innerHTML = rows.map(row => {
-        if (row.moreRow) return `<div class="px-5 py-1.5 text-xs text-neutral-400 italic">${row.name}</div>`;
-        const catHeader = row.category !== lastCat
-            ? `<div class="px-5 pt-3 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">${(lastCat = row.category, row.category)}</div>`
-            : (lastCat = row.category, '');
-        const priceCell = row.basePrice === null ? '' :
-            steps === 0
-                ? `<span class="font-semibold text-neutral-800">₱${row.basePrice.toLocaleString('en-US',{minimumFractionDigits:2})}</span>`
-                : `<span class="text-neutral-400 line-through text-xs mr-2">₱${row.basePrice.toLocaleString('en-US',{minimumFractionDigits:2})}</span>
-                   <span class="font-bold text-neutral-900">₱${row.scaledPrice.toLocaleString('en-US',{minimumFractionDigits:2})}</span>`;
-        return `${catHeader}<div class="flex items-center justify-between px-5 py-2 hover:bg-neutral-50 text-sm">
+        if (row.more) return `<div class="px-5 py-1 text-xs text-neutral-400 italic bg-neutral-50">${row.name}</div>`;
+        const header = row.cat !== lastCat
+            ? `<div class="px-5 pt-3 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-neutral-50 border-t border-neutral-100">${(lastCat = row.cat, row.cat)}</div>`
+            : (lastCat = row.cat, '');
+        const price = steps === 0
+            ? `<span class="font-semibold text-neutral-800">₱${row.base.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`
+            : `<span class="text-neutral-400 line-through text-xs mr-2">₱${row.base.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span><span class="font-bold text-neutral-900">₱${row.scaled.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+        return `${header}<div class="flex items-center justify-between px-5 py-2 hover:bg-neutral-50 text-sm">
             <span class="text-neutral-700">${row.name}</span>
-            <span class="text-right">${priceCell}</span>
+            <span>${price}</span>
         </div>`;
     }).join('');
 }
 
 // ============================================================
-// SELECT MODE — row checkboxes + remove selected
+// SELECT MODE — row checkboxes + remove selected rows
 // ============================================================
 let _selectMode = false;
 
 function toggleSelectMode() {
     _selectMode = !_selectMode;
-    const selectBtn      = document.getElementById('select-btn');
-    const removeBtn      = document.getElementById('remove-selected-btn');
-    const importLabel    = document.getElementById('import-btn-label');
-    const exportBtn      = document.getElementById('export-btn');
+    const selectBtn   = document.getElementById('select-btn');
+    const removeBtn   = document.getElementById('remove-selected-btn');
+    const importLabel = document.getElementById('import-btn-label');
+    const exportBtn   = document.getElementById('export-btn');
 
     if (_selectMode) {
         selectBtn.textContent = 'Cancel';
         selectBtn.className = 'px-4 py-2 text-sm font-medium bg-neutral-100 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-200 transition cursor-pointer';
         removeBtn.classList.remove('hidden');
-        if (importLabel) importLabel.classList.add('opacity-40', 'pointer-events-none');
-        if (exportBtn)   exportBtn.classList.add('opacity-40', 'pointer-events-none');
+        if (importLabel) importLabel.classList.add('opacity-40','pointer-events-none');
+        if (exportBtn)   exportBtn.classList.add('opacity-40','pointer-events-none');
         injectRowCheckboxes();
     } else {
         selectBtn.textContent = 'Select';
         selectBtn.className = 'px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-50 transition cursor-pointer';
         removeBtn.classList.add('hidden');
         document.getElementById('remove-count').textContent = '0';
-        if (importLabel) importLabel.classList.remove('opacity-40', 'pointer-events-none');
-        if (exportBtn)   exportBtn.classList.remove('opacity-40', 'pointer-events-none');
+        if (importLabel) importLabel.classList.remove('opacity-40','pointer-events-none');
+        if (exportBtn)   exportBtn.classList.remove('opacity-40','pointer-events-none');
         removeRowCheckboxes();
     }
 }
 
 function injectRowCheckboxes() {
-    // Find all data rows across all visible tbodies
-    const tbodies = document.querySelectorAll('.price-table tbody');
-    tbodies.forEach(tbody => {
-        tbody.querySelectorAll('tr[data-index]').forEach(tr => {
-            if (tr.querySelector('.row-select-cb')) return; // already injected
-            const td = document.createElement('td');
-            td.className = 'text-center w-10 pl-3';
-            td.style.width = '36px';
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.className = 'row-select-cb cursor-pointer';
-            cb.style.cssText = 'width:16px;height:16px;accent-color:#3b82f6;';
-            cb.addEventListener('change', updateRemoveCount);
-            td.appendChild(cb);
-            tr.insertBefore(td, tr.firstChild);
-        });
+    document.querySelectorAll('.price-table tbody tr[data-index]').forEach(tr => {
+        if (tr.querySelector('.row-select-cb')) return;
+        const td = document.createElement('td');
+        td.style.cssText = 'width:36px;padding:0 8px;text-align:center;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'row-select-cb cursor-pointer';
+        cb.style.cssText = 'width:16px;height:16px;accent-color:#3b82f6;';
+        cb.addEventListener('change', updateRemoveCount);
+        td.appendChild(cb);
+        tr.insertBefore(td, tr.firstChild);
     });
     updateRemoveCount();
 }
@@ -1670,41 +1417,126 @@ function updateRemoveCount() {
 
 async function removeSelectedRows() {
     if (!currentCategory) { showToast('Select a category first.', 'error'); return; }
-    const checkedTrs = [...document.querySelectorAll('.row-select-cb:checked')].map(cb => cb.closest('tr'));
-    if (checkedTrs.length === 0) { showToast('No rows selected.', 'info'); return; }
-    if (!confirm(`Remove ${checkedTrs.length} row(s)? This will save immediately to GitHub.`)) return;
+    const checked = [...document.querySelectorAll('.row-select-cb:checked')].map(cb => cb.closest('tr'));
+    if (!checked.length) { showToast('No rows selected.', 'info'); return; }
+    if (!confirm(`Remove ${checked.length} row(s)? This saves immediately to GitHub.`)) return;
 
-    const indices = checkedTrs.map(tr => parseInt(tr.dataset.index)).filter(i => !isNaN(i)).sort((a,b) => b-a);
-    const key     = currentCategory;
-    const schema  = key === 'masonry' ? 'masonry'
-                  : key === 'rebars'  ? 'rebars'
-                  : key === 'concrete_mix' ? 'concrete_mix'
-                  : key === 'equipment'    ? 'equipment'
-                  : key === 'pipes'        ? 'pipes'
-                  : 'simple';
+    const indices = checked.map(tr => parseInt(tr.dataset.index)).filter(i => !isNaN(i)).sort((a,b) => b-a);
+    const key = currentCategory;
 
-    // Splice from in-memory data (highest index first to preserve lower indices)
     indices.forEach(idx => {
-        if (schema === 'masonry') {
-            if (categoryData[key] && categoryData[key].prices) categoryData[key].prices.splice(idx, 1);
-        } else if (schema === 'pipes') {
-            // pipes rows are across sub-tables — just re-render; don't splice directly
-        } else {
-            if (Array.isArray(categoryData[key])) categoryData[key].splice(idx, 1);
+        if (key === 'masonry') {
+            if (categoryData[key]?.prices) categoryData[key].prices.splice(idx, 1);
+        } else if (Array.isArray(categoryData[key])) {
+            categoryData[key].splice(idx, 1);
         }
     });
 
-    const saveBtn = document.getElementById('save-all-btn');
-    saveBtn.textContent = 'Saving…'; saveBtn.disabled = true;
+    const btn = document.getElementById('save-all-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
     const ok = await Parser.saveBulk(key, categoryData[key]);
-    saveBtn.textContent = 'Save all changes'; saveBtn.disabled = false;
+    btn.textContent = 'Save all changes'; btn.disabled = false;
 
     if (ok) {
-        showToast(`${indices.length} row(s) removed and saved.`, 'success');
-        toggleSelectMode(); // exit select mode
-        switchCategory(key); // re-render
+        showToast(`${indices.length} row(s) removed.`, 'success');
+        toggleSelectMode();
+        switchCategory(key);
     } else {
-        showToast('Remove failed. Check console.', 'error');
+        showToast('Remove failed.', 'error');
+    }
+}
+
+
+// ============================================================
+// GLOBAL YEAR MULTIPLIER
+// Base year = 2026. Active year + rate stored in prices.json
+// meta and localStorage. All price displays use getYearMultiplier().
+// Database (JSONs) always stores 2026 base values unchanged.
+// ============================================================
+const BASE_YEAR = 2026;
+
+function getYearMultiplier() {
+    const meta = window.PRICES?.meta;
+    const activeYear = meta?.active_year ?? BASE_YEAR;
+    const rates      = meta?.year_rates  ?? {};
+    const rate       = rates[activeYear] ?? 10;
+    const steps      = activeYear - BASE_YEAR;
+    return { multiplier: Math.pow(1 + rate / 100, steps), activeYear, rate, steps };
+}
+
+function scalePrice(basePrice) {
+    const { multiplier } = getYearMultiplier();
+    return Math.round(basePrice * multiplier * 100) / 100;
+}
+
+function unscalePrice(displayPrice) {
+    // When an admin edits a price while in a non-base year,
+    // convert back to base before saving.
+    const { multiplier } = getYearMultiplier();
+    if (multiplier === 1) return displayPrice;
+    return Math.round((displayPrice / multiplier) * 100) / 100;
+}
+
+async function setActiveYear() {
+    const yearEl = document.getElementById('esc-year-select');
+    const rateEl = document.getElementById('esc-rate-input');
+    if (!yearEl || !rateEl) return;
+
+    const year = parseInt(yearEl.value);
+    const rate = parseFloat(rateEl.value) || 10;
+
+    if (!window.PRICES) { showToast('Price data not loaded yet.', 'error'); return; }
+    if (!window.PRICES.meta) window.PRICES.meta = {};
+    if (!window.PRICES.meta.year_rates) window.PRICES.meta.year_rates = {};
+
+    window.PRICES.meta.active_year = year;
+    window.PRICES.meta.year_rates[year] = rate;
+    window.PRICES.meta.last_updated = new Date().toISOString().split('T')[0];
+
+    const btn = document.getElementById('set-active-year-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    const ok = await Parser.savePricesJson(window.PRICES);
+    btn.textContent = 'Set active'; btn.disabled = false;
+
+    if (ok) {
+        showToast(`Active year set to ${year} (${rate}% per year).`, 'success');
+        updateActiveYearBanner();
+        // Re-render current category with new multiplier
+        if (currentCategory && currentCategory !== 'escalation') switchCategory(currentCategory);
+    } else {
+        showToast('Failed to save active year.', 'error');
+    }
+}
+
+async function clearActiveYear() {
+    if (!window.PRICES) return;
+    window.PRICES.meta.active_year = BASE_YEAR;
+    window.PRICES.meta.last_updated = new Date().toISOString().split('T')[0];
+    const ok = await Parser.savePricesJson(window.PRICES);
+    if (ok) {
+        showToast('Reset to base year (2026).', 'success');
+        updateActiveYearBanner();
+        if (currentCategory && currentCategory !== 'escalation') switchCategory(currentCategory);
+    }
+}
+
+function updateActiveYearBanner() {
+    const { activeYear, steps } = getYearMultiplier();
+    const banner  = document.getElementById('active-year-banner');
+    const display = document.getElementById('active-year-display');
+    if (!banner || !display) return;
+    if (steps === 0) {
+        banner.classList.add('hidden');
+    } else {
+        display.textContent = activeYear;
+        banner.classList.remove('hidden');
+    }
+    // Also sync the year select to show current active year
+    const yearEl = document.getElementById('esc-year-select');
+    if (yearEl) yearEl.value = activeYear;
+    const rateEl = document.getElementById('esc-rate-input');
+    if (rateEl && window.PRICES?.meta?.year_rates?.[activeYear]) {
+        rateEl.value = window.PRICES.meta.year_rates[activeYear];
     }
 }
 

@@ -48,10 +48,5 @@
     "name": "Assorted Nails",
     "unit": "Kg",
     "price_php": 65
-  },
-  {
-    "name": "hello",
-    "unit": "",
-    "price_php": 100
   }
 ]

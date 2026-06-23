@@ -3,57 +3,57 @@
     {
       "name": "Concrete Hollow Blocks (CHB) 4″",
       "unit": "pc",
-      "price_php": 12.0
+      "price_php": 12
     },
     {
       "name": "Concrete Hollow Blocks (CHB) 6″",
       "unit": "pc",
-      "price_php": 18.0
+      "price_php": 18
     },
     {
       "name": "Portland Cement, 40 kg.",
       "unit": "bag",
-      "price_php": 261.0
+      "price_php": 261
     },
     {
       "name": "Washed sand",
       "unit": "cu.m.",
-      "price_php": 1365.0
+      "price_php": 1365
     },
     {
       "name": "10 mm. Dia. x 6.0 M. DSB",
       "unit": "pc.",
-      "price_php": 159.0
+      "price_php": 159
     },
     {
       "name": "Tie Wire #16",
       "unit": "kg.",
-      "price_php": 61.0
+      "price_php": 61
     },
     {
       "name": "Cement",
       "unit": "bag",
-      "price_php": 262.0
+      "price_php": 262
     },
     {
       "name": "Sand",
       "unit": "cu.m.",
-      "price_php": 1432.0
+      "price_php": 1432
     },
     {
       "name": "Gravel Fill",
       "unit": "cu.m.",
-      "price_php": 1417.0
+      "price_php": 1417
     },
     {
       "name": "Weep Holes (PVC)",
       "unit": "Lm.",
-      "price_php": 201.0
+      "price_php": 201
     },
     {
       "name": "Filter Cloth",
       "unit": "sq.m.",
-      "price_php": 260.0
+      "price_php": 260
     },
     {
       "name": "Boulders",
@@ -63,12 +63,12 @@
     {
       "name": "Screened Sand",
       "unit": "cu.m.",
-      "price_php": 1550.0
+      "price_php": 1550
     },
     {
       "name": "Screened Gravel",
       "unit": "cu.m.",
-      "price_php": 1590.0
+      "price_php": 1590
     }
   ],
   "concrete_proportion_table": [

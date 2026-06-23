@@ -1385,7 +1385,7 @@ function injectRowCheckboxes() {
     document.querySelectorAll('.price-table tbody tr[data-index]').forEach(tr => {
         if (tr.querySelector('.row-select-cb')) return;
         const td = document.createElement('td');
-        td.style.cssText = 'width:20px;padding:0 8px;text-align:center;';
+        td.style.cssText = 'width:5px;padding:0 8px;text-align:center;';
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.className = 'row-select-cb cursor-pointer';

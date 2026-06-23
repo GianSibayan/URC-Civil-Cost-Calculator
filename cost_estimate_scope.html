@@ -45,7 +45,7 @@
             font-weight: 600;
             color: #111;
             font-family: 'Inter', sans-serif;
-            text-align: right;
+            text-align: center;
             outline: none;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
@@ -117,7 +117,7 @@
             </div>
         </header>
 
-        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
+        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full" style="grid-template-rows:100%">
             <div class="xl:col-span-8 flex flex-col overflow-hidden border-r border-neutral-100">
                 
                 <div class="p-6 pb-2 border-b border-neutral-100 bg-[#fbfbfc]">
@@ -682,7 +682,7 @@
                 modalContent.classList.remove('scale-95');
             }, 10);
         }
-        
+
         function goBackMain() {
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';

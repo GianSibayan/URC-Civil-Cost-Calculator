@@ -769,7 +769,9 @@
             updateActiveTargetPanel();
             calculateTotals(catId);
             persistData();
-        } {
+        }
+
+        function updateActiveTargetPanel() {
             const nameEl  = document.getElementById('active-target-name');
             const saveBtn = document.getElementById('save-price-btn');
             if (activeItemKey && activeItemDesc) {

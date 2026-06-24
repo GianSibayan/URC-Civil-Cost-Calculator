@@ -96,11 +96,11 @@
             </button>
             <button onclick="window.location.href='labor_resources.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
                 Labor &amp; Resources
-            </button> 
-               <div class="pt-6">
+            </button>  
+                <div class="pt-6">
                     <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
                     <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-400 select-none">History</div>
-                </div>           
+                </div>          
         </nav>
         <div class="pt-4 border-t border-neutral-100 mt-auto">
             <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
@@ -117,6 +117,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     View Summary
                 </button>
+                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
                 <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Export</button>
             </div>
         </header>
@@ -561,10 +562,32 @@
         let activeItemKey  = null; // which scope item is currently selected for price assignment
         let activeItemDesc = null;
 
+        // ── SESSION PERSISTENCE ──────────────────────────────────────
+        const CES_STORAGE_KEY = 'urc_ces_session';
+
+        function persistData() {
+            try {
+                sessionStorage.setItem(CES_STORAGE_KEY, JSON.stringify({ itemPrices, scopeItemData, categoryTotals }));
+            } catch(e) { console.error('CES persist failed:', e); }
+        }
+
+        function loadPersistedData() {
+            try {
+                const raw = sessionStorage.getItem(CES_STORAGE_KEY);
+                if (!raw) return;
+                const d = JSON.parse(raw);
+                if (d.itemPrices)     Object.assign(itemPrices,     d.itemPrices);
+                if (d.scopeItemData)  Object.assign(scopeItemData,   d.scopeItemData);
+                if (d.categoryTotals) Object.assign(categoryTotals,  d.categoryTotals);
+            } catch(e) { console.error('CES load failed:', e); }
+        }
+        // ─────────────────────────────────────────────────────────────
+
         document.addEventListener("DOMContentLoaded", async () => {
             await loadPricesMeta();  // must complete first so scalePrice() has meta
             fetchAllDatabases(); // Initialize DB for Cart
-            initTotals(); // Initialize Totals for Scope
+            initTotals(); // Initialize Totals for Scope (sets all to 0)
+            loadPersistedData(); // Restore saved prices over the 0s
             renderNavigation();
             renderContent();
         });
@@ -745,9 +768,8 @@
 
             updateActiveTargetPanel();
             calculateTotals(catId);
-        }
-
-        function updateActiveTargetPanel() {
+            persistData();
+        } {
             const nameEl  = document.getElementById('active-target-name');
             const saveBtn = document.getElementById('save-price-btn');
             if (activeItemKey && activeItemDesc) {

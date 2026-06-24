@@ -587,7 +587,6 @@
                 btn.appendChild(document.createTextNode(cat.label));
                 btn.appendChild(badge);
                 navContainer.appendChild(btn);
-                calculateTotals(activeCategory.id);
             });
         }
 
@@ -654,6 +653,7 @@
                 `;
                 contentArea.appendChild(sectionWrapper);
             });
+            calculateTotals(activeCategory.id);
         }
 
         function switchTab(tabId) {

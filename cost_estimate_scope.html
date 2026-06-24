@@ -235,7 +235,8 @@
         ];
 
         let MASTER_DB = {}; 
-        let cart = []; 
+        let cart = [];
+        const scopeItemData = {}; // iKey -> { price, cart: [...] } — saved on "Save Price"
 
         async function fetchAllDatabases() {
             const statusEl = document.getElementById('db-status');
@@ -670,7 +671,7 @@
         }
 
         function selectItemTarget(checkbox, iKey, catId, desc) {
-            // Deselect any previously active item in the DOM
+            // Deselect previous item visually (unsaved cart work is discarded on switch)
             if (activeItemKey && activeItemKey !== iKey) {
                 const prevCb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
                 if (prevCb) {
@@ -683,10 +684,20 @@
                 activeItemKey  = iKey;
                 activeItemDesc = desc;
                 checkbox.closest('tr').classList.add('bg-blue-50');
+
+                // Load this item's previously saved cart, or start with a clean cart
+                cart = scopeItemData[iKey]?.cart
+                    ? JSON.parse(JSON.stringify(scopeItemData[iKey].cart))
+                    : [];
+                renderCart();
             } else {
                 activeItemKey  = null;
                 activeItemDesc = null;
                 checkbox.closest('tr').classList.remove('bg-blue-50');
+
+                // Clear cart when deselecting
+                cart = [];
+                renderCart();
             }
 
             updateActiveTargetPanel();
@@ -699,9 +710,14 @@
             const cartTotal = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0;
             const catId = activeItemKey.split('__')[0];
 
+            // Persist price + full cart snapshot for this scope item
+            scopeItemData[activeItemKey] = {
+                price: cartTotal,
+                cart:  JSON.parse(JSON.stringify(cart))
+            };
             itemPrices[activeItemKey] = cartTotal;
 
-            // Update price label on the left side without re-rendering
+            // Update price label on the left side
             const lbl = document.querySelector(`.item-price-lbl[data-ikey="${activeItemKey}"]`);
             if (lbl) {
                 lbl.textContent = cartTotal > 0
@@ -718,6 +734,11 @@
 
             activeItemKey  = null;
             activeItemDesc = null;
+
+            // Clear cart display — ready for next item
+            cart = [];
+            renderCart();
+
             updateActiveTargetPanel();
             calculateTotals(catId);
         }
@@ -791,8 +812,8 @@
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';
             setTimeout(() => { Auth.logout(); }, 200);
-        }
-                
+        }        
+
         function closeSummary() {
             const modal = document.getElementById('summary-modal');
             const modalContent = document.getElementById('summary-modal-content');

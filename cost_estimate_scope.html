@@ -653,6 +653,8 @@
                 `;
                 contentArea.appendChild(sectionWrapper);
             });
+
+            // Ensure category total display reflects any already-saved prices
             calculateTotals(activeCategory.id);
         }
 
@@ -808,13 +810,11 @@
                 modalContent.classList.remove('scale-95');
             }, 10);
         }
-
         function goBackMain() {
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';
             setTimeout(() => { Auth.logout(); }, 200);
-        }        
-
+        }      
         function closeSummary() {
             const modal = document.getElementById('summary-modal');
             const modalContent = document.getElementById('summary-modal-content');

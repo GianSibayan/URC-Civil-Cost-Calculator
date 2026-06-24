@@ -102,7 +102,7 @@
             <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
                 Main Page
             </button>
-        </div>            
+        </div>        
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
@@ -160,7 +160,17 @@
                     <div id="empty-cart-msg" class="text-sm text-neutral-400 text-center mt-10">Estimate cart is empty</div>
                 </div>
 
-                <div class="mt-4 pt-4 border-t border-neutral-200 flex items-center justify-between bg-[#f8f9fa] sticky bottom-0 z-10">
+                <!-- SAVE PRICE PANEL -->
+                <div class="mt-3 p-3 bg-white border border-neutral-200 rounded-xl flex-shrink-0">
+                    <div class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Save cart total to scope item</div>
+                    <div id="active-target-name" class="text-xs font-semibold text-neutral-500 mb-2 truncate">← Select a scope item first</div>
+                    <button onclick="saveCartPrice()" id="save-price-btn" disabled
+                        class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition">
+                        Save Price
+                    </button>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-neutral-200 flex items-center justify-between bg-[#f8f9fa] sticky bottom-0 z-10">
                     <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Cart Total</span>
                     <span id="cart-grand-total" class="text-2xl font-bold text-neutral-900">₱0.00</span>
                 </div>
@@ -348,11 +358,27 @@
         }
 
         function updateCartItemQuantity(cartItemId, newQuantity) {
-            const item = cart.find(item => item.id === cartItemId);
-            if (item) {
-                item.quantity = parseFloat(newQuantity) || 0;
-                renderCart();
+            const item = cart.find(ci => ci.id === cartItemId);
+            if (!item) return;
+            item.quantity = parseFloat(newQuantity) || 0;
+
+            const material = MASTER_DB[item.materialId];
+            if (!material) return;
+
+            // Update just this item's cost in-place — never re-render (re-render kills the focused input)
+            const costEl = document.getElementById(`cart-item-cost-${cartItemId}`);
+            if (costEl) {
+                const totalCost = item.quantity * material.price;
+                costEl.textContent = `₱${totalCost.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
             }
+
+            // Recalculate grand total in-place
+            let cartTotal = 0;
+            cart.forEach(ci => {
+                const mat = MASTER_DB[ci.materialId];
+                if (mat) cartTotal += (ci.quantity || 0) * mat.price;
+            });
+            document.getElementById('cart-grand-total').textContent = `₱${cartTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
         }
 
         function renderCart() {
@@ -392,7 +418,7 @@
                         </div>
                         <div class="text-right">
                             <div class="text-[10px] text-neutral-400">@ ₱${material.price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                            <div class="text-sm font-black text-neutral-800">₱${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div id="cart-item-cost-${item.id}" class="text-sm font-black text-neutral-800">₱${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                     </div>
                 `;
@@ -528,7 +554,9 @@
 
         let activeTabId = SCOPE_CATEGORIES[0].id;
         let categoryTotals = {};
-        let itemPrices = {}; // key: `${catId}__${secIdx}__${itemIdx}`, value: assigned cart total
+        let itemPrices    = {}; // key: `${catId}__${secIdx}__${i}`, value: saved cart total
+        let activeItemKey  = null; // which scope item is currently selected for price assignment
+        let activeItemDesc = null;
 
         document.addEventListener("DOMContentLoaded", async () => {
             await loadPricesMeta();  // must complete first so scalePrice() has meta
@@ -589,24 +617,25 @@
                 let tbodyHTML = section.items.map((item, i) => {
                     const displayCode = item.code + (section.prefix || '');
                     const iKey = `${activeCategory.id}__${secIdx}__${i}`;
-                    const isChecked = iKey in itemPrices;
+                    const isActiveTarget = iKey === activeItemKey;
                     const assigned = itemPrices[iKey] || 0;
                     const priceDisplay = assigned > 0
                         ? `₱${assigned.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`
                         : '';
+                    const escapedDesc = item.desc.replace(/'/g, "\\'");
                     return `
-                        <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors">
+                        <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors${isActiveTarget ? ' bg-emerald-50' : ''}">
                             <td class="py-2.5 px-4 text-center text-xs font-semibold text-neutral-400 w-20">${displayCode}</td>
                             <td class="py-2.5 px-4 text-sm text-neutral-800 font-medium">${item.desc}</td>
                             <td class="py-2 px-4 w-44">
                                 <div class="flex items-center justify-end gap-3">
                                     <span class="text-sm font-semibold text-blue-600 item-price-lbl" data-ikey="${iKey}">${priceDisplay}</span>
-                                    <input type="checkbox" ${isChecked ? 'checked' : ''}
+                                    <input type="checkbox" ${isActiveTarget ? 'checked' : ''}
                                            class="scope-checkbox cursor-pointer"
-                                           style="width:16px;height:16px;accent-color:#3b82f6;flex-shrink:0;"
+                                           style="width:16px;height:16px;accent-color:#10b981;flex-shrink:0;"
                                            data-category="${activeCategory.id}"
                                            data-ikey="${iKey}"
-                                           onchange="assignCartPrice(this)" />
+                                           onchange="selectItemTarget(this, '${iKey}', '${activeCategory.id}', '${escapedDesc}')" />
                                 </div>
                             </td>
                         </tr>
@@ -640,28 +669,71 @@
             });
         }
 
-        function assignCartPrice(checkbox) {
-            const iKey    = checkbox.dataset.ikey;
-            const catId   = checkbox.dataset.category;
+        function selectItemTarget(checkbox, iKey, catId, desc) {
+            // Deselect any previously active item in the DOM
+            if (activeItemKey && activeItemKey !== iKey) {
+                const prevCb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
+                if (prevCb) {
+                    prevCb.checked = false;
+                    prevCb.closest('tr').classList.remove('bg-emerald-50');
+                }
+            }
 
             if (checkbox.checked) {
-                const raw = document.getElementById('cart-grand-total').textContent;
-                const cartTotal = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0;
-                itemPrices[iKey] = cartTotal;
+                activeItemKey  = iKey;
+                activeItemDesc = desc;
+                checkbox.closest('tr').classList.add('bg-emerald-50');
             } else {
-                delete itemPrices[iKey];
+                activeItemKey  = null;
+                activeItemDesc = null;
+                checkbox.closest('tr').classList.remove('bg-emerald-50');
             }
 
-            // Update the price label on the same row without re-rendering
-            const lbl = document.querySelector(`.item-price-lbl[data-ikey="${iKey}"]`);
+            updateActiveTargetPanel();
+        }
+
+        function saveCartPrice() {
+            if (!activeItemKey) return;
+
+            const raw = document.getElementById('cart-grand-total').textContent;
+            const cartTotal = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0;
+            const catId = activeItemKey.split('__')[0];
+
+            itemPrices[activeItemKey] = cartTotal;
+
+            // Update price label on the left side without re-rendering
+            const lbl = document.querySelector(`.item-price-lbl[data-ikey="${activeItemKey}"]`);
             if (lbl) {
-                const val = itemPrices[iKey];
-                lbl.textContent = val > 0
-                    ? `₱${val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`
-                    : '';
+                lbl.textContent = cartTotal > 0
+                    ? `₱${cartTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`
+                    : '₱0.00';
             }
 
+            // Uncheck and deselect
+            const cb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
+            if (cb) {
+                cb.checked = false;
+                cb.closest('tr').classList.remove('bg-emerald-50');
+            }
+
+            activeItemKey  = null;
+            activeItemDesc = null;
+            updateActiveTargetPanel();
             calculateTotals(catId);
+        }
+
+        function updateActiveTargetPanel() {
+            const nameEl  = document.getElementById('active-target-name');
+            const saveBtn = document.getElementById('save-price-btn');
+            if (activeItemKey && activeItemDesc) {
+                nameEl.textContent  = activeItemDesc;
+                nameEl.classList.replace('text-neutral-500', 'text-neutral-800');
+                saveBtn.disabled = false;
+            } else {
+                nameEl.textContent  = '← Select a scope item first';
+                nameEl.classList.replace('text-neutral-800', 'text-neutral-500');
+                saveBtn.disabled = true;
+            }
         }
 
         function calculateTotals(catId) {
@@ -720,7 +792,7 @@
             document.body.style.opacity = '0';
             setTimeout(() => { Auth.logout(); }, 200);
         }
-
+        
         function closeSummary() {
             const modal = document.getElementById('summary-modal');
             const modalContent = document.getElementById('summary-modal-content');

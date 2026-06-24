@@ -776,11 +776,13 @@
             const saveBtn = document.getElementById('save-price-btn');
             if (activeItemKey && activeItemDesc) {
                 nameEl.textContent  = activeItemDesc;
-                nameEl.classList.replace('text-neutral-500', 'text-neutral-800');
+                nameEl.classList.remove('text-neutral-500');
+                nameEl.classList.add('text-neutral-800');
                 saveBtn.disabled = false;
             } else {
                 nameEl.textContent  = '← Select a scope item first';
-                nameEl.classList.replace('text-neutral-800', 'text-neutral-500');
+                nameEl.classList.remove('text-neutral-800');
+                nameEl.classList.add('text-neutral-500');
                 saveBtn.disabled = true;
             }
         }

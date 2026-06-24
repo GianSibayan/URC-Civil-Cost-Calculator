@@ -147,7 +147,7 @@
                     </select>
 
                     <label class="text-xs font-bold text-neutral-500 uppercase mt-2">2. Select Materials</label>
-                    <div id="material-checkbox-list" class="w-full bg-white border border-neutral-200 rounded-lg p-2 text-sm h-56 overflow-y-auto flex flex-col shadow-inner">
+                    <div id="material-checkbox-list" class="w-full bg-white border border-neutral-200 rounded-lg p-2 text-sm h-32 overflow-y-auto flex flex-col shadow-inner">
                         <div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>
                     </div>
 
@@ -165,7 +165,7 @@
                     <div class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Save cart total to scope item</div>
                     <div id="active-target-name" class="text-xs font-semibold text-neutral-500 mb-2 truncate">← Select a scope item first</div>
                     <button onclick="saveCartPrice()" id="save-price-btn" disabled
-                        class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition">
+                        class="w-full py-2 bg-black hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition">
                         Save Price
                     </button>
                 </div>
@@ -624,7 +624,7 @@
                         : '';
                     const escapedDesc = item.desc.replace(/'/g, "\\'");
                     return `
-                        <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors${isActiveTarget ? ' bg-emerald-50' : ''}">
+                        <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors${isActiveTarget ? ' bg-blue-50' : ''}">
                             <td class="py-2.5 px-4 text-center text-xs font-semibold text-neutral-400 w-20">${displayCode}</td>
                             <td class="py-2.5 px-4 text-sm text-neutral-800 font-medium">${item.desc}</td>
                             <td class="py-2 px-4 w-44">
@@ -632,7 +632,7 @@
                                     <span class="text-sm font-semibold text-blue-600 item-price-lbl" data-ikey="${iKey}">${priceDisplay}</span>
                                     <input type="checkbox" ${isActiveTarget ? 'checked' : ''}
                                            class="scope-checkbox cursor-pointer"
-                                           style="width:16px;height:16px;accent-color:#10b981;flex-shrink:0;"
+                                           style="width:16px;height:16px;accent-color:#3b82f6;flex-shrink:0;"
                                            data-category="${activeCategory.id}"
                                            data-ikey="${iKey}"
                                            onchange="selectItemTarget(this, '${iKey}', '${activeCategory.id}', '${escapedDesc}')" />
@@ -675,18 +675,18 @@
                 const prevCb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
                 if (prevCb) {
                     prevCb.checked = false;
-                    prevCb.closest('tr').classList.remove('bg-emerald-50');
+                    prevCb.closest('tr').classList.remove('bg-blue-50');
                 }
             }
 
             if (checkbox.checked) {
                 activeItemKey  = iKey;
                 activeItemDesc = desc;
-                checkbox.closest('tr').classList.add('bg-emerald-50');
+                checkbox.closest('tr').classList.add('bg-blue-50');
             } else {
                 activeItemKey  = null;
                 activeItemDesc = null;
-                checkbox.closest('tr').classList.remove('bg-emerald-50');
+                checkbox.closest('tr').classList.remove('bg-blue-50');
             }
 
             updateActiveTargetPanel();
@@ -713,7 +713,7 @@
             const cb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
             if (cb) {
                 cb.checked = false;
-                cb.closest('tr').classList.remove('bg-emerald-50');
+                cb.closest('tr').classList.remove('bg-blue-50');
             }
 
             activeItemKey  = null;
@@ -792,7 +792,7 @@
             document.body.style.opacity = '0';
             setTimeout(() => { Auth.logout(); }, 200);
         }
-        
+                
         function closeSummary() {
             const modal = document.getElementById('summary-modal');
             const modalContent = document.getElementById('summary-modal-content');

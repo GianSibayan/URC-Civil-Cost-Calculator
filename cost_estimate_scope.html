@@ -384,15 +384,13 @@
 
         function renderCart() {
             const cartContainer = document.getElementById('cart-items');
-            const emptyMsg = document.getElementById('empty-cart-msg');
             let cartTotal = 0;
 
             cartContainer.innerHTML = '';
+            document.getElementById('cart-grand-total').textContent = '₱0.00';
 
             if (cart.length === 0) {
-                cartContainer.appendChild(emptyMsg);
-                document.getElementById('cart-grand-total').textContent = '₱0.00';
-                emptyMsg.style.display = 'block';
+                cartContainer.innerHTML = '<div id="empty-cart-msg" class="text-sm text-neutral-400 text-center mt-10">Estimate cart is empty</div>';
                 return;
             }
 
@@ -654,7 +652,6 @@
                 contentArea.appendChild(sectionWrapper);
             });
 
-            // Ensure category total display reflects any already-saved prices
             calculateTotals(activeCategory.id);
         }
 
@@ -810,11 +807,13 @@
                 modalContent.classList.remove('scale-95');
             }, 10);
         }
+
         function goBackMain() {
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';
             setTimeout(() => { Auth.logout(); }, 200);
-        }      
+        }        
+
         function closeSummary() {
             const modal = document.getElementById('summary-modal');
             const modalContent = document.getElementById('summary-modal-content');

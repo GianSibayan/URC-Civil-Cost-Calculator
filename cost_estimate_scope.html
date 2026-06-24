@@ -582,11 +582,12 @@
                 const badge = document.createElement('span');
                 badge.id = `badge-${cat.id}`;
                 badge.className = `text-[10px] px-1.5 py-0.5 rounded-md ${cat.id === activeTabId ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-500'}`;
-                badge.textContent = '₱0';
+                badge.textContent = `₱${formatCompact(categoryTotals[cat.id] || 0)}`;
 
                 btn.appendChild(document.createTextNode(cat.label));
                 btn.appendChild(badge);
                 navContainer.appendChild(btn);
+                calculateTotals(activeCategory.id);
             });
         }
 

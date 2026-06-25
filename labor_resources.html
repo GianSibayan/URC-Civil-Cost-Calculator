@@ -204,15 +204,15 @@
                     <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
                         <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
                         <div class="space-y-2 text-sm text-neutral-600">
-                            <div class="flex justify-between"><span>Material Costs</span><span class="cost-materials font-bold text-neutral-900">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Labor Costs</span><span id="summary-labor" class="font-bold text-neutral-600">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Material Costs</span><span id="summary-materials" class="cost-materials font-bold text-neutral-900">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Labor Costs</span><span id="summary-labor" class="font-bold text-neutral-900">₱0.00</span></div>
                             <div class="flex justify-between"><span>Equipment Costs</span><span id="summary-equipment" class="font-bold text-neutral-900">₱0.00</span></div>
                             <div class="flex justify-between"><span>Overhead &amp; Profit</span><span id="summary-profit" class="font-bold text-neutral-900">₱0.00</span></div>
                         </div>
                         <div class="border-t border-neutral-200 pt-4 flex justify-between items-center">
                             <div>
                                 <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
-                                <p class="text-[10px] text-neutral-400">Labor + Equipment + Profit</p>
+                                <p class="text-[10px] text-neutral-400">Material + Labor + Equipment + Profit</p>
                             </div>
                             <div class="text-2xl font-black text-neutral-900" id="summary-total">₱0.00</div>
                         </div>
@@ -263,21 +263,48 @@
         }
 
         function updateSummary() {
+            var materialCost = loadMaterialsFromCES();
             var laborCost = 0;
             Object.keys(laborState).forEach(function(role) {
                 var r = laborState[role];
                 laborCost += r.rate * r.count * r.days;
             });
-            var base       = laborCost + globalEquipment;
-            var profitCost = base * (globalProfit / 100);
-            var grandTotal = base + profitCost;
+            var execBase   = laborCost + globalEquipment;
+            var profitCost = execBase * (globalProfit / 100);
+            var grandTotal = materialCost + execBase + profitCost;
             function fmt(n) { return '\u20b1' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+            document.getElementById('summary-materials').textContent = fmt(materialCost);
             document.getElementById('summary-labor').textContent     = fmt(laborCost);
             document.getElementById('summary-equipment').textContent = fmt(globalEquipment);
             document.getElementById('summary-profit').textContent    = fmt(profitCost);
             document.getElementById('summary-total').textContent     = fmt(grandTotal);
+            checkSaveButton();
         }
-
+        // function updateSummary() {
+        //     var laborCost = 0;
+        //     Object.keys(laborState).forEach(function(role) {
+        //         var r = laborState[role];
+        //         laborCost += r.rate * r.count * r.days;
+        //     });
+        //     var base       = laborCost + globalEquipment;
+        //     var profitCost = base * (globalProfit / 100);
+        //     var grandTotal = base + profitCost;
+        //     function fmt(n) { return '\u20b1' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        //     document.getElementById('summary-labor').textContent     = fmt(laborCost);
+        //     document.getElementById('summary-equipment').textContent = fmt(globalEquipment);
+        //     document.getElementById('summary-profit').textContent    = fmt(profitCost);
+        //     document.getElementById('summary-total').textContent     = fmt(grandTotal);
+        // }
+        function loadMaterialsFromCES() {
+            try {
+                var raw = sessionStorage.getItem('urc_ces_session');
+                if (!raw) return 0;
+                var d = JSON.parse(raw);
+                if (!d.categoryTotals) return 0;
+                return Object.values(d.categoryTotals).reduce(function(a, b) { return a + b; }, 0);
+            } catch(e) { return 0; }
+        }
+        
         function saveToCache() {
             try {
                 localStorage.setItem('urc_ccc_labor_2026', JSON.stringify({

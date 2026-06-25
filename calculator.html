@@ -700,7 +700,9 @@
         function checkSaveButton() {
             const btn = document.getElementById('btn-save-estimate');
             if (!btn) return;
-            const ready = (estimateState.length > 0) && (estimateState.width > 0) && (estimateState.clearHeight > 0);
+            const ready = localStorage.getItem('urc_ccc_calc_ready')  === 'true'
+                    && localStorage.getItem('urc_ccc_ces_ready')   === 'true'
+                    && localStorage.getItem('urc_ccc_labor_ready') === 'true';
             btn.disabled = !ready;
             btn.classList.toggle('opacity-40', !ready);
             btn.classList.toggle('pointer-events-none', !ready);
@@ -709,44 +711,94 @@
         function confirmSaveEstimate() {
             const projectName  = document.getElementById('modal-project-name').value.trim();
             const engineerName = document.getElementById('modal-engineer-name').value.trim();
-            if (!projectName || !engineerName) { document.getElementById('modal-error').classList.remove('hidden'); return; }
+            if (!projectName || !engineerName) {
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
 
-            const L = estimateState.length||0, W = estimateState.width||0, H = estimateState.clearHeight||0;
-            const M = (estimateState.mezzanine||0) / 100;
+            // ── Read all three caches ────────────────────────────────────────
+            let calcSnap  = {};
+            let cesSnap   = {};
+            let laborSnap = {};
+            try { calcSnap  = JSON.parse(localStorage.getItem('urc_ccc_state_v10')  || '{}'); } catch(e) {}
+            try { cesSnap   = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
+            try { laborSnap = JSON.parse(localStorage.getItem('urc_ccc_labor_2026') || '{}'); } catch(e) {}
+
+            // ── Calculator summary ───────────────────────────────────────────
+            const L = calcSnap.length||0, W = calcSnap.width||0, H = calcSnap.clearHeight||0;
+            const M = (calcSnap.mezzanine||0) / 100;
             const floorArea = L * W, grossArea = floorArea * (1 + M);
-            const bldgVolume = L * W * H + L * W * M * 6, perimeter = 2 * (L + W);
-            const bsl = estimateState.baySpacingL||0, bsw = estimateState.baySpacingW||0;
+            const bsl = calcSnap.baySpacingL||0, bsw = calcSnap.baySpacingW||0;
             const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L/bsl + W/bsw) : 0;
-            const fl=estimateState.footingLength||0, fw=estimateState.footingWidth||0, fd=estimateState.footingDepth||0;
-            const pl=estimateState.pedestalLength||0, pw=estimateState.pedestalWidth||0, ph=estimateState.pedestalHeight||0;
+            const fl=calcSnap.footingLength||0, fw=calcSnap.footingWidth||0, fd=calcSnap.footingDepth||0;
+            const pl=calcSnap.pedestalLength||0, pw=calcSnap.pedestalWidth||0, ph=calcSnap.pedestalHeight||0;
             const concreteVol = (fl*fw*fd + pl*pw*ph) * nodes;
             const structMap = { steel_rigid:'Steel Rigid Frame', concrete:'Concrete', tilt_up:'Tilt-Up', hybrid:'Hybrid' };
             const roofMap   = { standing_seam:'Standing Seam', corrugated:'Corrugated', flat:'Flat', skylight:'Skylight' };
             const wallMap   = { metal_panel:'Metal Panel', masonry:'Masonry', glass:'Glass Curtain', none:'None' };
 
-            const record = {
-                id: 'ccc_hist_' + Date.now(), savedAt: new Date().toISOString(),
-                projectName, engineerName, source: 'calculator',
-                label: `${projectName} — Building Calculator`,
-                snapshot: {
-                    length:L, width:W, clearHeight:H, stories:estimateState.stories||1,
-                    mezzanine:estimateState.mezzanine||0,
-                    structureType: structMap[estimateState.structureType]||estimateState.structureType,
-                    roofType:      roofMap[estimateState.roofType]||estimateState.roofType,
-                    wallCladding:  wallMap[estimateState.wallCladding]||estimateState.wallCladding,
-                    slabThickness: estimateState.slabThickness,
-                    dockDoors:estimateState.dockDoors||0, driveInDoors:estimateState.driveInDoors||0,
-                    baySpacingL:bsl, baySpacingW:bsw,
-                    footingLength:fl, footingWidth:fw, footingDepth:fd,
-                    pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
-                    concretePriceM3:estimateState.concretePriceM3||0, concreteClass:estimateState.concreteClass
-                },
-                summary: {
-                    floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
-                    bldgVolume:+bldgVolume.toFixed(2), perimeter:+perimeter.toFixed(2),
-                    nodes, concreteVol:+concreteVol.toFixed(2)
-                }
+            // ── CES summary ──────────────────────────────────────────────────
+            const categoryTotals = cesSnap.categoryTotals || {};
+            const cesTotal    = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+            const pricedItems = Object.keys(cesSnap.itemPrices || {}).length;
+
+            // ── Labor summary ────────────────────────────────────────────────
+            const laborStateRaw   = laborSnap.laborState      || {};
+            const globalEquipment = laborSnap.globalEquipment || 0;
+            const globalProfit    = laborSnap.globalProfit    || 0;
+            const roleLabels = {
+                ncr:'NCR (Unskilled)', visayas:'Visayas (Unskilled)', mindanao:'Mindanao (Unskilled)',
+                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
+                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
+                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
+                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
             };
+            let laborCost = 0, totalHeads = 0;
+            const roles = [];
+            Object.keys(laborStateRaw).forEach(role => {
+                const r = laborStateRaw[role], sub = r.rate * r.count * r.days;
+                laborCost += sub;
+                if (r.count > 0) { totalHeads += r.count; roles.push({ name:roleLabels[role]||role, rate:r.rate, count:r.count, days:r.days }); }
+            });
+            const execBase    = laborCost + globalEquipment;
+            const profitCost  = execBase * (globalProfit / 100);
+            const grandTotal  = cesTotal + execBase + profitCost;
+
+            // ── Build combined record ────────────────────────────────────────
+            const record = {
+                id: 'ccc_hist_' + Date.now(),
+                savedAt: new Date().toISOString(),
+                projectName, engineerName,
+                calculator: {
+                    snapshot: {
+                        length:L, width:W, clearHeight:H, stories:calcSnap.stories||1,
+                        mezzanine:calcSnap.mezzanine||0,
+                        structureType: structMap[calcSnap.structureType]||calcSnap.structureType,
+                        roofType:      roofMap[calcSnap.roofType]||calcSnap.roofType,
+                        wallCladding:  wallMap[calcSnap.wallCladding]||calcSnap.wallCladding,
+                        slabThickness: calcSnap.slabThickness,
+                        dockDoors:calcSnap.dockDoors||0, driveInDoors:calcSnap.driveInDoors||0,
+                        baySpacingL:bsl, baySpacingW:bsw,
+                        footingLength:fl, footingWidth:fw, footingDepth:fd,
+                        pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
+                        concretePriceM3:calcSnap.concretePriceM3||0, concreteClass:calcSnap.concreteClass
+                    },
+                    summary: {
+                        floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
+                        perimeter:+(2*(L+W)).toFixed(2), nodes, concreteVol:+concreteVol.toFixed(2)
+                    }
+                },
+                ces: {
+                    categoryTotals, pricedItems, grandTotal:+cesTotal.toFixed(2)
+                },
+                labor: {
+                    roles, globalEquipment, globalProfit,
+                    laborCost:+laborCost.toFixed(2), equipmentCost:globalEquipment,
+                    profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads
+                },
+                grandTotal: +grandTotal.toFixed(2)
+            };
+
             try {
                 const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
                 h.unshift(record);
@@ -793,6 +845,8 @@
             const materialCost = concreteVol * (estimateState.concretePriceM3 || 0);
             const equipCost = 0;
             let   laborCost    = 0;
+            const calcReady = (estimateState.length > 0) && (estimateState.width > 0) && (estimateState.clearHeight > 0);
+            localStorage.setItem('urc_ccc_calc_ready', String(calcReady));
             checkSaveButton();
         }
 
@@ -857,6 +911,7 @@
             initCharts();
             loadFromCache();
             loadPrices();
+            checkSaveButton(); 
         };
     </script>
     <!-- Save Estimate Modal -->

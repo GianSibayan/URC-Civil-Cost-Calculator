@@ -262,48 +262,109 @@
             saveToCache(); updateSummary();
         }
         function checkSaveButton() {
-            var btn = document.getElementById('btn-save-estimate');
+            const btn = document.getElementById('btn-save-estimate');
             if (!btn) return;
-            var total = 0;
-            Object.keys(laborState).forEach(function(r) { var s = laborState[r]; total += s.rate * s.count * s.days; });
-            total += globalEquipment;
-            var ready = total > 0;
+            const ready = localStorage.getItem('urc_ccc_calc_ready')  === 'true'
+                    && localStorage.getItem('urc_ccc_ces_ready')   === 'true'
+                    && localStorage.getItem('urc_ccc_labor_ready') === 'true';
             btn.disabled = !ready;
             btn.classList.toggle('opacity-40', !ready);
             btn.classList.toggle('pointer-events-none', !ready);
         }
 
         function confirmSaveEstimate() {
-            var projectName  = document.getElementById('modal-project-name').value.trim();
-            var engineerName = document.getElementById('modal-engineer-name').value.trim();
-            if (!projectName || !engineerName) { document.getElementById('modal-error').classList.remove('hidden'); return; }
+            const projectName  = document.getElementById('modal-project-name').value.trim();
+            const engineerName = document.getElementById('modal-engineer-name').value.trim();
+            if (!projectName || !engineerName) {
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
 
-            var roleLabels = {
+            // ── Read all three caches ────────────────────────────────────────
+            let calcSnap  = {};
+            let cesSnap   = {};
+            let laborSnap = {};
+            try { calcSnap  = JSON.parse(localStorage.getItem('urc_ccc_state_v10')  || '{}'); } catch(e) {}
+            try { cesSnap   = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
+            try { laborSnap = JSON.parse(localStorage.getItem('urc_ccc_labor_2026') || '{}'); } catch(e) {}
+
+            // ── Calculator summary ───────────────────────────────────────────
+            const L = calcSnap.length||0, W = calcSnap.width||0, H = calcSnap.clearHeight||0;
+            const M = (calcSnap.mezzanine||0) / 100;
+            const floorArea = L * W, grossArea = floorArea * (1 + M);
+            const bsl = calcSnap.baySpacingL||0, bsw = calcSnap.baySpacingW||0;
+            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L/bsl + W/bsw) : 0;
+            const fl=calcSnap.footingLength||0, fw=calcSnap.footingWidth||0, fd=calcSnap.footingDepth||0;
+            const pl=calcSnap.pedestalLength||0, pw=calcSnap.pedestalWidth||0, ph=calcSnap.pedestalHeight||0;
+            const concreteVol = (fl*fw*fd + pl*pw*ph) * nodes;
+            const structMap = { steel_rigid:'Steel Rigid Frame', concrete:'Concrete', tilt_up:'Tilt-Up', hybrid:'Hybrid' };
+            const roofMap   = { standing_seam:'Standing Seam', corrugated:'Corrugated', flat:'Flat', skylight:'Skylight' };
+            const wallMap   = { metal_panel:'Metal Panel', masonry:'Masonry', glass:'Glass Curtain', none:'None' };
+
+            // ── CES summary ──────────────────────────────────────────────────
+            const categoryTotals = cesSnap.categoryTotals || {};
+            const cesTotal    = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+            const pricedItems = Object.keys(cesSnap.itemPrices || {}).length;
+
+            // ── Labor summary ────────────────────────────────────────────────
+            const laborStateRaw   = laborSnap.laborState      || {};
+            const globalEquipment = laborSnap.globalEquipment || 0;
+            const globalProfit    = laborSnap.globalProfit    || 0;
+            const roleLabels = {
                 ncr:'NCR (Unskilled)', visayas:'Visayas (Unskilled)', mindanao:'Mindanao (Unskilled)',
                 carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
                 plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
                 electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
                 generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
             };
-            var laborCost = 0, totalHeads = 0, roles = [];
-            Object.keys(laborState).forEach(function(role) {
-                var r = laborState[role], sub = r.rate * r.count * r.days;
+            let laborCost = 0, totalHeads = 0;
+            const roles = [];
+            Object.keys(laborStateRaw).forEach(role => {
+                const r = laborStateRaw[role], sub = r.rate * r.count * r.days;
                 laborCost += sub;
                 if (r.count > 0) { totalHeads += r.count; roles.push({ name:roleLabels[role]||role, rate:r.rate, count:r.count, days:r.days }); }
             });
-            var execBase = laborCost + globalEquipment;
-            var profitCost = execBase * (globalProfit / 100);
-            var grandTotal = loadMaterialsFromCES() + execBase + profitCost;
+            const execBase    = laborCost + globalEquipment;
+            const profitCost  = execBase * (globalProfit / 100);
+            const grandTotal  = cesTotal + execBase + profitCost;
 
-            var record = {
-                id: 'ccc_hist_' + Date.now(), savedAt: new Date().toISOString(),
-                projectName: projectName, engineerName: engineerName, source: 'labor',
-                label: projectName + ' — Labor & Resources',
-                snapshot: { roles:roles, globalEquipment:globalEquipment, globalProfit:globalProfit },
-                summary: { laborCost:+laborCost.toFixed(2), equipmentCost:+globalEquipment, profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads:totalHeads }
+            // ── Build combined record ────────────────────────────────────────
+            const record = {
+                id: 'ccc_hist_' + Date.now(),
+                savedAt: new Date().toISOString(),
+                projectName, engineerName,
+                calculator: {
+                    snapshot: {
+                        length:L, width:W, clearHeight:H, stories:calcSnap.stories||1,
+                        mezzanine:calcSnap.mezzanine||0,
+                        structureType: structMap[calcSnap.structureType]||calcSnap.structureType,
+                        roofType:      roofMap[calcSnap.roofType]||calcSnap.roofType,
+                        wallCladding:  wallMap[calcSnap.wallCladding]||calcSnap.wallCladding,
+                        slabThickness: calcSnap.slabThickness,
+                        dockDoors:calcSnap.dockDoors||0, driveInDoors:calcSnap.driveInDoors||0,
+                        baySpacingL:bsl, baySpacingW:bsw,
+                        footingLength:fl, footingWidth:fw, footingDepth:fd,
+                        pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
+                        concretePriceM3:calcSnap.concretePriceM3||0, concreteClass:calcSnap.concreteClass
+                    },
+                    summary: {
+                        floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
+                        perimeter:+(2*(L+W)).toFixed(2), nodes, concreteVol:+concreteVol.toFixed(2)
+                    }
+                },
+                ces: {
+                    categoryTotals, pricedItems, grandTotal:+cesTotal.toFixed(2)
+                },
+                labor: {
+                    roles, globalEquipment, globalProfit,
+                    laborCost:+laborCost.toFixed(2), equipmentCost:globalEquipment,
+                    profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads
+                },
+                grandTotal: +grandTotal.toFixed(2)
             };
+
             try {
-                var h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
                 h.unshift(record);
                 localStorage.setItem('urc_ccc_history', JSON.stringify(h));
                 closeSaveModal();
@@ -326,6 +387,8 @@
             document.getElementById('summary-equipment').textContent = fmt(globalEquipment);
             document.getElementById('summary-profit').textContent    = fmt(profitCost);
             document.getElementById('summary-total').textContent     = fmt(grandTotal);
+            var lrReady = (laborCost + globalEquipment) > 0;
+            localStorage.setItem('urc_ccc_labor_ready', String(lrReady));
             checkSaveButton();
         }
         // function updateSummary() {
@@ -418,6 +481,7 @@
         window.onload = function() {
             if (typeof Auth !== 'undefined') Auth.requireLogin();
             loadFromCache();
+            checkSaveButton();  
         };
     </script>
     <!-- Save Estimate Modal -->

@@ -155,7 +155,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
+                    <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
                     <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
                 </div>
             </header>
@@ -497,7 +497,7 @@
             </div> </main>
     </div>
 
-    <script>
+    <script>     
         // ============================================================
         // STATE
         // ============================================================
@@ -670,6 +670,19 @@
             }, 200);
         }
 
+        function openSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('modal-project-name').focus();
+        }
+        function closeSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('modal-project-name').value = '';
+            document.getElementById('modal-engineer-name').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });   
         // ============================================================
         // INPUT HANDLERS
         // ============================================================
@@ -684,6 +697,64 @@
             saveToCache(); updateUI();
         }
 
+        function checkSaveButton() {
+            const btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            const ready = (estimateState.length > 0) && (estimateState.width > 0) && (estimateState.clearHeight > 0);
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
+        }
+
+        function confirmSaveEstimate() {
+            const projectName  = document.getElementById('modal-project-name').value.trim();
+            const engineerName = document.getElementById('modal-engineer-name').value.trim();
+            if (!projectName || !engineerName) { document.getElementById('modal-error').classList.remove('hidden'); return; }
+
+            const L = estimateState.length||0, W = estimateState.width||0, H = estimateState.clearHeight||0;
+            const M = (estimateState.mezzanine||0) / 100;
+            const floorArea = L * W, grossArea = floorArea * (1 + M);
+            const bldgVolume = L * W * H + L * W * M * 6, perimeter = 2 * (L + W);
+            const bsl = estimateState.baySpacingL||0, bsw = estimateState.baySpacingW||0;
+            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L/bsl + W/bsw) : 0;
+            const fl=estimateState.footingLength||0, fw=estimateState.footingWidth||0, fd=estimateState.footingDepth||0;
+            const pl=estimateState.pedestalLength||0, pw=estimateState.pedestalWidth||0, ph=estimateState.pedestalHeight||0;
+            const concreteVol = (fl*fw*fd + pl*pw*ph) * nodes;
+            const structMap = { steel_rigid:'Steel Rigid Frame', concrete:'Concrete', tilt_up:'Tilt-Up', hybrid:'Hybrid' };
+            const roofMap   = { standing_seam:'Standing Seam', corrugated:'Corrugated', flat:'Flat', skylight:'Skylight' };
+            const wallMap   = { metal_panel:'Metal Panel', masonry:'Masonry', glass:'Glass Curtain', none:'None' };
+
+            const record = {
+                id: 'ccc_hist_' + Date.now(), savedAt: new Date().toISOString(),
+                projectName, engineerName, source: 'calculator',
+                label: `${projectName} — Building Calculator`,
+                snapshot: {
+                    length:L, width:W, clearHeight:H, stories:estimateState.stories||1,
+                    mezzanine:estimateState.mezzanine||0,
+                    structureType: structMap[estimateState.structureType]||estimateState.structureType,
+                    roofType:      roofMap[estimateState.roofType]||estimateState.roofType,
+                    wallCladding:  wallMap[estimateState.wallCladding]||estimateState.wallCladding,
+                    slabThickness: estimateState.slabThickness,
+                    dockDoors:estimateState.dockDoors||0, driveInDoors:estimateState.driveInDoors||0,
+                    baySpacingL:bsl, baySpacingW:bsw,
+                    footingLength:fl, footingWidth:fw, footingDepth:fd,
+                    pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
+                    concretePriceM3:estimateState.concretePriceM3||0, concreteClass:estimateState.concreteClass
+                },
+                summary: {
+                    floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
+                    bldgVolume:+bldgVolume.toFixed(2), perimeter:+perimeter.toFixed(2),
+                    nodes, concreteVol:+concreteVol.toFixed(2)
+                }
+            };
+            try {
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
+                h.unshift(record);
+                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+                closeSaveModal();
+                showToast('Estimate saved to history.', 'success');
+            } catch(e) { showToast('Could not save estimate.', 'error'); }
+        }
         // ============================================================
         // COMPUTATION + DOM UPDATE
         // ============================================================
@@ -722,6 +793,7 @@
             const materialCost = concreteVol * (estimateState.concretePriceM3 || 0);
             const equipCost = 0;
             let   laborCost    = 0;
+            checkSaveButton();
         }
 
         function syncInputs() {
@@ -787,5 +859,30 @@
             loadPrices();
         };
     </script>
+    <!-- Save Estimate Modal -->
+    <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+            <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
+                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
+                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+            </div>
+            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

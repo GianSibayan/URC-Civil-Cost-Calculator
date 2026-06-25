@@ -80,7 +80,7 @@
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
             <h2 class="text-2xl font-bold text-neutral-900">Labor &amp; Resources</h2>
             <div class="flex items-center gap-2">
-                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
+                <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
                 <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
             </div>
         </header>
@@ -261,7 +261,55 @@
             if (field === 'globalProfit')    globalProfit    = isNaN(parsed) ? 0 : parsed;
             saveToCache(); updateSummary();
         }
+        function checkSaveButton() {
+            var btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            var total = 0;
+            Object.keys(laborState).forEach(function(r) { var s = laborState[r]; total += s.rate * s.count * s.days; });
+            total += globalEquipment;
+            var ready = total > 0;
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
+        }
 
+        function confirmSaveEstimate() {
+            var projectName  = document.getElementById('modal-project-name').value.trim();
+            var engineerName = document.getElementById('modal-engineer-name').value.trim();
+            if (!projectName || !engineerName) { document.getElementById('modal-error').classList.remove('hidden'); return; }
+
+            var roleLabels = {
+                ncr:'NCR (Unskilled)', visayas:'Visayas (Unskilled)', mindanao:'Mindanao (Unskilled)',
+                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
+                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
+                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
+                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
+            };
+            var laborCost = 0, totalHeads = 0, roles = [];
+            Object.keys(laborState).forEach(function(role) {
+                var r = laborState[role], sub = r.rate * r.count * r.days;
+                laborCost += sub;
+                if (r.count > 0) { totalHeads += r.count; roles.push({ name:roleLabels[role]||role, rate:r.rate, count:r.count, days:r.days }); }
+            });
+            var execBase = laborCost + globalEquipment;
+            var profitCost = execBase * (globalProfit / 100);
+            var grandTotal = loadMaterialsFromCES() + execBase + profitCost;
+
+            var record = {
+                id: 'ccc_hist_' + Date.now(), savedAt: new Date().toISOString(),
+                projectName: projectName, engineerName: engineerName, source: 'labor',
+                label: projectName + ' — Labor & Resources',
+                snapshot: { roles:roles, globalEquipment:globalEquipment, globalProfit:globalProfit },
+                summary: { laborCost:+laborCost.toFixed(2), equipmentCost:+globalEquipment, profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads:totalHeads }
+            };
+            try {
+                var h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
+                h.unshift(record);
+                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+                closeSaveModal();
+                showToast('Estimate saved to history.', 'success');
+            } catch(e) { showToast('Could not save estimate.', 'error'); }
+        }
         function updateSummary() {
             var materialCost = loadMaterialsFromCES();
             var laborCost = 0;
@@ -304,7 +352,7 @@
                 return Object.values(d.categoryTotals).reduce(function(a, b) { return a + b; }, 0);
             } catch(e) { return 0; }
         }
-        
+
         function saveToCache() {
             try {
                 localStorage.setItem('urc_ccc_labor_2026', JSON.stringify({
@@ -348,7 +396,19 @@
             } catch(e) {}
             updateSummary();
         }
-
+        function openSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('modal-project-name').focus();
+        }
+        function closeSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('modal-project-name').value = '';
+            document.getElementById('modal-engineer-name').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });   
         function goBackMain() {
             document.body.style.transition = 'opacity 0.2s';
             document.body.style.opacity = '0';
@@ -360,5 +420,30 @@
             loadFromCache();
         };
     </script>
+    <!-- Save Estimate Modal -->
+    <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+            <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
+                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
+                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+            </div>
+            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -117,7 +117,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     View Summary
                 </button>
-                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Save Estimate</button>
+                <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
                 <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Export</button>
             </div>
         </header>
@@ -314,7 +314,19 @@
                 }
             });
         }
-
+        function openSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('modal-project-name').focus();
+        }
+        function closeSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('modal-project-name').value = '';
+            document.getElementById('modal-engineer-name').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });   
         function updateMaterialDropdown() {
             const catId = document.getElementById('material-category-selector').value;
             const container = document.getElementById('material-checkbox-list');
@@ -729,7 +741,42 @@
 
             updateActiveTargetPanel();
         }
+        function checkSaveButton() {
+            const btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            const ready = Object.keys(itemPrices).length > 0;
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
+        }
 
+        function confirmSaveEstimate() {
+            const projectName  = document.getElementById('modal-project-name').value.trim();
+            const engineerName = document.getElementById('modal-engineer-name').value.trim();
+            if (!projectName || !engineerName) { document.getElementById('modal-error').classList.remove('hidden'); return; }
+
+            const grandTotal  = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+            const pricedItems = Object.keys(itemPrices).length;
+            const catMap = {};
+            SCOPE_CATEGORIES.forEach(cat => {
+                const t = categoryTotals[cat.id] || 0;
+                if (t > 0) catMap[cat.title || cat.id] = t;
+            });
+            const record = {
+                id: 'ccc_hist_' + Date.now(), savedAt: new Date().toISOString(),
+                projectName, engineerName, source: 'ces',
+                label: `${projectName} — Cost Estimate Scope`,
+                snapshot: { pricedItems, categoryTotals: catMap },
+                summary: { pricedItems, grandTotal: +grandTotal.toFixed(2) }
+            };
+            try {
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
+                h.unshift(record);
+                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+                closeSaveModal();
+                showToast('Estimate saved to history.', 'success');
+            } catch(e) { showToast('Could not save estimate.', 'error'); }
+        }
         function saveCartPrice() {
             if (!activeItemKey) return;
 
@@ -769,6 +816,7 @@
             updateActiveTargetPanel();
             calculateTotals(catId);
             persistData();
+            checkSaveButton();
         }
 
         function updateActiveTargetPanel() {
@@ -858,5 +906,31 @@
         }
 
     </script>
+
+    <!-- Save Estimate Modal -->
+    <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+            <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
+                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
+                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+            </div>
+            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

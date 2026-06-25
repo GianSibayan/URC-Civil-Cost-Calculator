@@ -4,13 +4,13 @@
 A web-based civil project cost estimation tool built to replace the department's existing Excel-based workflow (`WAREHOUSE_BUILDING_CALCULATOR.xlsx`). Engineers input building parameters and receive detailed cost estimates. Admins manage the price database through a protected panel.
 
 ## Status
-🚧 In active development — June 2026
+🚧 In active development — June 2026 | History tab implemented (localStorage); GitHub-backed shared history planned
 
 ---
 
 ## What This App Does
 
-Five modules across four HTML pages:
+Six modules across five HTML pages:
 
 **1. Building Calculator** (`calculator.html`)
 Engineer inputs dimensions (length, width, clear height, stories, mezzanine %), structure selections (structure type, roof, wall cladding, slab thickness), bay spacing, and capacity parameters. App auto-calculates floor area, building volume, total connection nodes, storage area, rack levels, and total pallet positions live. Right panel shows a live bar chart and Bill of Quantities breakdown.
@@ -19,13 +19,54 @@ Engineer inputs dimensions (length, width, clear height, stories, mezzanine %), 
 Engineer inputs footing/pedestal dimensions and selects concrete class. App auto-calculates concrete volume, rebar weight, excavation volume, formwork area, labor rate, and total cost in ₱ using rates fetched from `prices.json`.
 
 **3. Cost Estimate Scope** (`cost_estimate_scope.html`)
-Structured line-item form replicating the `COST ESTIMATE SCOPE` sheet from the Excel reference. Organized into accordion sections by scope category (Yard & Underground, Yard Utilities, Plant Utilities, Substation, Building Shell, Interior Finishing, Electrical, Mechanical). Engineer checks off items in scope. Material cart with live DB lookup from the 14 category JSONs. Subtotals by category, grand total, and adjusted total (× escalation factor × place factor from `prices.json`).
+Structured line-item form replicating the `COST ESTIMATE SCOPE` sheet from the Excel reference. Organized into tab sections by scope category (Yard & Underground, Yard Utilities, Plant Utilities, Substation & Power, RM Warehouse, Building Shell, Interior Finishing, Electrical, Mechanical).
+
+**Scope item assignment workflow:**
+1. Tick a scope item checkbox on the left → it becomes the active assignment target (row highlights blue, right panel shows item name and enables Save Price)
+2. On the right, select a material category from the dropdown, check materials, set quantities, and build up a cart
+3. Click **Save Price** → current Cart Total is saved as that item's price; the full cart (materials + quantities) is stored to that item; cart clears for the next item
+4. Tick another scope item and repeat
+
+Per-item data stored in `scopeItemData` keyed by `${catId}__${sectionIdx}__${itemIdx}`. Category totals and tab badges update in real-time after each save. All saved state (prices, carts, totals) persists across page navigations via `sessionStorage['urc_ces_session']`. A cross-page cache (`localStorage['urc_ces_cross_page']`) is also written on every save so that Labor & Resources and the Save Estimate flow can read CES totals across tabs. Material prices shown in the cart are escalation-adjusted client-side using `getYearMultiplier()` from `prices.json` meta — base JSONs always store 2026 values.
 
 **4. Labor & Resources** (`labor_resources.html`)
-Engineer enters headcount and days per labor type (regional workers, skilled trades, senior engineers, consultants) at fixed daily rates. App computes row totals and a grand total live. Equipment costs and profit margin inputs. Separate localStorage cache so it persists independently from the calculator.
+Engineer enters headcount and days per labor type (regional workers, skilled trades, senior engineers, consultants) at fixed daily rates. App computes row totals and a grand total live. Equipment costs and profit margin inputs. The Bill of Quantities panel includes a **Material Costs** row pulled live from the CES cross-page cache (`localStorage['urc_ces_cross_page']`) via `loadMaterialsFromCES()` — grand total reflects Material + Labor + Equipment + Profit. Separate localStorage cache so labor state persists independently from the calculator.
 
 **5. Admin Panel** (`admin.html`)
 Protected price management interface. Admins can view, edit, save individual rows, add rows, import from Excel/CSV, and export all 14 category price lists. Core rates (concrete class prices, rebar, excavation, labor, escalation/place factors) are edited directly. Includes an Annual Escalation tool (see below).
+
+**6. Estimate History** (`history.html`)
+Displays all saved estimates in a row-based layout. Each row shows a dark header bar (project name, engineer name, timestamp) with an Expand/Collapse toggle. Collapsed view shows three mini summary cards — Building Calculator metrics, Cost Estimate Scope totals, and Labor & Resources breakdown. Expanded view shows full detail: a 2-column key-value grid for building dimensions, a category totals table for CES, a role breakdown table for labor, and a combined grand total bar. Shows amber-bannered demo data when no records exist. Delete per record (with confirmation) and Clear All available. Currently backed by `localStorage['urc_ccc_history']`; GitHub-backed shared storage via `api/save-history.js` is the planned next upgrade.
+
+---
+
+## Cross-Page Save Estimate Flow
+
+The **Save Estimate** button appears in the header of all three calculator pages (`calculator.html`, `cost_estimate_scope.html`, `labor_resources.html`). It is disabled (greyed out) until all three pages have been sufficiently filled. Ready flags are written to localStorage by each page:
+
+| Flag | Key | Condition |
+|---|---|---|
+| Calculator ready | `urc_ccc_calc_ready` | Length, Width, Clear Height all > 0 |
+| CES ready | `urc_ccc_ces_ready` | At least one scope item has a saved price |
+| Labor ready | `urc_ccc_labor_ready` | Grand total > 0 |
+
+All three flags must be `"true"` for the button to enable — checked by `checkSaveButton()` which runs on every state change and on page load. Once enabled, clicking Save Estimate opens a modal prompting for **Project Name** and **Engineer Name**. On confirm, `confirmSaveEstimate()` reads from all three stored caches (not in-memory state), builds a single combined record, and writes it to `localStorage['urc_ccc_history']`.
+
+The combined record schema:
+```json
+{
+  "id": "ccc_hist_<timestamp>",
+  "savedAt": "<ISO string>",
+  "projectName": "...",
+  "engineerName": "...",
+  "calculator": { "snapshot": { ...all inputs }, "summary": { ...computed metrics } },
+  "ces": { "categoryTotals": { ...per category }, "pricedItems": N, "grandTotal": N },
+  "labor": { "roles": [...], "globalEquipment": N, "globalProfit": N, "laborCost": N, "equipmentCost": N, "profitCost": N, "grandTotal": N, "totalHeads": N },
+  "grandTotal": N
+}
+```
+
+`confirmSaveEstimate()` is identical across all three pages and reads exclusively from localStorage caches — not from in-memory variables — so it works regardless of which page the user saves from.
 
 ---
 
@@ -52,6 +93,12 @@ Protected price management interface. Admins can view, edit, save individual row
 | Source control | GitHub (private repo) |
 | Price database | `prices.json` + 14 category JSONs in `/data/` |
 | Auth + price saves | Vercel Serverless Functions |
+| CES session state | `sessionStorage['urc_ces_session']` — prices, carts, totals per scope item |
+| CES cross-page cache | `localStorage['urc_ces_cross_page']` — category totals readable by Labor & Save flow |
+| Calculator cache | `localStorage['urc_ccc_state_v10']` — all building/footing inputs |
+| Labor cache | `localStorage['urc_ccc_labor_2026']` — labor state, equipment, profit |
+| Ready flags | `localStorage['urc_ccc_calc_ready']`, `['urc_ccc_ces_ready']`, `['urc_ccc_labor_ready']` |
+| Estimate history | `localStorage['urc_ccc_history']` — array of combined records, newest first |
 | Currency | Philippine Peso (₱) |
 
 ---
@@ -62,8 +109,9 @@ Protected price management interface. Admins can view, edit, save individual row
 URC-Civil-Cost-Calculator/
 ├── index.html                  # Landing / login page
 ├── calculator.html             # Building + Footing calculator tabs
-├── cost_estimate_scope.html    # Cost Estimate Scope page (separate from calculator)
+├── cost_estimate_scope.html    # Cost Estimate Scope page
 ├── labor_resources.html        # Labor & Resources rates page
+├── history.html                # Estimate History page — saved records viewer
 ├── admin.html                  # Admin panel — price management + escalation tool
 ├── prices.json                 # Core rates used in calculations:
 │                               #   concrete class prices, rebar, excavation,
@@ -137,24 +185,19 @@ Admins update prices via `admin.html`. All saves push to GitHub via the Vercel s
 
 ---
 
-## Annual Price Escalation
+### Annual Price Escalation (client-side, non-destructive)
+The Admin Panel includes an **Annual Escalation** tool (sidebar → Annual Escalation):
 
-The Admin Panel includes an **Annual Escalation** tool (sidebar → Tools → Annual Escalation):
+1. Select the **active year** and enter the **escalation rate %** per year
+2. Click **Apply** — saves only `active_year` and `year_rates` to `prices.json` meta (one GitHub write)
 
-1. Enter the **year** the new prices apply to (e.g. 2027) and the **escalation rate %** (e.g. 10)
-2. Click **Preview Changes** — loads all 14 JSONs and `prices.json`, applies the multiplier, and shows a before→after table per category
-3. Review the preview, then click **Confirm & Apply**
+**How scaling works:**
+- All 14 category JSONs always store **2026 base values** — they are never modified by escalation
+- Every page that displays prices calls `getYearMultiplier()` which reads `active_year` and `year_rates` from `prices.json` meta and computes: `price × (1 + rate/100)^(activeYear − 2026)`
+- `scalePrice()` applies this multiplier client-side at render time in admin, calculator, CES, and labor pages
+- To "revert": change the active year back to 2026 in admin — the base JSON values are unchanged
 
-**What it does on confirm:**
-- Multiplies every price field in all 14 category JSONs by `(1 + rate/100)`, rounded to 2 decimal places
-- Multiplies core rates in `prices.json` (concrete class prices, rebar, excavation, forms, labor) by the same factor
-- Saves a **price snapshot** of the pre-escalation values into `prices.json` under `meta.price_snapshots[year-1]`
-- Records the escalation in `meta.escalation_history` with year, rate, date, and who applied it
-
-**Reverting:**
-Each history entry shows a **"Revert to [year]"** button if a snapshot exists. Clicking it restores all category JSONs and core rates to the snapshotted values and logs the revert in escalation history. This is the only safe rollback path — GitHub commit history is the fallback if no snapshot exists.
-
-**Safeguard:** If escalation for the selected year was already applied, a warning banner appears before you can preview.
+This is deliberately non-destructive. The database is always the 2026 truth; the year setting is just a display multiplier.
 
 ---
 
@@ -178,9 +221,10 @@ Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open any `.html
 2. **3 extra Total Bay Spacing outputs** — formula unclear, needs Sir Tony clarification.
 3. **Tab 3 PhilConstruct unit rates** — pending Sir Tony sharing the rate list; currently `0` in `prices.json`.
 4. **Forms Area formula** (Footing Calculator) — needs verification.
-5. **Cost Estimate Scope cart integration** — right panel currently shows placeholder; shopping cart / per-item cost logic not yet wired.
-6. **Footing & Pedestal nav** in `calculator.html` — tab routing needs a flow fix (known, deferred).
-7. **Labor & Resources** data not yet fed back into the main cost breakdown in the calculator sidebar.
+5. **Shared estimate history** — history is currently localStorage only (per-browser, per-device). GitHub-backed shared storage via `api/save-history.js` + `/data/history.json` is designed and ready to implement; see README section above for the full approach.
+6. **CES four-part cost estimation** — Sir Tony requested restructuring CES into per-item breakdown of material / labor / equipment / profit margin. Currently cart total is a single lump price per scope item.
+7. **Footing & Pedestal nav** in `calculator.html` — tab routing needs a flow fix (known, deferred).
+8. **Labor & Resources** data not yet fed back into the main cost breakdown in the calculator sidebar.
 
 ---
 
@@ -191,6 +235,7 @@ Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open any `.html
 3. All price list data lives in `/data/` — edit via `admin.html`, never directly on GitHub
 4. Run escalation in `admin.html` → Annual Escalation at the start of each new year
 5. Sir Tony owns the Excel reference file and PhilConstruct rate list — confirm any formula questions with him in the Monday 11AM drumbeat
+6. Estimate history is in `localStorage['urc_ccc_history']` — if upgrading to shared GitHub storage, see the Cross-Page Save Estimate Flow section above for the full record schema
 
 ---
 
@@ -203,4 +248,4 @@ Plain HTML/JS — no frameworks, no compilers, no `npm install`. Open any `.html
 | Project Owner | Engr. Tony Pabilan |
 | Direct Supervisor | Engr. Emir Manansala |
 
-*ESD Global Engineering Internship Batch, URC / JG Summit Holdings*
+*ESD Global Engineering Internship Batch Hatdog 2026, URC / JG Summit Holdings*

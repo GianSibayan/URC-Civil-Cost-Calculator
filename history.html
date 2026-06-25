@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URC CCC — Estimate History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/src/auth.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter','-apple-system','BlinkMacSystemFont','"Segoe UI"','sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+        .chevron { transition: transform 0.2s ease; }
+        .chevron.open { transform: rotate(180deg); }
+        .section-box { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; }
+        .tbl td, .tbl th { padding: 8px 14px; font-size: 13px; }
+        .tbl th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; background: #f4f5f8; }
+        .tbl tr:not(:last-child) td { border-bottom: 1px solid #f3f4f6; }
+        .tbl tr:not(:last-child) th { border-bottom: 1px solid #e5e7eb; }
+        .tbl .total-row td { border-top: 2px solid #e5e7eb; font-weight: 700; background: #f9fafb; }
+        .kv-grid { display: grid; grid-template-columns: 1fr 1fr; }
+        .kv-cell { padding: 8px 14px; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+        .kv-cell:nth-child(odd) { border-right: 1px solid #f3f4f6; }
+        .kv-label { color: #9ca3af; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
+        .kv-value { color: #111827; font-weight: 600; }
+    </style>
+</head>
+<body class="h-full flex bg-white font-sans overflow-hidden select-none">
+
+<div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+<!-- SIDEBAR -->
+<aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6 z-20">
+    <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
+    <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
+    <nav class="flex-1 mt-8 space-y-1 relative">
+        <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Building Calculator</button>
+        <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Footing &amp; Pedestal Cal.</button>
+        <button onclick="window.location.href='cost_estimate_scope.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Cost Estimate Scope</button>
+        <button onclick="window.location.href='labor_resources.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Labor &amp; Resources</button>
+        <div class="pt-6">
+            <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
+            <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">History</button>
+        </div>
+    </nav>
+    <div class="pt-4 border-t border-neutral-100 mt-auto">
+        <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">Main Page</button>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+    <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
+        <div class="flex items-center gap-3">
+            <h2 class="text-2xl font-bold text-neutral-900">History</h2>
+            <span id="count-badge" class="text-xs font-semibold text-neutral-400 bg-neutral-100 px-2.5 py-0.5 rounded-full hidden">0 saved</span>
+        </div>
+        <button id="btn-clear-all" onclick="clearAll()" class="hidden text-sm font-semibold text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer">Clear All</button>
+    </header>
+
+    <div class="flex-1 overflow-y-auto px-8 py-6">
+
+        <!-- Demo banner -->
+        <div id="demo-banner" class="hidden mb-5 flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>No saved estimates yet — showing demo data. Fill all three pages and click <strong>Save Estimate</strong> to create a real record.</span>
+        </div>
+
+        <!-- Records -->
+        <div id="records-list" class="space-y-3 max-w-5xl"></div>
+
+        <!-- Empty state -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-24 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center mb-4">
+                <svg class="w-7 h-7 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <p class="text-sm font-semibold text-neutral-500">No estimates saved yet</p>
+            <p class="text-sm text-neutral-400 mt-0.5">Complete all three pages and click Save Estimate.</p>
+        </div>
+
+    </div>
+</main>
+
+<script>
+// ── DEMO DATA ─────────────────────────────────────────────────────────────────
+const DEMO = [{
+    id: 'demo_1', isDemo: true,
+    savedAt: new Date(Date.now() - 7200000).toISOString(),
+    projectName: 'Calamba Warehouse Phase 2',
+    engineerName: 'Juan dela Cruz',
+    calculator: {
+        snapshot: {
+            length:60, width:40, clearHeight:9, stories:1, mezzanine:25,
+            structureType:'Steel Rigid Frame', roofType:'Standing Seam',
+            wallCladding:'Metal Panel', slabThickness:'100mm', concreteClass:'C30/37',
+            dockDoors:4, driveInDoors:2, baySpacingL:7.5, baySpacingW:7.5,
+            footingLength:1.2, footingWidth:1.2, footingDepth:0.6,
+            pedestalLength:0.4, pedestalWidth:0.4, pedestalHeight:0.5,
+            concretePriceM3:7800
+        },
+        summary: { floorArea:2400, grossArea:3000, bldgVolume:21600, perimeter:200, nodes:24, concreteVol:55.3 }
+    },
+    ces: {
+        categoryTotals: { 'Site Development':850000, 'Main Building':3200000, 'Utilities':450000, 'Others (Equipment)':280000 },
+        pricedItems:7, grandTotal:4780000
+    },
+    labor: {
+        roles:[
+            { name:'NCR (Unskilled)',  rate:695,  count:15, days:90 },
+            { name:'Carpenter',        rate:700,  count:8,  days:60 },
+            { name:'Mason',            rate:700,  count:5,  days:45 },
+            { name:'Welder',           rate:815,  count:4,  days:30 },
+            { name:'Civil Engineer',   rate:2700, count:2,  days:120 }
+        ],
+        globalEquipment:500000, globalProfit:12,
+        laborCost:2043375, equipmentCost:500000, profitCost:305205,
+        grandTotal:7628580, totalHeads:34
+    },
+    grandTotal:7628580
+}];
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+function loadHistory() {
+    try { return JSON.parse(localStorage.getItem('urc_ccc_history') || '[]'); } catch(e) { return []; }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Auth !== 'undefined') Auth.requireLogin();
+    render();
+});
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+    const real   = loadHistory();
+    const isDemo = real.length === 0;
+    const recs   = isDemo ? DEMO : real;
+
+    document.getElementById('demo-banner').classList.toggle('hidden', !isDemo);
+    document.getElementById('demo-banner').classList.toggle('flex', isDemo);
+    document.getElementById('btn-clear-all').classList.toggle('hidden', isDemo || real.length === 0);
+
+    const badge = document.getElementById('count-badge');
+    if (real.length > 0) {
+        badge.textContent = real.length + ' saved';
+        badge.classList.remove('hidden');
+    } else { badge.classList.add('hidden'); }
+
+    const list  = document.getElementById('records-list');
+    const empty = document.getElementById('empty-state');
+
+    if (recs.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden'); empty.classList.add('flex');
+        return;
+    }
+    empty.classList.add('hidden'); empty.classList.remove('flex');
+    list.innerHTML = recs.map(r => rowHTML(r, isDemo)).join('');
+}
+
+// ── ROW ───────────────────────────────────────────────────────────────────────
+function rowHTML(rec, isDemo) {
+    const id   = rec.id;
+    const pn   = esc(rec.projectName  || 'Unnamed Project');
+    const en   = esc(rec.engineerName || 'Unknown');
+    const rel  = relTime(rec.savedAt);
+    const date = fmtDate(rec.savedAt);
+    const total = fmt(rec.grandTotal || 0);
+
+    return `
+<div class="border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm" id="row-${id}">
+
+    <!-- Dark header bar -->
+    <div class="bg-neutral-900 px-5 py-3.5 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+            <span class="text-white font-semibold text-sm truncate">${pn}</span>
+            <span class="text-neutral-600 text-sm flex-shrink-0">|</span>
+            <span class="text-neutral-400 text-sm flex-shrink-0">by ${en}</span>
+            <span class="text-neutral-600 text-xs flex-shrink-0 ml-1">${rel} · ${date}</span>
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+            ${isDemo ? '' : `
+            <button onclick="deleteRecord('${id}')" title="Delete"
+                class="p-1.5 text-neutral-600 hover:text-red-400 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>`}
+            <button onclick="toggle('${id}')" id="toggle-${id}"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-neutral-300 hover:text-white text-xs font-semibold rounded-lg hover:bg-white/10 transition cursor-pointer">
+                <span id="tlabel-${id}">Expand</span>
+                <svg id="tchev-${id}" class="chevron w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- COLLAPSED: 3 mini-cards -->
+    <div id="collapsed-${id}" class="p-4 grid grid-cols-3 gap-3 bg-white">
+        ${miniCalc(rec)} ${miniCES(rec)} ${miniLabor(rec)}
+    </div>
+
+    <!-- EXPANDED: full detail (hidden) -->
+    <div id="expanded-${id}" class="hidden px-5 pb-6 pt-2 bg-white space-y-6">
+        ${expandedCalc(rec)}
+        ${expandedCES(rec)}
+        ${expandedLabor(rec)}
+        <!-- Grand total bar -->
+        <div class="flex items-center justify-between bg-neutral-900 text-white rounded-xl px-5 py-4 mt-2">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-widest text-neutral-400">Combined Grand Total</p>
+                <p class="text-[10px] text-neutral-500 mt-0.5">Materials + Labor + Equipment + Profit</p>
+            </div>
+            <span class="text-2xl font-black">${total}</span>
+        </div>
+    </div>
+
+</div>`;
+}
+
+// ── MINI CARDS (collapsed) ────────────────────────────────────────────────────
+function miniCalc(rec) {
+    const s = rec.calculator?.snapshot || {};
+    const m = rec.calculator?.summary  || {};
+    return `
+<div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Building Calculator</p>
+    <div class="space-y-2">
+        ${kv('Dimensions', `${s.length||'—'} × ${s.width||'—'} × ${s.clearHeight||'—'} m`)}
+        ${kv('Floor Area',  `${(m.floorArea||0).toLocaleString()} sqm`)}
+        ${kv('Gross Area',  `${(m.grossArea||0).toLocaleString()} sqm`)}
+        ${kv('Structure',   s.structureType||'—')}
+        ${kv('Concrete',    `${(m.concreteVol||0).toFixed(1)} m³`)}
+    </div>
+</div>`;
+}
+
+function miniCES(rec) {
+    const c = rec.ces || {};
+    const cats = Object.keys(c.categoryTotals || {});
+    return `
+<div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Cost Estimate Scope</p>
+    <div class="space-y-2">
+        ${kv('Items Priced',  c.pricedItems || 0)}
+        ${kv('Categories',    cats.length + ' active')}
+        ${kvBig('Scope Total', fmt(c.grandTotal || 0), 'text-emerald-700')}
+    </div>
+</div>`;
+}
+
+function miniLabor(rec) {
+    const l = rec.labor || {};
+    return `
+<div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Labor &amp; Resources</p>
+    <div class="space-y-2">
+        ${kv('Total Heads',   l.totalHeads || 0)}
+        ${kv('Profit Margin', (l.globalProfit||0) + '%')}
+        ${kv('Labor Cost',    fmt(l.laborCost||0))}
+        ${kv('Equipment',     fmt(l.equipmentCost||0))}
+    </div>
+</div>`;
+}
+
+// ── EXPANDED SECTIONS ─────────────────────────────────────────────────────────
+function expandedCalc(rec) {
+    const s = rec.calculator?.snapshot || {};
+    const m = rec.calculator?.summary  || {};
+    if (!s.length && !m.floorArea) return '';
+    return `
+<div>
+    <p class="text-sm font-bold text-neutral-800 mb-2">Building Dimensions</p>
+    <div class="section-box">
+        <div class="kv-grid">
+            ${kvc('Length',         `${s.length||0} m`)}
+            ${kvc('Structure Type', s.structureType||'—')}
+            ${kvc('Width',          `${s.width||0} m`)}
+            ${kvc('Roof Type',      s.roofType||'—')}
+            ${kvc('Clear Height',   `${s.clearHeight||0} m`)}
+            ${kvc('Wall Cladding',  s.wallCladding||'—')}
+            ${kvc('Stories',        s.stories||1)}
+            ${kvc('Slab Thickness', s.slabThickness||'—')}
+            ${kvc('Mezzanine',      `${s.mezzanine||0}%`)}
+            ${kvc('Concrete Class', s.concreteClass||'—')}
+            ${kvc('Floor Area',     `${(m.floorArea||0).toLocaleString()} sqm`)}
+            ${kvc('Concrete Price', fmt(s.concretePriceM3||0) + '/m³')}
+            ${kvc('Gross Area',     `${(m.grossArea||0).toLocaleString()} sqm`)}
+            ${kvc('Concrete Vol.',  `${(m.concreteVol||0).toFixed(2)} m³`)}
+            ${kvc('Perimeter',      `${(m.perimeter||0)} m`)}
+            ${kvc('Bay Nodes',      m.nodes||'—')}
+            ${kvc('Dock Doors',     s.dockDoors||0)}
+            ${kvc('Drive-in Doors', s.driveInDoors||0)}
+            ${kvc('Footing',        `${s.footingLength||0}×${s.footingWidth||0}×${s.footingDepth||0} m`)}
+            ${kvc('Pedestal',       `${s.pedestalLength||0}×${s.pedestalWidth||0}×${s.pedestalHeight||0} m`)}
+        </div>
+    </div>
+</div>`;
+}
+
+function expandedCES(rec) {
+    const c    = rec.ces || {};
+    const cats = c.categoryTotals || {};
+    const rows = Object.entries(cats);
+    if (!rows.length) return '';
+    const rowsHTML = rows.map(([name, val]) => `
+        <tr><td class="text-neutral-700">${esc(name)}</td><td class="text-right font-semibold text-neutral-800">${fmt(val)}</td></tr>
+    `).join('');
+    return `
+<div>
+    <p class="text-sm font-bold text-neutral-800 mb-2">Cost Estimate Scope</p>
+    <div class="section-box">
+        <table class="tbl w-full">
+            <thead><tr><th class="text-left">Category</th><th class="text-right">Amount</th></tr></thead>
+            <tbody>${rowsHTML}
+                <tr class="total-row"><td>Total</td><td class="text-right text-emerald-700">${fmt(c.grandTotal||0)}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>`;
+}
+
+function expandedLabor(rec) {
+    const l     = rec.labor || {};
+    const roles = (l.roles || []).filter(r => (r.count||0) > 0);
+    if (!roles.length && !l.laborCost) return '';
+    const roleRows = roles.map(r => {
+        const sub = r.rate * r.count * r.days;
+        return `<tr>
+            <td class="text-neutral-700">${esc(r.name)}</td>
+            <td class="text-right text-neutral-500">${fmt(r.rate)}</td>
+            <td class="text-center font-semibold">${r.count}</td>
+            <td class="text-center text-neutral-500">${r.days}</td>
+            <td class="text-right font-semibold text-neutral-800">${fmt(sub)}</td>
+        </tr>`;
+    }).join('');
+    return `
+<div>
+    <p class="text-sm font-bold text-neutral-800 mb-2">Labor &amp; Resources</p>
+    <div class="section-box">
+        <table class="tbl w-full min-w-[480px]">
+            <thead><tr>
+                <th class="text-left">Role</th>
+                <th class="text-right">Rate / Day</th>
+                <th class="text-center">Heads</th>
+                <th class="text-center">Days</th>
+                <th class="text-right">Subtotal</th>
+            </tr></thead>
+            <tbody>${roleRows}
+                <tr class="total-row">
+                    <td colspan="4">Labor Cost</td>
+                    <td class="text-right">${fmt(l.laborCost||0)}</td>
+                </tr>
+                <tr><td colspan="4" class="text-neutral-500">Equipment Cost</td><td class="text-right">${fmt(l.equipmentCost||0)}</td></tr>
+                <tr><td colspan="4" class="text-neutral-500">Overhead &amp; Profit (${l.globalProfit||0}%)</td><td class="text-right">${fmt(l.profitCost||0)}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>`;
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────────────────────
+function toggle(id) {
+    const collapsed = document.getElementById('collapsed-' + id);
+    const expanded  = document.getElementById('expanded-'  + id);
+    const label     = document.getElementById('tlabel-'    + id);
+    const chev      = document.getElementById('tchev-'     + id);
+    const isOpen    = !expanded.classList.contains('hidden');
+    if (isOpen) {
+        expanded.classList.add('hidden');
+        collapsed.classList.remove('hidden');
+        label.textContent = 'Expand';
+        chev.classList.remove('open');
+    } else {
+        collapsed.classList.add('hidden');
+        expanded.classList.remove('hidden');
+        label.textContent = 'Collapse';
+        chev.classList.add('open');
+    }
+}
+
+// ── DELETE / CLEAR ────────────────────────────────────────────────────────────
+function deleteRecord(id) {
+    const h = loadHistory().filter(r => r.id !== id);
+    localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+    showToast('Record deleted.');
+    render();
+}
+function clearAll() {
+    if (!confirm('Clear all saved estimates? This cannot be undone.')) return;
+    localStorage.removeItem('urc_ccc_history');
+    showToast('History cleared.');
+    render();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n) {
+    return '₱' + (n||0).toLocaleString('en-PH', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function fmtDate(iso) {
+    return new Date(iso).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function relTime(iso) {
+    const d = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(d/60000);
+    if (m < 1) return 'Just now';
+    if (m < 60) return m + 'm ago';
+    const h = Math.floor(m/60);
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h/24) + 'd ago';
+}
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+// Inline key-value row for mini card
+function kv(label, value) {
+    return `<div class="flex justify-between items-baseline gap-2">
+        <span class="text-xs text-neutral-400 flex-shrink-0">${label}</span>
+        <span class="text-xs font-semibold text-neutral-800 text-right truncate">${value}</span>
+    </div>`;
+}
+function kvBig(label, value, colorClass='text-neutral-900') {
+    return `<div class="flex justify-between items-baseline gap-2 pt-1 border-t border-neutral-200 mt-1">
+        <span class="text-xs text-neutral-500 flex-shrink-0 font-semibold">${label}</span>
+        <span class="text-sm font-bold ${colorClass} text-right">${value}</span>
+    </div>`;
+}
+// Cell for the 2-column key-value grid inside expanded sections
+function kvc(label, value) {
+    return `<div class="kv-cell">
+        <div class="kv-label">${label}</div>
+        <div class="kv-value">${value}</div>
+    </div>`;
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'px-4 py-3 rounded-xl shadow-lg border border-neutral-200 text-sm font-semibold bg-white text-neutral-700 flex items-center gap-2 pointer-events-auto max-w-xs transition-all duration-300 opacity-0 translate-y-2';
+    t.textContent = msg;
+    c.appendChild(t);
+    requestAnimationFrame(() => { t.style.opacity='1'; t.style.transform='translateY(0)'; });
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2500);
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function goBackMain() {
+    document.body.style.transition = 'opacity 0.2s';
+    document.body.style.opacity = '0';
+    setTimeout(() => { Auth.logout(); }, 200);
+}
+</script>
+</body>
+</html>

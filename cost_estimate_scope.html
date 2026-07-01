@@ -7,6 +7,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="/src/auth.js"></script>
 
     <script>
@@ -22,85 +23,37 @@
     </script>
 
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
-            background-color: #ffffff;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif; background-color: #ffffff; -webkit-font-smoothing: antialiased; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
-
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-
-        .dim-input {
-            width: 100%;
-            background: white;
-            border: 1.5px solid rgba(0,0,0,0.08);
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #111;
-            font-family: 'Inter', sans-serif;
-            text-align: center;
-            outline: none;
-            transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        .dim-input:focus {
-            border-color: rgba(0,0,0,0.25);
-            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
-        }
-        .dim-input::placeholder { color: #bbb; font-weight: 400; text-align: center; }
-        
-        .tab-content { animation: fadeIn 0.2s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        #summary-modal { backdrop-filter: blur(4px); }
+        .dim-input { width: 100%; background: white; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600; color: #111; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+        .dim-input:focus { border-color: rgba(0,0,0,0.25); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+        .ledger-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
     </style>
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
 
-    <div id="summary-modal" class="fixed inset-0 z-50 bg-black/40 hidden items-center justify-center opacity-0 transition-opacity duration-200">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="summary-modal-content">
-            <div class="px-6 py-4 border-b border-neutral-100 flex justify-between items-center bg-[#f8f9fa]">
-                <h3 class="text-lg font-bold text-neutral-900">Estimate Summary</h3>
-                <button onclick="closeSummary()" class="text-neutral-400 hover:text-neutral-800 transition">✕</button>
-            </div>
-            <div class="p-6 max-h-[60vh] overflow-y-auto" id="summary-list"></div>
-            <div class="px-6 py-4 border-t border-neutral-100 bg-neutral-50 flex justify-between items-center">
-                <span class="text-sm font-bold text-neutral-500 uppercase">Scope Total</span>
-                <span id="modal-grand-total" class="text-xl font-black text-neutral-900">₱0.00</span>
-            </div>
-        </div>
-    </div>
-
     <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
         <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
-        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
+        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Civil Cost Calculator</p>
 
         <nav class="flex-1 mt-8 space-y-1">
             <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                Building Calculator
-            </button>
-            <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                Footing &amp; Pedestal Cal.
+                Quantities Takeoff
             </button>
             <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">
-                Cost Estimate Scope
+                Master Estimator
             </button>
             <button onclick="window.location.href='labor_resources.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                Labor &amp; Resources
+                Labor Database Ref.
             </button>  
-                <div class="pt-6">
-                    <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-                    <button onclick="window.location.href='history.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">History</button>
-                </div>          
+            <div class="pt-6">
+                <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
+                <button onclick="window.location.href='history.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">History</button>
+            </div>          
         </nav>
         <div class="pt-4 border-t border-neutral-100 mt-auto">
             <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
@@ -111,73 +64,103 @@
 
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
-            <h2 class="text-2xl font-bold text-neutral-900">Cost Estimate Scope</h2>
+            <h2 class="text-2xl font-bold text-neutral-900">Master Estimator</h2>
             <div class="flex items-center gap-3">
-                <button onclick="openSummary()" class="px-4 py-2 text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition shadow-sm border border-emerald-200 flex items-center gap-2">
+                <button id="btn-view-boq" onclick="openBOQView()" class="px-4 py-2 text-sm font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    View Summary
+                    View BOQ Summary
                 </button>
-                <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
-                <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40">Export</button>
+                <button id="btn-save-estimate" class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm transition-opacity cursor-pointer">Save Estimate</button>
             </div>
         </header>
 
-        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full" style="grid-template-rows:100%">
-            <div class="xl:col-span-8 flex flex-col overflow-hidden border-r border-neutral-100">
-                
+        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
+            
+            <div class="xl:col-span-7 flex flex-col overflow-hidden border-r border-neutral-100">
                 <div class="p-6 pb-2 border-b border-neutral-100 bg-[#fbfbfc]">
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="relative flex-1 max-w-md">
-                            <input type="text" id="category-search" placeholder="Search scopes..." onkeyup="filterCategories()" class="w-full pl-10 pr-4 py-2 text-sm border border-neutral-200 rounded-lg focus:border-blue-500 outline-none bg-white">
-                            <svg class="w-4 h-4 absolute left-3 top-2.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </div>
-                    </div>
                     <div id="tab-nav-container" class="flex space-x-2 overflow-x-auto pb-3 custom-scrollbar"></div>
                 </div>
-
                 <div id="dynamic-content-area" class="flex-1 overflow-y-auto p-6 pb-32 bg-white"></div>
-
             </div>
 
-            <div class="xl:col-span-4 bg-[#f8f9fa] p-8 flex flex-col h-full border-t xl:border-t-0 border-neutral-200">
-                <div class="mb-6 border-b border-neutral-200 pb-4">
-                    <h3 class="text-lg font-bold text-neutral-900">Material Cart</h3>
-                    <p class="text-xs text-neutral-500 mt-1" id="db-status">Loading databases...</p>
-                </div>
-
-                <div class="flex flex-col gap-3 mb-6">
-                    <label class="text-xs font-bold text-neutral-500 uppercase">1. Search Database</label>
-                    <select id="material-category-selector" onchange="updateMaterialDropdown()" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500">
-                        <option value="">-- Select Material Category --</option>
-                    </select>
-
-                    <label class="text-xs font-bold text-neutral-500 uppercase mt-2">2. Select Materials</label>
-                    <div id="material-checkbox-list" class="w-full bg-white border border-neutral-200 rounded-lg p-2 text-sm h-32 overflow-y-auto flex flex-col shadow-inner">
-                        <div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>
+            <div id="builder-container" class="xl:col-span-5 bg-[#f8f9fa] flex flex-col h-full border-t xl:border-t-0 border-neutral-200 overflow-hidden">
+                <div class="flex-1 p-6 overflow-y-auto border-b border-neutral-200 flex flex-col">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-neutral-900">Scope Item Builder</h3>
+                        <p id="active-target-name" class="text-sm font-semibold text-blue-600 mt-1 truncate">← Select a scope item from the left</p>
                     </div>
 
-                    <button onclick="addSelectedToCart()" class="w-full py-2.5 bg-black hover:bg-neutral-800 text-white text-sm font-semibold rounded-lg transition mt-2 shadow-sm">
-                        Add Selected to Cart
-                    </button>
+                    <div id="builder-controls" class="opacity-50 pointer-events-none transition-opacity flex-1">
+                        
+                        <div class="mb-5 bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                            <label class="text-xs font-bold text-neutral-800 uppercase border-b border-neutral-100 pb-2 block mb-3">Add Line Item Details</label>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Material Details (Optional)</label>
+                                    <div class="flex flex-col gap-2">
+                                        <select id="material-category-selector" onchange="updateMaterialDropdown()" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"></select>
+                                        <select id="material-selector" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" onchange="validateCartInputs()"></select>
+                                        <input type="number" id="material-qty" placeholder="Quantity" class="dim-input w-full" oninput="validateCartInputs()" min="0" step="any" onkeydown="return ['e','E','+','-'].includes(event.key) ? false : true" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Associated Labor (Optional)</label>
+                                    <div class="flex flex-col gap-2">
+                                        <select id="labor-selector" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" onchange="validateCartInputs()"></select>
+                                        <input type="number" id="labor-hours" placeholder="Effort (Man Hours)" class="dim-input w-full" oninput="validateCartInputs()" min="0" step="any" onkeydown="return ['e','E','+','-'].includes(event.key) ? false : true" />
+                                    </div>
+                                </div>
+
+                                <button id="btn-add-item" onclick="addCombinedItemToScope()" disabled class="w-full mt-2 px-4 py-2.5 bg-neutral-900 text-white rounded-lg text-sm font-semibold hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed transition">
+                                    Add Line Item to Scope
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm min-h-[150px]">
+                            <label class="text-xs font-bold text-neutral-800 uppercase border-b border-neutral-100 pb-2 block mb-2">Item Breakdown</label>
+                            <div id="current-item-breakdown" class="space-y-2 text-sm">
+                                <div class="text-neutral-400 italic text-center py-4">No data added yet.</div>
+                            </div>
+                            <div class="border-t border-neutral-100 mt-3 pt-3 flex justify-between font-bold text-neutral-900">
+                                <span>Item Subtotal:</span>
+                                <span id="current-item-subtotal">₱0.00</span>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
-                <div id="cart-items" class="flex-1 overflow-y-auto space-y-3 pr-2 pb-4">
-                    <div id="empty-cart-msg" class="text-sm text-neutral-400 text-center mt-10">Estimate cart is empty</div>
-                </div>
+                <div class="p-6 bg-white flex-shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Financial Ledger</h3>
+                    
+                    <div class="space-y-2 text-sm text-neutral-600 mb-4">
+                        <div class="ledger-row font-bold text-neutral-900"><span>Defined Cost Subtotal</span><span id="ledger-defined">₱0.00</span></div>
+                        
+                        <div class="ledger-row text-xs text-neutral-500 mt-2"><span>Undefined Allowances (5%)</span><span id="ledger-undefined">₱0.00</span></div>
+                        <div class="pl-4 text-[10px] text-neutral-400 space-y-0.5">
+                            <div class="flex justify-between"><span>Field Instructions (2%)</span><span id="ledger-uf-field">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Unlisted Items (2%)</span><span id="ledger-uf-unlisted">₱0.00</span></div>
+                            <div class="flex justify-between"><span>Post Start-up (1%)</span><span id="ledger-uf-post">₱0.00</span></div>
+                        </div>
 
-                <!-- SAVE PRICE PANEL -->
-                <div class="mt-3 p-3 bg-white border border-neutral-200 rounded-xl flex-shrink-0">
-                    <div class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Save cart total to scope item</div>
-                    <div id="active-target-name" class="text-xs font-semibold text-neutral-500 mb-2 truncate">← Select a scope item first</div>
-                    <button onclick="saveCartPrice()" id="save-price-btn" disabled
-                        class="w-full py-2 bg-black hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition">
-                        Save Price
-                    </button>
-                </div>
+                        <div class="ledger-row text-xs text-neutral-500 mt-2"><span>Risk Management Funds</span><span id="ledger-risk">₱0.00</span></div>
+                        <div class="pl-4 text-[10px] text-neutral-400">
+                            <div class="flex justify-between"><span>Contingency (5%)</span><span id="ledger-contingency">₱0.00</span></div>
+                        </div>
+                    </div>
 
-                <div class="mt-3 pt-3 border-t border-neutral-200 flex items-center justify-between bg-[#f8f9fa] sticky bottom-0 z-10">
-                    <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Cart Total</span>
-                    <span id="cart-grand-total" class="text-2xl font-bold text-neutral-900">₱0.00</span>
+                    <div class="border-t border-neutral-200 pt-3">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h4 class="text-sm font-bold text-neutral-900 uppercase">Estimated Total Cost</h4>
+                                <p class="text-[10px] text-neutral-400">Raw Data: <span id="ledger-raw">₱0.00</span></p>
+                            </div>
+                            <div class="text-2xl font-black text-blue-600" id="ledger-rounded">₱0.00</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -185,42 +168,19 @@
 
     <script>
         // ============================================================
-        // 1. MATERIAL CART LOGIC (RESTORED)
+        // 1. DATABASE & INITIALIZATION
         // ============================================================
-        // ============================================================
-        // ESCALATION — mirrors admin.html logic exactly
-        // Reads active_year + year_rates from prices.json meta.
-        // Database JSONs always store 2026 base values unchanged.
-        // ============================================================
-        const BASE_YEAR = 2026;
-        let PRICES_META = null;
-
-        async function loadPricesMeta() {
-            try {
-                let res = await fetch('/prices.json');
-                if (!res.ok) throw new Error('relative failed');
-                PRICES_META = await res.json();
-            } catch (_) {
-                try {
-                    const res = await fetch('https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json');
-                    if (res.ok) PRICES_META = await res.json();
-                } catch (e) { console.error('Could not load prices.json meta:', e); }
-            }
-        }
-
-        function getYearMultiplier() {
-            const meta      = PRICES_META?.meta;
-            const activeYear = meta?.active_year ?? BASE_YEAR;
-            const rates     = meta?.year_rates   ?? {};
-            const rate      = rates[activeYear]  ?? 10;
-            const steps     = activeYear - BASE_YEAR;
-            return { multiplier: Math.pow(1 + rate / 100, steps), activeYear, rate, steps };
-        }
-
-        function scalePrice(basePrice) {
-            const { multiplier } = getYearMultiplier();
-            return Math.round(basePrice * multiplier * 100) / 100;
-        }
+        let MASTER_DB = {}; 
+        
+        const LABOR_DB = {
+            'carpenter': { name: 'Carpenter', dailyRate: 700 },
+            'mason': { name: 'Mason', dailyRate: 700 },
+            'welder': { name: 'Welder', dailyRate: 815 },
+            'electrician': { name: 'Electrician', dailyRate: 875 },
+            'plumber': { name: 'Plumber', dailyRate: 700 },
+            'ncr_unskilled': { name: 'Unskilled (NCR)', dailyRate: 695 },
+            'civil_eng': { name: 'Civil Engineer', dailyRate: 2700 }
+        };
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -239,215 +199,10 @@
             { id: 'pipes', file: 'data/pipes.json', schema: 'pipes', label: 'Pipes' }
         ];
 
-        let MASTER_DB = {}; 
-        let cart = [];
-        const scopeItemData = {}; // iKey -> { price, cart: [...] } — saved on "Save Price"
+        let scopeItemData = {}; 
+        let activeItemKey  = null;
+        let activeItemDesc = null;
 
-        async function fetchAllDatabases() {
-            const statusEl = document.getElementById('db-status');
-            let loadedCount = 0;
-
-            await Promise.all(DB_CONFIG.map(async (config) => {
-                const urls = [
-                    `/${config.file}`,
-                    `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`
-                ];
-
-                for (const url of urls) {
-                    try {
-                        const res = await fetch(url);
-                        if (res.ok) {
-                            const rawData = await res.json();
-                            normalizeMaterialData(config, rawData);
-                            loadedCount++;
-                            break; 
-                        }
-                    } catch (e) {}
-                }
-            }));
-
-            populateMaterialCategoryDropdown();
-
-            if (loadedCount > 0) {
-                statusEl.textContent = `Live DB Active (${loadedCount} modules loaded)`;
-                statusEl.className = "text-xs font-semibold text-emerald-600 mt-1";
-            } else {
-                statusEl.textContent = "Offline Mode: No materials loaded.";
-                statusEl.className = "text-xs font-semibold text-rose-500 mt-1";
-            }
-        }
-
-        function normalizeMaterialData(config, data) {
-            if (!data) return;
-            const addEntry = (id, name, price, unit) => {
-                MASTER_DB[id] = { name, price: price || 0, unit: unit || 'unit', category: config.id };
-            };
-
-            try {
-                if (config.schema === 'simple') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, scalePrice(item.price_php), item.unit));
-                } else if (config.schema === 'masonry' && data.prices) {
-                    data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, scalePrice(item.price_php), item.unit));
-                } else if (config.schema === 'rebars') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size} (${item.length})`, scalePrice(item.price_php), "pc"));
-                } else if (config.schema === 'concrete_mix') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, scalePrice(item.price_php), "cu.m"));
-                } else if (config.schema === 'equipment') {
-                    data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, scalePrice(item.rate_min_php), item.unit));
-                } else if (config.schema === 'pipes') {
-                    let pipeIdx = 0;
-                    if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english} (${item.metric_mm}mm)`, scalePrice(item.price_per_6m_php), "6m"));
-                    if (data.seamless_galvanized_steel) data.seamless_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Seamless: ${item.description}`, scalePrice(item.price_per_length_php), "length"));
-                    if (data.erw_welded_galvanized_steel) data.erw_welded_galvanized_steel.forEach(item => addEntry(`pipes_${pipeIdx++}`, `ERW Welded: ${item.description}`, scalePrice(item.price_per_length_php), "length"));
-                }
-            } catch (error) { console.error(error); }
-        }
-
-        function populateMaterialCategoryDropdown() {
-            const select = document.getElementById('material-category-selector');
-            DB_CONFIG.forEach(config => {
-                if (Object.values(MASTER_DB).some(mat => mat.category === config.id)) {
-                    const option = document.createElement('option');
-                    option.value = config.id;
-                    option.textContent = config.label;
-                    select.appendChild(option);
-                }
-            });
-        }
-        function openSaveModal() {
-            const m = document.getElementById('save-modal');
-            m.classList.remove('hidden'); m.classList.add('flex');
-            document.getElementById('modal-project-name').focus();
-        }
-        function closeSaveModal() {
-            const m = document.getElementById('save-modal');
-            m.classList.add('hidden'); m.classList.remove('flex');
-            document.getElementById('modal-project-name').value = '';
-            document.getElementById('modal-engineer-name').value = '';
-            document.getElementById('modal-error').classList.add('hidden');
-        }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });   
-        function updateMaterialDropdown() {
-            const catId = document.getElementById('material-category-selector').value;
-            const container = document.getElementById('material-checkbox-list');
-            container.innerHTML = ''; 
-
-            if (!catId) {
-                container.innerHTML = '<div class="text-neutral-400 text-center italic mt-6">Select a category first...</div>';
-                return;
-            }
-            
-            for (const [key, mat] of Object.entries(MASTER_DB)) {
-                if (mat.category === catId) {
-                    const label = document.createElement('label');
-                    label.className = "flex items-start gap-3 p-2 hover:bg-neutral-50 rounded cursor-pointer border border-transparent hover:border-neutral-200 transition-colors";
-                    label.innerHTML = `
-                        <input type="checkbox" value="${key}" class="mt-0.5 material-checkbox w-4 h-4 text-blue-600 rounded border-neutral-300 focus:ring-blue-500 cursor-pointer">
-                        <div class="flex-1 select-none">
-                            <div class="font-medium text-neutral-800 leading-tight">${mat.name}</div>
-                            <div class="text-xs text-blue-600 font-semibold mt-0.5">₱${mat.price.toLocaleString(undefined, {minimumFractionDigits: 2})} <span class="text-neutral-400 font-normal">/ ${mat.unit}</span></div>
-                        </div>
-                    `;
-                    container.appendChild(label);
-                }
-            }
-        }
-
-        function addSelectedToCart() {
-            const checkboxes = document.querySelectorAll('.material-checkbox:checked');
-            if (checkboxes.length === 0) return alert("Please check at least one material to add.");
-
-            let addedCount = 0;
-            checkboxes.forEach(cb => {
-                if (!cart.find(item => item.materialId === cb.value)) {
-                    cart.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), materialId: cb.value, quantity: 0 });
-                    addedCount++;
-                }
-                cb.checked = false; 
-            });
-
-            if (addedCount === 0) alert("The selected materials are already in your cart!");
-            else renderCart();
-        }
-
-        function removeFromCart(cartItemId) {
-            cart = cart.filter(item => item.id !== cartItemId);
-            renderCart();
-        }
-
-        function updateCartItemQuantity(cartItemId, newQuantity) {
-            const item = cart.find(ci => ci.id === cartItemId);
-            if (!item) return;
-            item.quantity = parseFloat(newQuantity) || 0;
-
-            const material = MASTER_DB[item.materialId];
-            if (!material) return;
-
-            // Update just this item's cost in-place — never re-render (re-render kills the focused input)
-            const costEl = document.getElementById(`cart-item-cost-${cartItemId}`);
-            if (costEl) {
-                const totalCost = item.quantity * material.price;
-                costEl.textContent = `₱${totalCost.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            }
-
-            // Recalculate grand total in-place
-            let cartTotal = 0;
-            cart.forEach(ci => {
-                const mat = MASTER_DB[ci.materialId];
-                if (mat) cartTotal += (ci.quantity || 0) * mat.price;
-            });
-            document.getElementById('cart-grand-total').textContent = `₱${cartTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-        }
-
-        function renderCart() {
-            const cartContainer = document.getElementById('cart-items');
-            let cartTotal = 0;
-
-            cartContainer.innerHTML = '';
-            document.getElementById('cart-grand-total').textContent = '₱0.00';
-
-            if (cart.length === 0) {
-                cartContainer.innerHTML = '<div id="empty-cart-msg" class="text-sm text-neutral-400 text-center mt-10">Estimate cart is empty</div>';
-                return;
-            }
-
-            cart.forEach(item => {
-                const material = MASTER_DB[item.materialId];
-                if (!material) return; 
-
-                const totalCost = item.quantity * material.price;
-                cartTotal += totalCost;
-
-                const div = document.createElement('div');
-                div.className = "bg-white p-3.5 rounded-xl border border-neutral-200 shadow-sm relative group transition-all";
-                div.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="text-sm font-bold text-neutral-900 pr-4 leading-tight">${material.name}</div>
-                        <button onclick="removeFromCart('${item.id}')" class="text-neutral-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100 bg-white rounded-full p-0.5">✕</button>
-                    </div>
-                    <div class="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100">
-                        <div class="flex items-center gap-2">
-                            <input type="number" min="0" value="${item.quantity || ''}" placeholder="0" 
-                                   oninput="updateCartItemQuantity('${item.id}', this.value)" 
-                                   class="w-16 px-2 py-1 text-sm text-center border border-neutral-300 rounded focus:border-blue-500 outline-none" />
-                            <span class="text-xs text-neutral-500 font-medium">${material.unit}</span>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-[10px] text-neutral-400">@ ₱${material.price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                            <div id="cart-item-cost-${item.id}" class="text-sm font-black text-neutral-800">₱${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        </div>
-                    </div>
-                `;
-                cartContainer.appendChild(div);
-            });
-
-            document.getElementById('cart-grand-total').textContent = `₱${cartTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
-
-        // ============================================================
-        // 2. DYNAMIC SCOPE TABLES LOGIC
-        // ============================================================
-        
         const commonShell = [
             { code: "105", desc: "Excavation & Fill" }, { code: "110", desc: "Foundations" }, { code: "115", desc: "Superstructure Slabs" },
             { code: "120", desc: "Slab on Grade" }, { code: "125", desc: "Floor and wall caulk" }, { code: "130", desc: "Frame - Steel" },
@@ -478,7 +233,7 @@
 
         const SCOPE_CATEGORIES = [
             {
-                id: "yard-underground", label: "Yard & Underground",
+                id: "yard-underground", label: "Yard & Underground", isIndirect: false,
                 sections: [{
                     title: "Yard & Underground", color: "bg-blue-50 text-blue-800",
                     items: [
@@ -491,28 +246,28 @@
                 }]
             },
             {
-                id: "yard-utilities", label: "Yard Utilities",
+                id: "yard-utilities", label: "Yard Utilities", isIndirect: false,
                 sections: [{
                     title: "Yard Utilities", color: "bg-blue-50 text-blue-800",
                     items: [{ code: "1", desc: "Potable Water" }, { code: "2", desc: "City Water" }, { code: "3", desc: "Sanitary Sewer" }, { code: "4", desc: "Gas - Natural" }]
                 }]
             },
             {
-                id: "plant-utilities", label: "Plant Utilities",
+                id: "plant-utilities", label: "Plant Utilities", isIndirect: false,
                 sections: [{
                     title: "Plant Utilities", color: "bg-blue-50 text-blue-800",
                     items: [{ code: "1", desc: "Hot Water" }, { code: "2", desc: "Steam" }, { code: "3", desc: "Process Sewer" }, { code: "4", desc: "Gas - LPG" }, { code: "5", desc: "Fuel Oil" }]
                 }]
             },
             {
-                id: "substation", label: "Substation & Power",
+                id: "substation", label: "Substation & Power", isIndirect: false,
                 sections: [{
                     title: "Substation and Primary Power Distribution", color: "bg-blue-50 text-blue-800",
                     items: [{ code: "1", desc: "Power - High Voltage" }, { code: "2", desc: "Substation/PDP/LV Powerfeed" }, { code: "3", desc: "Backup Generator" }]
                 }]
             },
             {
-                id: "rm-warehouse", label: "RM Warehouse",
+                id: "rm-warehouse", label: "RM Warehouse", isIndirect: false,
                 sections: [
                     { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: "", items: commonShell },
                     { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: "", items: commonInterior },
@@ -521,7 +276,7 @@
                 ]
             },
             {
-                id: "making", label: "Making",
+                id: "making", label: "Making", isIndirect: false,
                 sections: [
                     { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " MAK", items: commonShell },
                     { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " MAK", items: commonInterior },
@@ -530,7 +285,7 @@
                 ]
             },
             {
-                id: "converting", label: "Converting",
+                id: "converting", label: "Converting", isIndirect: false,
                 sections: [
                     { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " Conv", items: commonShell },
                     { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " Conv", items: commonInterior },
@@ -539,7 +294,7 @@
                 ]
             },
             {
-                id: "pub", label: "PUB",
+                id: "pub", label: "PUB", isIndirect: false,
                 sections: [
                     { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " PUB", items: commonShell },
                     { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " PUB", items: commonInterior },
@@ -548,7 +303,7 @@
                 ]
             },
             {
-                id: "admin", label: "Admin Building",
+                id: "admin", label: "Admin Building", isIndirect: false,
                 sections: [
                     { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " Admin", items: commonShell },
                     { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " Admin", items: commonInterior },
@@ -557,71 +312,161 @@
                 ]
             },
             {
-                id: "others", label: "Others & Management",
+                id: "indirect-costs", label: "Indirect Costs", isIndirect: true,
                 sections: [
-                    { title: "Others (Equipment)", color: "bg-yellow-50 text-yellow-800", items: [{code:"510",desc:"Truck Dock Doors/Levelers"}, {code:"520",desc:"Furnishings"}, {code:"530",desc:"Canopies"}, {code:"940",desc:"Racks"}, {code:"950",desc:"Warehouse Management System"}] },
-                    { title: "Other Buildings", color: "bg-stone-50 text-stone-800", items: [{code:"610",desc:"Transformer Building"}, {code:"620",desc:"Guard House"}, {code:"630",desc:"Fire Pump House"}, {code:"640",desc:"Boiler House"}, {code:"650",desc:"Flammable Material Storage"}, {code:"660",desc:"Empty Pallet Storage"}, {code:"670",desc:"Scrap Building"}, {code:"680",desc:"Cafeteria"}, {code:"690",desc:"Waste Water Treatment"}, {code:"699",desc:"Others"}] },
-                    { title: "Engineering & Construction", color: "bg-indigo-50 text-indigo-800", items: [{code:"Const",desc:"Construction Management (Temp facilities, permits)"}, {code:"Com",desc:"Commissioning"}, {code:"Con Eng",desc:"Contractor Engineering"}, {code:"Plant Eng",desc:"Plant Engineering"}, {code:"PG Eng",desc:"P&G Engineering"}] },
-                    { title: "Risk Funds", color: "bg-rose-50 text-rose-800", items: [{code:"Und",desc:"Undefined"}, {code:"Cont",desc:"Contingency"}, {code:"Pot",desc:"Potential Items"}] },
-                    { title: "Operational Taxes & Prem", color: "bg-neutral-100 text-neutral-800", items: [{code:"Main",desc:"Maintaining Production"}, {code:"Prem",desc:"Premium Time"}, {code:"Tax",desc:"Taxes"}] }
+                    {
+                        title: "Construction Indirects", color: "bg-amber-50 text-amber-800", prefix: "",
+                        items: [
+                            { code: "H", desc: "Construction Equipment" },
+                            { code: "I", desc: "Construction Tools" },
+                            { code: "J", desc: "Safety Paraphernalias (including PPE's)" },
+                            { code: "K", desc: "Scaffoldings" },
+                            { code: "L", desc: "Mobilization" },
+                            { code: "M", desc: "Demobilization" },
+                            { code: "N", desc: "Overhead (Home, Office and field support) & Profit" },
+                            { code: "O", desc: "Government Permit (Building/Occupancy, Electrical, Mechanical)" },
+                            { code: "P", desc: "Bonds and Insurance" }
+                        ]
+                    }
                 ]
             }
         ];
 
         let activeTabId = SCOPE_CATEGORIES[0].id;
-        let categoryTotals = {};
-        let itemPrices    = {}; // key: `${catId}__${secIdx}__${i}`, value: saved cart total
-        let activeItemKey  = null; // which scope item is currently selected for price assignment
-        let activeItemDesc = null;
-
-        // ── SESSION PERSISTENCE ──────────────────────────────────────
-        const CES_STORAGE_KEY = 'urc_ces_session';
-
-        function persistData() {
-            try {
-                sessionStorage.setItem(CES_STORAGE_KEY, JSON.stringify({ itemPrices, scopeItemData, categoryTotals }));
-                localStorage.setItem('urc_ces_cross_page', JSON.stringify({ itemPrices, categoryTotals }));
-            } catch(e) { console.error('CES persist failed:', e); }
-        }
-
-        function loadPersistedData() {
-            try {
-                const raw = sessionStorage.getItem(CES_STORAGE_KEY);
-                if (!raw) return;
-                const d = JSON.parse(raw);
-                if (d.itemPrices)     Object.assign(itemPrices,     d.itemPrices);
-                if (d.scopeItemData)  Object.assign(scopeItemData,   d.scopeItemData);
-                if (d.categoryTotals) Object.assign(categoryTotals,  d.categoryTotals);
-            } catch(e) { console.error('CES load failed:', e); }
-        }
-        // ─────────────────────────────────────────────────────────────
 
         document.addEventListener("DOMContentLoaded", async () => {
-            await loadPricesMeta();  // must complete first so scalePrice() has meta
-            fetchAllDatabases(); // Initialize DB for Cart
-            initTotals(); // Initialize Totals for Scope (sets all to 0)
-            loadPersistedData(); // Restore saved prices over the 0s
+            await fetchAllDatabases();
+            populateCategoryDropdown();
+            populateLaborDropdown();
             renderNavigation();
             renderContent();
-            checkSaveButton();
+            updateLedger();
         });
 
-        function initTotals() { SCOPE_CATEGORIES.forEach(cat => categoryTotals[cat.id] = 0); }
+        // ============================================================
+        // 2. DATA LOADING & DROPDOWNS
+        // ============================================================
+        async function fetchAllDatabases() {
+            await Promise.all(DB_CONFIG.map(async (config) => {
+                const urls = [
+                    `/${config.file}`,
+                    `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`
+                ];
+                for (const url of urls) {
+                    try {
+                        const res = await fetch(url);
+                        if (res.ok) {
+                            const rawData = await res.json();
+                            normalizeMaterialData(config, rawData);
+                            break;
+                        }
+                    } catch (e) { }
+                }
+            }));
+        }
+
+        function normalizeMaterialData(config, data) {
+            const addEntry = (id, name, price, unit) => {
+                MASTER_DB[id] = { name, price: price || 0, unit: unit || 'unit', category: config.id };
+            };
+            if (config.schema === 'simple') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
+            else if (config.schema === 'masonry') data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
+            else if (config.schema === 'rebars') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size}`, item.price_php, "pc"));
+            else if (config.schema === 'concrete_mix') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, item.price_php, "cu.m"));
+            else if (config.schema === 'equipment') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, item.rate_min_php, item.unit));
+            else if (config.schema === 'pipes') {
+                let pipeIdx = 0;
+                if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english}`, item.price_per_6m_php, "6m"));
+            }
+        }
+
+        function populateCategoryDropdown() {
+            const select = document.getElementById('material-category-selector');
+            select.innerHTML = '<option value="">-- Select Category --</option>';
+            DB_CONFIG.forEach(config => {
+                const option = document.createElement('option');
+                option.value = config.id;
+                option.textContent = config.label;
+                select.appendChild(option);
+            });
+        }
+
+        function updateMaterialDropdown() {
+            const catId = document.getElementById('material-category-selector').value;
+            const select = document.getElementById('material-selector');
+            select.innerHTML = '<option value="">-- Select Specific Material --</option>';
+            for (const [key, mat] of Object.entries(MASTER_DB)) {
+                if (mat.category === catId) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = `${mat.name} (₱${mat.price}/${mat.unit})`;
+                    select.appendChild(option);
+                }
+            }
+            validateCartInputs();
+        }
+
+        function populateLaborDropdown() {
+            const select = document.getElementById('labor-selector');
+            select.innerHTML = '<option value="">-- Select Labor Role --</option>';
+            for (const [key, lab] of Object.entries(LABOR_DB)) {
+                const hourlyRate = (lab.dailyRate / 8).toFixed(2);
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${lab.name} (₱${hourlyRate}/hr)`;
+                select.appendChild(option);
+            }
+        }
+
+        // ============================================================
+        // 3. UI RENDERING, NAVIGATION & BUILDER LOGIC
+        // ============================================================
+        
+        function openBOQView() {
+            activeTabId = 'BOQ'; 
+            activeItemKey = null; 
+            renderNavigation(); 
+            renderContent(); 
+        }
+
+        function calculateCategoryTotal(catId) {
+            let total = 0;
+            Object.keys(scopeItemData).forEach(key => {
+                if (key.startsWith(catId + '__')) {
+                    scopeItemData[key].forEach(row => total += row.total);
+                }
+            });
+            return total;
+        }
+
+        function formatCompact(num) {
+            if (num === 0) return "0.00";
+            return num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
 
         function renderNavigation() {
             const navContainer = document.getElementById('tab-nav-container');
             navContainer.innerHTML = '';
+            
+            const boqBtn = document.getElementById('btn-view-boq');
+            if (activeTabId === 'BOQ') {
+                boqBtn.className = "px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-2";
+            } else {
+                boqBtn.className = "px-4 py-2 text-sm font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer flex items-center gap-2";
+            }
 
             SCOPE_CATEGORIES.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = `cat-nav-btn px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${cat.id === activeTabId ? 'bg-black text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'}`;
-                btn.dataset.id = cat.id;
-                btn.onclick = () => switchTab(cat.id);
+                const catTotal = calculateCategoryTotal(cat.id);
+                const isActive = cat.id === activeTabId;
                 
+                const btn = document.createElement('button');
+                btn.className = `cat-nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex flex-col items-center justify-center min-w-[140px] ${isActive ? 'bg-black text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'}`;
+                btn.onclick = () => { activeTabId = cat.id; renderNavigation(); renderContent(); };
+                
+                const badgeBg = isActive ? 'bg-blue-900/60 text-blue-200' : 'bg-blue-50 text-blue-600';
                 const badge = document.createElement('span');
-                badge.id = `badge-${cat.id}`;
-                badge.className = `text-[10px] px-1.5 py-0.5 rounded-md ${cat.id === activeTabId ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-500'}`;
-                badge.textContent = `₱${formatCompact(categoryTotals[cat.id] || 0)}`;
+                badge.className = `text-[10px] mt-1 px-2 py-0.5 rounded-md font-bold transition-colors ${badgeBg}`;
+                badge.textContent = `₱${formatCompact(catTotal || 0)}`;
 
                 btn.appendChild(document.createTextNode(cat.label));
                 btn.appendChild(badge);
@@ -632,50 +477,72 @@
         function renderContent() {
             const contentArea = document.getElementById('dynamic-content-area');
             contentArea.innerHTML = '';
+            
+            if (activeTabId === 'BOQ') {
+                renderBOQ(contentArea);
+                document.getElementById('active-target-name').textContent = "← Select a scope item from a category tab to edit";
+                document.getElementById('active-target-name').classList.replace('text-blue-600', 'text-neutral-500');
+                document.getElementById('builder-controls').classList.add('opacity-50', 'pointer-events-none');
+                document.getElementById('current-item-breakdown').innerHTML = '<div class="text-neutral-400 italic text-center py-4">No item selected.</div>';
+                document.getElementById('current-item-subtotal').textContent = '₱0.00';
+                return;
+            }
 
             const activeCategory = SCOPE_CATEGORIES.find(c => c.id === activeTabId);
-            if (!activeCategory) return;
+            const catTotal = calculateCategoryTotal(activeCategory.id);
 
             const headerDiv = document.createElement('div');
-            headerDiv.className = "mb-6 flex justify-between items-end";
+            headerDiv.className = "mb-6 flex justify-between items-end px-2";
             headerDiv.innerHTML = `
                 <div>
                     <h3 class="text-2xl font-bold text-neutral-900">${activeCategory.label}</h3>
-                    <p class="text-sm text-neutral-500 mt-1">Enter estimated costs for each scope item below.</p>
+                    <p class="text-sm text-neutral-500 mt-1">Select an item below to build its cost.</p>
                 </div>
                 <div class="text-right">
-                    <div class="text-xs font-bold text-neutral-400 uppercase">Category Total</div>
-                    <div class="text-2xl font-black text-blue-600" id="display-total-${activeCategory.id}">₱${categoryTotals[activeCategory.id].toLocaleString()}</div>
+                    <div class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Category Total</div>
+                    <div class="text-2xl font-black text-blue-600">₱${catTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
                 </div>
             `;
             contentArea.appendChild(headerDiv);
 
             activeCategory.sections.forEach((section, secIdx) => {
                 const sectionWrapper = document.createElement('div');
-                sectionWrapper.className = "mb-8 bg-white border border-neutral-200/80 rounded-xl overflow-hidden shadow-sm tab-content";
+                sectionWrapper.className = "mb-8 bg-white border border-neutral-200/80 rounded-xl overflow-hidden shadow-sm";
                 
                 let tbodyHTML = section.items.map((item, i) => {
                     const displayCode = item.code + (section.prefix || '');
                     const iKey = `${activeCategory.id}__${secIdx}__${i}`;
                     const isActiveTarget = iKey === activeItemKey;
-                    const assigned = itemPrices[iKey] || 0;
-                    const priceDisplay = assigned > 0
-                        ? `₱${assigned.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`
-                        : '';
+                    const itemData = scopeItemData[iKey] || [];
+                    const subtotal = itemData.reduce((sum, row) => sum + row.total, 0);
+                    const hasPrice = subtotal > 0;
                     const escapedDesc = item.desc.replace(/'/g, "\\'");
+                    
+                    let rowClasses = "border-b border-neutral-100 cursor-pointer transition-colors duration-200";
+                    if (isActiveTarget) {
+                        rowClasses += " bg-blue-50"; 
+                    } else if (hasPrice) {
+                        rowClasses += " bg-[#f8f9fa] hover:bg-neutral-50"; 
+                    } else {
+                        rowClasses += " hover:bg-neutral-50";
+                    }
+
+                    const leftBorder = hasPrice ? "border-l-4 border-blue-500" : "border-l-4 border-transparent";
+                    const priceColor = hasPrice ? "text-blue-700 font-bold" : "text-neutral-400 font-semibold";
+                    const priceDisplay = hasPrice ? `₱${subtotal.toLocaleString(undefined, {minimumFractionDigits:2})}` : '—';
+                    
+                    const checkIcon = hasPrice 
+                        ? `<svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>` 
+                        : `<div class="w-4 h-4 flex-shrink-0"></div>`; 
+
                     return `
-                        <tr class="border-b border-neutral-100 hover:bg-neutral-50 transition-colors${isActiveTarget ? ' bg-blue-50' : ''}">
-                            <td class="py-2.5 px-4 text-center text-xs font-semibold text-neutral-400 w-20">${displayCode}</td>
-                            <td class="py-2.5 px-4 text-sm text-neutral-800 font-medium">${item.desc}</td>
-                            <td class="py-2 px-4 w-44">
+                        <tr class="${rowClasses}" onclick="selectScopeItem('${iKey}', '${escapedDesc}')">
+                            <td class="py-3 px-4 text-xs font-semibold text-neutral-400 transition-all ${leftBorder}">${displayCode}</td>
+                            <td class="py-3 px-4 text-sm text-neutral-800 font-medium truncate" title="${escapedDesc}">${item.desc}</td>
+                            <td class="py-3 px-4 text-right text-sm">
                                 <div class="flex items-center justify-end gap-3">
-                                    <span class="text-sm font-semibold text-blue-600 item-price-lbl" data-ikey="${iKey}">${priceDisplay}</span>
-                                    <input type="checkbox" ${isActiveTarget ? 'checked' : ''}
-                                           class="scope-checkbox cursor-pointer"
-                                           style="width:16px;height:16px;accent-color:#3b82f6;flex-shrink:0;"
-                                           data-category="${activeCategory.id}"
-                                           data-ikey="${iKey}"
-                                           onchange="selectItemTarget(this, '${iKey}', '${activeCategory.id}', '${escapedDesc}')" />
+                                    <span class="${priceColor} truncate">${priceDisplay}</span>
+                                    ${checkIcon}
                                 </div>
                             </td>
                         </tr>
@@ -686,281 +553,594 @@
                     <div class="px-4 py-3 ${section.color} border-b border-neutral-200/50 flex justify-between items-center">
                         <h4 class="font-bold text-sm tracking-wide uppercase">${section.title}</h4>
                     </div>
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse table-fixed">
+                        <colgroup>
+                            <col class="w-20">
+                            <col class="w-auto">
+                            <col class="w-36">
+                        </colgroup>
                         <tbody class="bg-white">${tbodyHTML}</tbody>
                     </table>
                 `;
                 contentArea.appendChild(sectionWrapper);
             });
-
-            calculateTotals(activeCategory.id);
         }
 
-        function switchTab(tabId) {
-            activeTabId = tabId;
-            renderNavigation();
-            renderContent();
+        // ============================================================
+        // 4. EXCEL-STYLE BOQ RENDERER
+        // ============================================================
+        
+        function exNum(val) {
+            if (!val || val === 0) return '-';
+            return val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
         }
 
-        function filterCategories() {
-            const query = document.getElementById('category-search').value.toLowerCase();
-            const btns = document.querySelectorAll('.cat-nav-btn');
-            btns.forEach(btn => {
-                const text = btn.textContent.toLowerCase();
-                btn.style.display = text.includes(query) ? 'flex' : 'none';
-            });
-        }
+        function renderBOQ(container) {
+            let hasItems = false;
+            let directRowsHtml = '';
+            let indirectRowsHtml = '';
+            
+            let grandDirectTotal = 0, grandDirectManHours = 0, grandDirectLabor = 0, grandDirectMat = 0;
+            let grandIndirectTotal = 0, grandIndirectManHours = 0, grandIndirectLabor = 0, grandIndirectMat = 0;
 
-        function selectItemTarget(checkbox, iKey, catId, desc) {
-            // Deselect previous item visually (unsaved cart work is discarded on switch)
-            if (activeItemKey && activeItemKey !== iKey) {
-                const prevCb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
-                if (prevCb) {
-                    prevCb.checked = false;
-                    prevCb.closest('tr').classList.remove('bg-blue-50');
+            SCOPE_CATEGORIES.forEach((cat, catIndex) => {
+                let catTotal = 0, catManHours = 0, catLabor = 0, catMat = 0;
+                let catRows = '';
+                const catLetter = String.fromCharCode(65 + catIndex); 
+                let itemCounter = 1;
+                
+                cat.sections.forEach((sec, secIdx) => {
+                    sec.items.forEach((item, i) => {
+                        const iKey = `${cat.id}__${secIdx}__${i}`;
+                        const itemData = scopeItemData[iKey] || [];
+                        
+                        if (itemData.length > 0) {
+                            hasItems = true;
+                            let parentManHours = 0, parentLaborCost = 0, parentMatCost = 0;
+                            
+                            itemData.forEach(row => {
+                                parentManHours += row.manHours; 
+                                parentLaborCost += row.labTotal; 
+                                parentMatCost += row.matTotal;
+                            });
+                            
+                            const parentTotal = parentLaborCost + parentMatCost;
+                            catTotal += parentTotal;
+                            catManHours += parentManHours;
+                            catLabor += parentLaborCost;
+                            catMat += parentMatCost;
+                            
+                            const displayNo = cat.isIndirect ? item.code : itemCounter;
+
+                            catRows += `
+                                <tr class="bg-[#fff2cc]">
+                                    <td class="border border-black p-1.5 text-center font-bold truncate">${displayNo}</td>
+                                    <td class="border border-black p-1.5 font-bold text-neutral-900 truncate" title="${item.desc}">${item.desc}</td>
+                                    <td class="border border-black p-1.5 text-center font-bold">1</td>
+                                    <td class="border border-black p-1.5 text-center font-bold">lot</td>
+                                    <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(parentManHours)}</td>
+                                    <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(parentLaborCost)}</td>
+                                    <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(parentMatCost)}</td>
+                                    <td class="border border-black p-1.5 text-right font-black text-blue-800 truncate">${exNum(parentTotal)}</td>
+                                </tr>
+                            `;
+
+                            itemData.forEach((row, childIdx) => {
+                                const childNo = `${displayNo}.${childIdx + 1}`;
+                                catRows += `
+                                    <tr class="bg-white">
+                                        <td class="border border-black p-1.5 text-center text-neutral-600 truncate">${childNo}</td>
+                                        <td class="border border-black p-1.5 pl-6 text-neutral-800 truncate" title="${row.name}">- ${row.name}</td>
+                                        <td class="border border-black p-1.5 text-center text-neutral-600 truncate">${row.matQty || '-'}</td>
+                                        <td class="border border-black p-1.5 text-center text-neutral-600 truncate">${row.matUnit || '-'}</td>
+                                        <td class="border border-black p-1.5 text-right text-neutral-600 truncate">${exNum(row.manHours)}</td>
+                                        <td class="border border-black p-1.5 text-right text-neutral-600 truncate">${exNum(row.labTotal)}</td>
+                                        <td class="border border-black p-1.5 text-right text-neutral-600 truncate">${exNum(row.matTotal)}</td>
+                                        <td class="border border-black p-1.5 text-right font-medium text-neutral-700 truncate">${exNum(row.total)}</td>
+                                    </tr>
+                                `;
+                            });
+
+                            itemCounter++;
+                        }
+                    });
+                });
+                
+                if (catTotal > 0) {
+                    const blockHtml = `
+                        ${!cat.isIndirect ? `
+                        <tr class="bg-[#e7e6e6]">
+                            <td class="border border-black p-1.5 text-center font-bold truncate">${catLetter}</td>
+                            <td class="border border-black p-1.5 font-bold uppercase truncate" colspan="7">${cat.label}</td>
+                        </tr>` : ''}
+                        ${catRows}
+                        ${!cat.isIndirect ? `
+                        <tr class="bg-[#d9e1f2]">
+                            <td class="border border-black p-1.5 text-center font-bold truncate" colspan="4">SUB TOTAL</td>
+                            <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(catManHours)}</td>
+                            <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(catLabor)}</td>
+                            <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(catMat)}</td>
+                            <td class="border border-black p-1.5 text-right font-bold truncate">₱${exNum(catTotal)}</td>
+                        </tr>` : ''}
+                    `;
+
+                    if (cat.isIndirect) {
+                        indirectRowsHtml += blockHtml;
+                        grandIndirectTotal += catTotal;
+                        grandIndirectManHours += catManHours;
+                        grandIndirectLabor += catLabor;
+                        grandIndirectMat += catMat;
+                    } else {
+                        directRowsHtml += blockHtml;
+                        grandDirectTotal += catTotal;
+                        grandDirectManHours += catManHours;
+                        grandDirectLabor += catLabor;
+                        grandDirectMat += catMat;
+                    }
                 }
-            }
+            });
 
-            if (checkbox.checked) {
-                activeItemKey  = iKey;
-                activeItemDesc = desc;
-                checkbox.closest('tr').classList.add('bg-blue-50');
-
-                // Load this item's previously saved cart, or start with a clean cart
-                cart = scopeItemData[iKey]?.cart
-                    ? JSON.parse(JSON.stringify(scopeItemData[iKey].cart))
-                    : [];
-                renderCart();
-            } else {
-                activeItemKey  = null;
-                activeItemDesc = null;
-                checkbox.closest('tr').classList.remove('bg-blue-50');
-
-                // Clear cart when deselecting
-                cart = [];
-                renderCart();
-            }
-
-            updateActiveTargetPanel();
-        }
-        function checkSaveButton() {
-            const btn = document.getElementById('btn-save-estimate');
-            if (!btn) return;
-            const ready = localStorage.getItem('urc_ccc_calc_ready')  === 'true'
-                    && localStorage.getItem('urc_ccc_ces_ready')   === 'true'
-                    && localStorage.getItem('urc_ccc_labor_ready') === 'true';
-            btn.disabled = !ready;
-            btn.classList.toggle('opacity-40', !ready);
-            btn.classList.toggle('pointer-events-none', !ready);
-        }
-
-        function confirmSaveEstimate() {
-            const projectName  = document.getElementById('modal-project-name').value.trim();
-            const engineerName = document.getElementById('modal-engineer-name').value.trim();
-            if (!projectName || !engineerName) {
-                document.getElementById('modal-error').classList.remove('hidden');
+            if (!hasItems) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64 text-neutral-400">
+                        <p class="font-medium text-lg text-neutral-500">No items added to the estimate yet.</p>
+                        <p class="text-sm mt-1">Select a category tab to start building your scope cart.</p>
+                    </div>
+                `;
                 return;
             }
 
-            // ── Read all three caches ────────────────────────────────────────
-            let calcSnap  = {};
-            let cesSnap   = {};
-            let laborSnap = {};
-            try { calcSnap  = JSON.parse(localStorage.getItem('urc_ccc_state_v10')  || '{}'); } catch(e) {}
-            try { cesSnap   = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
-            try { laborSnap = JSON.parse(localStorage.getItem('urc_ccc_labor_2026') || '{}'); } catch(e) {}
+            let finalTableHtml = directRowsHtml;
 
-            // ── Calculator summary ───────────────────────────────────────────
-            const L = calcSnap.length||0, W = calcSnap.width||0, H = calcSnap.clearHeight||0;
-            const M = (calcSnap.mezzanine||0) / 100;
-            const floorArea = L * W, grossArea = floorArea * (1 + M);
-            const bsl = calcSnap.baySpacingL||0, bsw = calcSnap.baySpacingW||0;
-            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L/bsl + W/bsw) : 0;
-            const fl=calcSnap.footingLength||0, fw=calcSnap.footingWidth||0, fd=calcSnap.footingDepth||0;
-            const pl=calcSnap.pedestalLength||0, pw=calcSnap.pedestalWidth||0, ph=calcSnap.pedestalHeight||0;
-            const concreteVol = (fl*fw*fd + pl*pw*ph) * nodes;
-            const structMap = { steel_rigid:'Steel Rigid Frame', concrete:'Concrete', tilt_up:'Tilt-Up', hybrid:'Hybrid' };
-            const roofMap   = { standing_seam:'Standing Seam', corrugated:'Corrugated', flat:'Flat', skylight:'Skylight' };
-            const wallMap   = { metal_panel:'Metal Panel', masonry:'Masonry', glass:'Glass Curtain', none:'None' };
-
-            // ── CES summary ──────────────────────────────────────────────────
-            const categoryTotals = cesSnap.categoryTotals || {};
-            const cesTotal    = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-            const pricedItems = Object.keys(cesSnap.itemPrices || {}).length;
-
-            // ── Labor summary ────────────────────────────────────────────────
-            const laborStateRaw   = laborSnap.laborState      || {};
-            const globalEquipment = laborSnap.globalEquipment || 0;
-            const globalProfit    = laborSnap.globalProfit    || 0;
-            const roleLabels = {
-                ncr:'NCR (Unskilled)', visayas:'Visayas (Unskilled)', mindanao:'Mindanao (Unskilled)',
-                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
-                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
-                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
-                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
-            };
-            let laborCost = 0, totalHeads = 0;
-            const roles = [];
-            Object.keys(laborStateRaw).forEach(role => {
-                const r = laborStateRaw[role], sub = r.rate * r.count * r.days;
-                laborCost += sub;
-                if (r.count > 0) { totalHeads += r.count; roles.push({ name:roleLabels[role]||role, rate:r.rate, count:r.count, days:r.days }); }
-            });
-            const execBase    = laborCost + globalEquipment;
-            const profitCost  = execBase * (globalProfit / 100);
-            const grandTotal  = cesTotal + execBase + profitCost;
-
-            // ── Build combined record ────────────────────────────────────────
-            const record = {
-                id: 'ccc_hist_' + Date.now(),
-                savedAt: new Date().toISOString(),
-                projectName, engineerName,
-                calculator: {
-                    snapshot: {
-                        length:L, width:W, clearHeight:H, stories:calcSnap.stories||1,
-                        mezzanine:calcSnap.mezzanine||0,
-                        structureType: structMap[calcSnap.structureType]||calcSnap.structureType,
-                        roofType:      roofMap[calcSnap.roofType]||calcSnap.roofType,
-                        wallCladding:  wallMap[calcSnap.wallCladding]||calcSnap.wallCladding,
-                        slabThickness: calcSnap.slabThickness,
-                        dockDoors:calcSnap.dockDoors||0, driveInDoors:calcSnap.driveInDoors||0,
-                        baySpacingL:bsl, baySpacingW:bsw,
-                        footingLength:fl, footingWidth:fw, footingDepth:fd,
-                        pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
-                        concretePriceM3:calcSnap.concretePriceM3||0, concreteClass:calcSnap.concreteClass
-                    },
-                    summary: {
-                        floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
-                        perimeter:+(2*(L+W)).toFixed(2), nodes, concreteVol:+concreteVol.toFixed(2)
-                    }
-                },
-                ces: {
-                    categoryTotals, pricedItems, grandTotal:+cesTotal.toFixed(2)
-                },
-                labor: {
-                    roles, globalEquipment, globalProfit,
-                    laborCost:+laborCost.toFixed(2), equipmentCost:globalEquipment,
-                    profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads
-                },
-                grandTotal: +grandTotal.toFixed(2)
-            };
-
-            try {
-                const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
-                h.unshift(record);
-                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
-                closeSaveModal();
-                showToast('Estimate saved to history.', 'success');
-            } catch(e) { showToast('Could not save estimate.', 'error'); }
-        }
-        function saveCartPrice() {
-            if (!activeItemKey) return;
-
-            const raw = document.getElementById('cart-grand-total').textContent;
-            const cartTotal = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0;
-            const catId = activeItemKey.split('__')[0];
-
-            // Persist price + full cart snapshot for this scope item
-            scopeItemData[activeItemKey] = {
-                price: cartTotal,
-                cart:  JSON.parse(JSON.stringify(cart))
-            };
-            itemPrices[activeItemKey] = cartTotal;
-
-            // Update price label on the left side
-            const lbl = document.querySelector(`.item-price-lbl[data-ikey="${activeItemKey}"]`);
-            if (lbl) {
-                lbl.textContent = cartTotal > 0
-                    ? `₱${cartTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`
-                    : '₱0.00';
+            if (grandDirectTotal > 0) {
+                finalTableHtml += `
+                    <tr class="bg-[#e2efda]">
+                        <td class="border border-black p-1.5 text-center font-bold uppercase truncate" colspan="4">TOTAL DIRECT COST</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandDirectManHours)}</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandDirectLabor)}</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandDirectMat)}</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">₱${exNum(grandDirectTotal)}</td>
+                    </tr>
+                `;
             }
 
-            // Uncheck and deselect
-            const cb = document.querySelector(`.scope-checkbox[data-ikey="${activeItemKey}"]`);
-            if (cb) {
-                cb.checked = false;
-                cb.closest('tr').classList.remove('bg-blue-50');
+            if (grandIndirectTotal > 0) {
+                finalTableHtml += indirectRowsHtml;
+                finalTableHtml += `
+                    <tr class="bg-[#e2efda]">
+                        <td class="border border-black p-1.5 text-center font-bold uppercase truncate" colspan="4">TOTAL INDIRECT COST</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandIndirectManHours)}</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandIndirectLabor)}</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandIndirectMat)}</td>
+                        <td class="border border-black p-1.5 text-right font-bold truncate">₱${exNum(grandIndirectTotal)}</td>
+                    </tr>
+                `;
             }
 
-            activeItemKey  = null;
-            activeItemDesc = null;
+            const lumpsumTotal = grandDirectTotal + grandIndirectTotal;
+            const lumpsumManHours = grandDirectManHours + grandIndirectManHours;
+            const lumpsumLabor = grandDirectLabor + grandIndirectLabor;
+            const lumpsumMat = grandDirectMat + grandIndirectMat;
 
-            // Clear cart display — ready for next item
-            cart = [];
-            renderCart();
+            finalTableHtml += `
+                <tr class="bg-[#b4c6e7]">
+                    <td class="border border-black p-2 text-center font-bold uppercase truncate" colspan="4">TOTAL LUMPSUM COST</td>
+                    <td class="border border-black p-2 text-right font-bold truncate">${exNum(lumpsumManHours)}</td>
+                    <td class="border border-black p-2 text-right font-bold truncate">${exNum(lumpsumLabor)}</td>
+                    <td class="border border-black p-2 text-right font-bold truncate">${exNum(lumpsumMat)}</td>
+                    <td class="border border-black p-2 text-right font-black truncate">₱${exNum(lumpsumTotal)}</td>
+                </tr>
+            `;
 
-            updateActiveTargetPanel();
-            calculateTotals(catId);
-            persistData();
-            localStorage.setItem('urc_ccc_ces_ready', String(Object.keys(itemPrices).length > 0));
-            checkSaveButton();
-        }
+            const todayDate = new Date().toISOString().split('T')[0];
 
-        function updateActiveTargetPanel() {
-            const nameEl  = document.getElementById('active-target-name');
-            const saveBtn = document.getElementById('save-price-btn');
-            if (activeItemKey && activeItemDesc) {
-                nameEl.textContent  = activeItemDesc;
-                nameEl.classList.remove('text-neutral-500');
-                nameEl.classList.add('text-neutral-800');
-                saveBtn.disabled = false;
-            } else {
-                nameEl.textContent  = '← Select a scope item first';
-                nameEl.classList.remove('text-neutral-800');
-                nameEl.classList.add('text-neutral-500');
-                saveBtn.disabled = true;
-            }
-        }
+            container.innerHTML = `
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-neutral-900">Field Cost Estimate (BOQ)</h3>
+                        <p class="text-sm text-neutral-500 mt-1">Formatted to match Official Bidding Template.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportToExcelBOQ()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export to Excel
+                        </button>
+                    </div>
+                </div>
 
-        function calculateTotals(catId) {
-            let sum = 0;
-            Object.entries(itemPrices).forEach(([key, val]) => {
-                if (key.startsWith(catId + '__')) sum += (val || 0);
-            });
-
-            categoryTotals[catId] = sum;
-            
-            const displayTotal = document.getElementById(`display-total-${catId}`);
-            if (displayTotal) displayTotal.textContent = `₱${sum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2})}`;
-            
-            const badge = document.getElementById(`badge-${catId}`);
-            if (badge) badge.textContent = `₱${formatCompact(sum)}`;
-        }
-
-        function formatCompact(num) {
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-            return num;
-        }
-
-        function openSummary() {
-            const modal = document.getElementById('summary-modal');
-            const modalContent = document.getElementById('summary-modal-content');
-            const listDiv = document.getElementById('summary-list');
-            let scopeGrandTotal = 0;
-
-            listDiv.innerHTML = '';
-
-            SCOPE_CATEGORIES.forEach(cat => {
-                const val = categoryTotals[cat.id] || 0;
-                scopeGrandTotal += val;
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div>
+                        <label class="text-xs font-bold text-blue-800 uppercase tracking-wider">Project Title</label>
+                        <input type="text" id="boq-project-title" placeholder="e.g. Additional Cooling Tower" class="mt-1.5 w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-blue-800 uppercase tracking-wider">Prepared By</label>
+                        <input type="text" id="boq-prepared-by" placeholder="e.g. Juan dela Cruz" class="mt-1.5 w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-blue-800 uppercase tracking-wider">Date</label>
+                        <input type="date" id="boq-date" value="${todayDate}" class="mt-1.5 w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:border-blue-500 outline-none text-neutral-700">
+                    </div>
+                </div>
                 
-                listDiv.innerHTML += `
-                    <div class="flex justify-between items-center py-3 border-b border-neutral-100 last:border-0">
-                        <span class="text-sm font-medium text-neutral-700">${cat.label}</span>
-                        <span class="text-sm font-bold text-neutral-900">₱${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                <div class="overflow-x-auto bg-white p-4 shadow-sm border border-neutral-300">
+                    <table class="w-full border-collapse border border-black text-[11px] font-sans text-black table-fixed" style="min-width: 900px; font-family: Arial, sans-serif;">
+                        <colgroup>
+                            <col style="width: 8%;">
+                            <col style="width: 32%;">
+                            <col style="width: 6%;">
+                            <col style="width: 6%;">
+                            <col style="width: 10%;">
+                            <col style="width: 12%;">
+                            <col style="width: 14%;">
+                            <col style="width: 12%;">
+                        </colgroup>
+                        <thead>
+                            <tr class="bg-[#d9e1f2]">
+                                <th class="border border-black p-1.5 text-center">ITEM NO.</th>
+                                <th class="border border-black p-1.5 text-center">SCOPE DESCRIPTION</th>
+                                <th class="border border-black p-1.5 text-center">QTY</th>
+                                <th class="border border-black p-1.5 text-center">UNIT</th>
+                                <th class="border border-black p-1.5 text-center">MAN HOUR</th>
+                                <th class="border border-black p-1.5 text-center">LABOR COST (Php)</th>
+                                <th class="border border-black p-1.5 text-center">MATERIALS COST (Php)</th>
+                                <th class="border border-black p-1.5 text-center">TOTAL COST</th>
+                            </tr>
+                        </thead>
+                        <tbody>${finalTableHtml}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // STYLED EXCEL EXPORT (USING XLSX-JS-STYLE)
+        // ============================================================
+        function exportToExcelBOQ() {
+            const projTitle = document.getElementById('boq-project-title')?.value || 'N/A';
+            const prepBy = document.getElementById('boq-prepared-by')?.value || 'N/A';
+            const rawDate = document.getElementById('boq-date')?.value;
+            const estDate = rawDate ? new Date(rawDate).toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'}) : 'N/A';
+
+            const borderAll = { top: {style: 'thin'}, bottom: {style: 'thin'}, left: {style: 'thin'}, right: {style: 'thin'} };
+            const fontArial = { name: "Arial", sz: 11 };
+            const fontBold = { name: "Arial", sz: 11, bold: true };
+            const fontHeader = { name: "Arial", sz: 14, bold: true };
+            
+            const colorHeader = "D9E1F2"; 
+            const colorCat    = "E7E6E6"; 
+            const colorItem   = "FFF2CC"; 
+            const colorDirect = "E2EFDA"; 
+            const colorLump   = "B4C6E7"; 
+            
+            const stTitleRow       = { font: fontHeader };
+            const stMetaLabel      = { font: fontBold };
+            const stMetaValue      = { font: fontArial };
+
+            const stHeader         = { font: fontBold, fill: {fgColor: {rgb: colorHeader}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stCatCenter      = { font: fontBold, fill: {fgColor: {rgb: colorCat}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stCatLeft        = { font: fontBold, fill: {fgColor: {rgb: colorCat}}, alignment: {horizontal: "left", vertical: "center"}, border: borderAll };
+            
+            const stItemCenterBold = { font: fontBold, fill: {fgColor: {rgb: colorItem}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stItemLeftBold   = { font: fontBold, fill: {fgColor: {rgb: colorItem}}, alignment: {horizontal: "left", vertical: "center"}, border: borderAll };
+            const stItemRightBold  = { font: fontBold, fill: {fgColor: {rgb: colorItem}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
+
+            const stChildCenter    = { font: fontArial, fill: {fgColor: {rgb: "FFFFFF"}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stChildLeft      = { font: fontArial, fill: {fgColor: {rgb: "FFFFFF"}}, alignment: {horizontal: "left", vertical: "center"}, border: borderAll };
+            const stChildRight     = { font: fontArial, fill: {fgColor: {rgb: "FFFFFF"}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
+
+            const stSubCenter      = { font: fontBold, fill: {fgColor: {rgb: colorHeader}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stSubRight       = { font: fontBold, fill: {fgColor: {rgb: colorHeader}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
+            const stDirCenter      = { font: fontBold, fill: {fgColor: {rgb: colorDirect}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stDirRight       = { font: fontBold, fill: {fgColor: {rgb: colorDirect}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
+            const stLumpCenter     = { font: fontBold, fill: {fgColor: {rgb: colorLump}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
+            const stLumpRight      = { font: fontBold, fill: {fgColor: {rgb: colorLump}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
+
+            const c = (val, style) => {
+                if (val === 0 || !val) return { v: '-', t: 's', s: style };
+                return { v: val, t: typeof val === 'number' ? 'n' : 's', s: style };
+            };
+            const cStr = (val, style) => ({ v: val || '', t: 's', s: style });
+
+            const ws_data = [
+                [cStr('ENGINEERING ESTIMATE TEMPLATE', stTitleRow)],
+                [],
+                [cStr('PROJECT TITLE', stMetaLabel), cStr(projTitle, stMetaValue), '', '', '', cStr('Prepared by', stMetaLabel), cStr(prepBy, stMetaValue)],
+                ['', '', '', '', '', cStr('Date', stMetaLabel), cStr(estDate, stMetaValue)],
+                [],
+                [
+                    { v: 'ITEM NO.', t: 's', s: stHeader }, { v: 'SCOPE DESCRIPTION', t: 's', s: stHeader }, { v: 'QTY', t: 's', s: stHeader }, { v: 'UNIT', t: 's', s: stHeader }, 
+                    { v: 'MAN HOUR', t: 's', s: stHeader }, { v: 'LABOR COST (Php)', t: 's', s: stHeader }, { v: 'MATERIALS COST (Php)', t: 's', s: stHeader }, { v: 'TOTAL COST', t: 's', s: stHeader }
+                ]
+            ];
+
+            let merges = [];
+            merges.push({s: {r: 0, c: 0}, e: {r: 0, c: 3}});
+
+            let currentRow = 6; 
+
+            let grandDirectTotal = 0, grandDirectManHours = 0, grandDirectLabor = 0, grandDirectMat = 0;
+            let grandIndirectTotal = 0, grandIndirectManHours = 0, grandIndirectLabor = 0, grandIndirectMat = 0;
+            let indirectRows = [];
+
+            SCOPE_CATEGORIES.forEach((cat, catIndex) => {
+                let catTotal = 0, catManHours = 0, catLabor = 0, catMat = 0;
+                let hasCategoryData = false;
+                let catRows = [];
+                const catLetter = String.fromCharCode(65 + catIndex);
+                let itemCounter = 1;
+
+                cat.sections.forEach((sec, secIdx) => {
+                    sec.items.forEach((item, i) => {
+                        const iKey = `${cat.id}__${secIdx}__${i}`;
+                        const itemData = scopeItemData[iKey] || [];
+                        if (itemData.length > 0) {
+                            hasCategoryData = true;
+                            let parentManHours = 0, parentLaborCost = 0, parentMatCost = 0;
+                            
+                            itemData.forEach(row => {
+                                parentManHours += row.manHours; 
+                                parentLaborCost += row.labTotal; 
+                                parentMatCost += row.matTotal;
+                            });
+
+                            const parentTotal = parentLaborCost + parentMatCost;
+                            catTotal += parentTotal; catManHours += parentManHours; catLabor += parentLaborCost; catMat += parentMatCost;
+
+                            const displayNo = cat.isIndirect ? item.code : itemCounter;
+                            
+                            // 1. Parent Row (Yellow)
+                            catRows.push([
+                                c(displayNo, stItemCenterBold), c(item.desc, stItemLeftBold), c(1, stItemCenterBold), c('lot', stItemCenterBold),
+                                c(parentManHours, stItemRightBold), c(parentLaborCost, stItemRightBold), c(parentMatCost, stItemRightBold), c(parentTotal, stItemRightBold)
+                            ]);
+
+                            // 2. Child Rows (White)
+                            itemData.forEach((row, childIdx) => {
+                                const childNo = `${displayNo}.${childIdx + 1}`;
+                                catRows.push([
+                                    cStr(childNo, stChildCenter),
+                                    cStr('   - ' + row.name, stChildLeft),
+                                    c(row.matQty || '-', stChildCenter),
+                                    cStr(row.matUnit || '-', stChildCenter),
+                                    c(row.manHours, stChildRight),
+                                    c(row.labTotal, stChildRight),
+                                    c(row.matTotal, stChildRight),
+                                    c(row.total, stChildRight)
+                                ]);
+                            });
+
+                            itemCounter++;
+                        }
+                    });
+                });
+
+                if (hasCategoryData) {
+                    if (cat.isIndirect) {
+                        indirectRows.push(...catRows);
+                        grandIndirectTotal += catTotal; grandIndirectManHours += catManHours;
+                        grandIndirectLabor += catLabor; grandIndirectMat += catMat;
+                    } else {
+                        ws_data.push([
+                            c(catLetter, stCatCenter), c(cat.label.toUpperCase(), stCatLeft), c('', stCatLeft), c('', stCatLeft), c('', stCatLeft), c('', stCatLeft), c('', stCatLeft), c('', stCatLeft)
+                        ]);
+                        merges.push({s: {r: currentRow, c: 1}, e: {r: currentRow, c: 7}}); 
+                        currentRow++;
+
+                        ws_data.push(...catRows);
+                        currentRow += catRows.length;
+
+                        ws_data.push([
+                            c('SUB TOTAL', stSubCenter), c('', stSubCenter), c('', stSubCenter), c('', stSubCenter), 
+                            c(catManHours, stSubRight), c(catLabor, stSubRight), c(catMat, stSubRight), c(catTotal, stSubRight)
+                        ]);
+                        merges.push({s: {r: currentRow, c: 0}, e: {r: currentRow, c: 3}}); 
+                        currentRow++;
+                        
+                        grandDirectTotal += catTotal; grandDirectManHours += catManHours;
+                        grandDirectLabor += catLabor; grandDirectMat += catMat;
+                    }
+                }
+            });
+
+            if (grandDirectTotal > 0) {
+                ws_data.push([
+                    c('TOTAL DIRECT COST', stDirCenter), c('', stDirCenter), c('', stDirCenter), c('', stDirCenter), 
+                    c(grandDirectManHours, stDirRight), c(grandDirectLabor, stDirRight), c(grandDirectMat, stDirRight), c(grandDirectTotal, stDirRight)
+                ]);
+                merges.push({s: {r: currentRow, c: 0}, e: {r: currentRow, c: 3}});
+                currentRow++;
+            }
+            
+            if (grandIndirectTotal > 0) {
+                ws_data.push(...indirectRows);
+                currentRow += indirectRows.length;
+
+                ws_data.push([
+                    c('TOTAL INDIRECT COST', stDirCenter), c('', stDirCenter), c('', stDirCenter), c('', stDirCenter), 
+                    c(grandIndirectManHours, stDirRight), c(grandIndirectLabor, stDirRight), c(grandIndirectMat, stDirRight), c(grandIndirectTotal, stDirRight)
+                ]);
+                merges.push({s: {r: currentRow, c: 0}, e: {r: currentRow, c: 3}});
+                currentRow++;
+            }
+
+            const lumpsumTotal = grandDirectTotal + grandIndirectTotal;
+            const lumpsumManHours = grandDirectManHours + grandIndirectManHours;
+            const lumpsumLabor = grandDirectLabor + grandIndirectLabor;
+            const lumpsumMat = grandDirectMat + grandIndirectMat;
+
+            if (lumpsumTotal > 0) {
+                ws_data.push([
+                    c('TOTAL LUMPSUM COST', stLumpCenter), c('', stLumpCenter), c('', stLumpCenter), c('', stLumpCenter), 
+                    c(lumpsumManHours, stLumpRight), c(lumpsumLabor, stLumpRight), c(lumpsumMat, stLumpRight), c(lumpsumTotal, stLumpRight)
+                ]);
+                merges.push({s: {r: currentRow, c: 0}, e: {r: currentRow, c: 3}});
+                currentRow++;
+            }
+
+            const ws = window.XLSX.utils.aoa_to_sheet(ws_data);
+            ws['!merges'] = merges;
+            ws['!cols'] = [{wch: 10}, {wch: 45}, {wch: 8}, {wch: 8}, {wch: 12}, {wch: 18}, {wch: 22}, {wch: 18}];
+            
+            const wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, "Field Cost Estimate");
+            window.XLSX.writeFile(wb, "URC_Field_Cost_Estimate.xlsx");
+        }
+
+        // ============================================================
+        // 5. ITEM BUILDER & LEDGER (UNIFIED LOGIC)
+        // ============================================================
+
+        function validateCartInputs() {
+            const matSel = document.getElementById('material-selector').value;
+            const matQty = parseFloat(document.getElementById('material-qty').value);
+            const hasMat = matSel && !isNaN(matQty) && matQty > 0;
+
+            const labSel = document.getElementById('labor-selector').value;
+            const labHrs = parseFloat(document.getElementById('labor-hours').value);
+            const hasLab = labSel && !isNaN(labHrs) && labHrs > 0;
+
+            document.getElementById('btn-add-item').disabled = !(hasMat || hasLab);
+        }
+
+        function selectScopeItem(iKey, desc) {
+            activeItemKey = iKey;
+            activeItemDesc = desc;
+            
+            document.getElementById('active-target-name').textContent = desc;
+            document.getElementById('active-target-name').classList.replace('text-neutral-500', 'text-blue-600');
+            document.getElementById('builder-controls').classList.remove('opacity-50', 'pointer-events-none');
+            
+            renderContent(); 
+            renderBuilderCart();
+        }
+
+        function addCombinedItemToScope() {
+            const matSel = document.getElementById('material-selector').value;
+            const matQty = parseFloat(document.getElementById('material-qty').value);
+            const hasMat = matSel && !isNaN(matQty) && matQty > 0;
+
+            const labSel = document.getElementById('labor-selector').value;
+            const labHrs = parseFloat(document.getElementById('labor-hours').value);
+            const hasLab = labSel && !isNaN(labHrs) && labHrs > 0;
+
+            if (!hasMat && !hasLab) return;
+
+            let matName = "", matUnit = "", matUnitCost = 0, matTotal = 0;
+            let labName = "", labUnitCost = 0, labTotal = 0;
+            
+            if (hasMat) {
+                const mat = MASTER_DB[matSel];
+                matName = mat.name;
+                matUnit = mat.unit;
+                matUnitCost = mat.price;
+                matTotal = matQty * matUnitCost;
+            }
+
+            if (hasLab) {
+                const lab = LABOR_DB[labSel];
+                labName = lab.name;
+                labUnitCost = lab.dailyRate / 8; // hourly rate
+                labTotal = labHrs * labUnitCost;
+            }
+
+            const itemName = hasMat ? matName : (hasLab ? `${labName} (Labor Task)` : 'Unknown');
+
+            if (!scopeItemData[activeItemKey]) scopeItemData[activeItemKey] = [];
+
+            scopeItemData[activeItemKey].push({
+                id: Date.now(),
+                name: itemName,
+                matQty: hasMat ? matQty : 0,
+                matUnit: matUnit,
+                matUnitCost: matUnitCost,
+                matTotal: matTotal,
+                labName: labName,
+                manHours: hasLab ? labHrs : 0,
+                labUnitCost: labUnitCost,
+                labTotal: labTotal,
+                total: matTotal + labTotal
+            });
+
+            document.getElementById('material-qty').value = '';
+            document.getElementById('material-selector').value = '';
+            document.getElementById('labor-hours').value = '';
+            document.getElementById('labor-selector').value = '';
+            validateCartInputs();
+            
+            renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
+        }
+        
+        function removeRow(id) {
+            scopeItemData[activeItemKey] = scopeItemData[activeItemKey].filter(item => item.id !== id);
+            renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
+        }
+
+        function renderBuilderCart() {
+            const container = document.getElementById('current-item-breakdown');
+            const data = scopeItemData[activeItemKey] || [];
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div class="text-neutral-400 italic text-center py-4">No data added yet.</div>';
+                document.getElementById('current-item-subtotal').textContent = '₱0.00';
+                return;
+            }
+
+            let subtotal = 0;
+            container.innerHTML = data.map(item => {
+                subtotal += item.total;
+                
+                let detailsHtml = '';
+                if (item.matTotal > 0) detailsHtml += `<div class="text-xs text-neutral-500 truncate">Mat: ${item.matQty} ${item.matUnit} @ ₱${item.matUnitCost.toLocaleString(undefined, {minimumFractionDigits:2})}/${item.matUnit}</div>`;
+                if (item.labTotal > 0) detailsHtml += `<div class="text-xs text-neutral-500 truncate">Lab: ${item.labName} (${item.manHours} hrs) @ ₱${item.labUnitCost.toLocaleString(undefined, {minimumFractionDigits:2})}/hr</div>`;
+
+                return `
+                    <div class="flex justify-between items-center bg-neutral-50 p-2 rounded border border-neutral-100 min-w-0">
+                        <div class="min-w-0 overflow-hidden pr-2">
+                            <span class="text-sm font-bold text-neutral-800 block truncate" title="${item.name}">${item.name}</span>
+                            ${detailsHtml}
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <span class="font-bold text-neutral-900">₱${item.total.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
+                            <button onclick="removeRow(${item.id})" class="text-red-400 hover:text-red-600">✕</button>
+                        </div>
                     </div>
                 `;
+            }).join('');
+            
+            document.getElementById('current-item-subtotal').textContent = `₱${subtotal.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+        }
+
+        function updateLedger() {
+            let definedCost = 0;
+            
+            Object.values(scopeItemData).forEach(itemArray => {
+                itemArray.forEach(row => definedCost += row.total);
             });
 
-            document.getElementById('modal-grand-total').textContent = `₱${scopeGrandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            const ufField = definedCost * 0.02;
+            const ufUnlisted = definedCost * 0.02;
+            const ufPost = definedCost * 0.01;
+            const undefinedTotal = ufField + ufUnlisted + ufPost; // 5%
+            
+            const contingency = definedCost * 0.05; // 5% Risk Funds
+            
+            const rawTotal = definedCost + undefinedTotal + contingency;
+            const roundedTotal = Math.round(rawTotal / 1000) * 1000;
 
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modalContent.classList.remove('scale-95');
-            }, 10);
+            const fmt = (num) => `₱${num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            
+            document.getElementById('ledger-defined').textContent = fmt(definedCost);
+            document.getElementById('ledger-undefined').textContent = fmt(undefinedTotal);
+            document.getElementById('ledger-uf-field').textContent = fmt(ufField);
+            document.getElementById('ledger-uf-unlisted').textContent = fmt(ufUnlisted);
+            document.getElementById('ledger-uf-post').textContent = fmt(ufPost);
+            
+            document.getElementById('ledger-risk').textContent = fmt(contingency);
+            document.getElementById('ledger-contingency').textContent = fmt(contingency);
+            
+            document.getElementById('ledger-raw').textContent = fmt(rawTotal);
+            document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
         }
 
         function goBackMain() {
@@ -968,46 +1148,6 @@
             document.body.style.opacity = '0';
             setTimeout(() => { Auth.logout(); }, 200);
         }        
-
-        function closeSummary() {
-            const modal = document.getElementById('summary-modal');
-            const modalContent = document.getElementById('summary-modal-content');
-            
-            modal.classList.add('opacity-0');
-            modalContent.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 200);
-        }
-
     </script>
-
-    <!-- Save Estimate Modal -->
-    <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
-            <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
-            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
-                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2"
-                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
-                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz"
-                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
-                </div>
-            </div>
-            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
-                <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

@@ -4,6 +4,12 @@
 
 const Auth = {
 
+  // Local dev bypass — skips Vercel auth when running on localhost
+  isLocalDev() {
+    return window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1';
+  },
+
   // Store token in sessionStorage after successful login
   // sessionStorage clears automatically when browser tab is closed
   setToken(token, email) {
@@ -36,6 +42,12 @@ const Auth = {
   // Guard — call this at the top of calculator.html and admin.html
   // Redirects to index.html if not logged in
   requireLogin() {
+    if (this.isLocalDev()) {
+      if (!this.isLoggedIn()) {
+        this.setToken('dev-token', 'dev@urc.com');
+      }
+      return;
+    }
     if (!this.isLoggedIn()) {
       window.location.href = '/index.html';
     }
@@ -44,6 +56,11 @@ const Auth = {
   // Login — sends email + password to /api/auth
   // destination: 'calculator' or 'admin'
   async login(email, password, destination = 'calculator') {
+    if (this.isLocalDev()) {
+      this.setToken('dev-token', 'dev@urc.com');
+      window.location.href = destination === 'admin' ? '/admin.html' : '/calculator.html';
+      return { success: true };
+    }
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
@@ -57,10 +74,8 @@ const Auth = {
         return { success: false, error: data.error || 'Login failed' };
       }
 
-      // Store token and email
       this.setToken(data.token, data.email);
 
-      // Redirect based on which button they clicked
       if (destination === 'admin') {
         window.location.href = '/admin.html';
       } else {

@@ -8,6 +8,20 @@ A web-based civil project cost estimation tool built to replace the department's
 
 ---
 
+## Working Locally on "local-dev" branch
+**First time setup:**
+git clone <repo-url>
+git checkout local-dev
+
+**Pulling latest changes from teammates:**
+git pull origin local-dev
+
+**Pushing your changes:**
+git add .
+git commit -m "brief description of what you changed"
+git push origin local-dev
+
+
 ## What This App Does
 
 Six modules across five HTML pages:

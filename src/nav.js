@@ -42,9 +42,5 @@
         if (placeholder) placeholder.outerHTML = navHTML;
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', render);
-    } else {
-        render();
-    }
+    render();
 })();

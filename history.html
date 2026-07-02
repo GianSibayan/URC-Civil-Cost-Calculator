@@ -6,6 +6,8 @@
     <title>URC CCC — Estimate History</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/src/auth.js"></script>
+    <!-- Navigation --> 
+    <script src="/src/nav.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -39,23 +41,7 @@
 <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
 <!-- SIDEBAR -->
-<aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6 z-20">
-    <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
-    <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
-    <nav class="flex-1 mt-8 space-y-1 relative">
-        <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Building Calculator</button>
-        <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Footing &amp; Pedestal Cal.</button>
-        <button onclick="window.location.href='cost_estimate_scope.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Cost Estimate Scope</button>
-        <button onclick="window.location.href='labor_resources.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Labor &amp; Resources</button>
-        <div class="pt-6">
-            <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-            <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">History</button>
-        </div>
-    </nav>
-    <div class="pt-4 border-t border-neutral-100 mt-auto">
-        <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">Main Page</button>
-    </div>
-</aside>
+<div id="nav-placeholder"></div>
 
 <!-- MAIN -->
 <main class="flex-1 flex flex-col h-full overflow-hidden bg-white">

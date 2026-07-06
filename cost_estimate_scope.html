@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Cost Estimate Scope</title>
 
-    <!-- Navigation --> 
-    <!-- <script src="/src/nav.js"></script> -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -38,9 +36,13 @@
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
 
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- SIDEBAR -->
     <div id="nav-placeholder"></div>
     <script src="/src/nav.js"></script>
 
+    <!-- MAIN -->
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
             <h2 class="text-2xl font-bold text-neutral-900">Master Estimator</h2>
@@ -55,6 +57,7 @@
 
         <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
             
+            <!-- LEFT PANEL: SCOPE LIST -->
             <div class="xl:col-span-7 flex flex-col overflow-hidden border-r border-neutral-100">
                 <div class="p-6 pb-2 border-b border-neutral-100 bg-[#fbfbfc]">
                     <div id="tab-nav-container" class="flex space-x-2 overflow-x-auto pb-3 custom-scrollbar"></div>
@@ -62,6 +65,7 @@
                 <div id="dynamic-content-area" class="flex-1 overflow-y-auto p-6 pb-32 bg-white"></div>
             </div>
 
+            <!-- RIGHT PANEL: ITEM BUILDER & LEDGER -->
             <div id="builder-container" class="xl:col-span-5 bg-[#f8f9fa] flex flex-col h-full border-t xl:border-t-0 border-neutral-200 overflow-hidden">
                 <div class="flex-1 p-6 overflow-y-auto border-b border-neutral-200 flex flex-col">
                     <div class="mb-4">
@@ -150,16 +154,10 @@
         // 1. DATABASE & INITIALIZATION
         // ============================================================
         let MASTER_DB = {}; 
-        
-        const LABOR_DB = {
-            'carpenter': { name: 'Carpenter', dailyRate: 700 },
-            'mason': { name: 'Mason', dailyRate: 700 },
-            'welder': { name: 'Welder', dailyRate: 815 },
-            'electrician': { name: 'Electrician', dailyRate: 875 },
-            'plumber': { name: 'Plumber', dailyRate: 700 },
-            'ncr_unskilled': { name: 'Unskilled (NCR)', dailyRate: 695 },
-            'civil_eng': { name: 'Civil Engineer', dailyRate: 2700 }
-        };
+        let LABOR_DB = {}; 
+        let scopeItemData = {}; 
+        let activeItemKey  = null;
+        let activeItemDesc = null;
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -177,10 +175,6 @@
             { id: 'equipment', file: 'data/equipment.json', schema: 'equipment', label: 'Equipment' },
             { id: 'pipes', file: 'data/pipes.json', schema: 'pipes', label: 'Pipes' }
         ];
-
-        let scopeItemData = {}; 
-        let activeItemKey  = null;
-        let activeItemDesc = null;
 
         const commonShell = [
             { code: "105", desc: "Excavation & Fill" }, { code: "110", desc: "Foundations" }, { code: "115", desc: "Superstructure Slabs" },
@@ -314,7 +308,8 @@
         let activeTabId = SCOPE_CATEGORIES[0].id;
 
         document.addEventListener("DOMContentLoaded", async () => {
-            await fetchAllDatabases();
+            initLaborDatabase(); 
+            await fetchAllDatabases(); 
             populateCategoryDropdown();
             populateLaborDropdown();
             renderNavigation();
@@ -323,8 +318,60 @@
         });
 
         // ============================================================
-        // 2. DATA LOADING & DROPDOWNS edit
+        // 2. DATA LOADING & DROPDOWNS
         // ============================================================
+        
+        function initLaborDatabase() {
+            const defaultLaborState = {
+                ncr:          { rate: 695 },
+                visayas:      { rate: 500 },
+                mindanao:     { rate: 500 },
+                carpenter:    { rate: 700 },
+                mason:        { rate: 700 },
+                welder:       { rate: 815 },
+                electrician:  { rate: 875 },
+                plumber:      { rate: 700 },
+                pipeFitter:   { rate: 700 },
+                civilEng:     { rate: 2700 },
+                electricalEng:{ rate: 2100 },
+                mechanicalEng:{ rate: 2500 },
+                generalEng:   { rate: 1700 },
+                itEng:        { rate: 2500 },
+                consultant:   { rate: 5000 }
+            };
+
+            const roleLabels = {
+                ncr:'NCR Region', visayas:'Visayas Region', mindanao:'Mindanao Region',
+                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
+                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
+                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
+                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
+            };
+
+            try {
+                const raw = localStorage.getItem('urc_ccc_labor_2026');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.laborState) {
+                        Object.keys(parsed.laborState).forEach(role => {
+                            LABOR_DB[role] = {
+                                name: roleLabels[role] || role,
+                                dailyRate: parsed.laborState[role].rate
+                            };
+                        });
+                        return; 
+                    }
+                }
+            } catch(e) { console.warn("Could not sync with labor session cache. Falling back to defaults."); }
+
+            Object.keys(defaultLaborState).forEach(role => {
+                LABOR_DB[role] = {
+                    name: roleLabels[role] || role,
+                    dailyRate: defaultLaborState[role].rate
+                };
+            });
+        }
+
         async function fetchAllDatabases() {
             await Promise.all(DB_CONFIG.map(async (config) => {
                 const urls = [
@@ -868,13 +915,13 @@
 
                             const displayNo = cat.isIndirect ? item.code : itemCounter;
                             
-                            // 1. Parent Row (Yellow)
+                            // 1. Parent Row
                             catRows.push([
                                 c(displayNo, stItemCenterBold), c(item.desc, stItemLeftBold), c(1, stItemCenterBold), c('lot', stItemCenterBold),
                                 c(parentManHours, stItemRightBold), c(parentLaborCost, stItemRightBold), c(parentMatCost, stItemRightBold), c(parentTotal, stItemRightBold)
                             ]);
 
-                            // 2. Child Rows (White)
+                            // 2. Child Rows
                             itemData.forEach((row, childIdx) => {
                                 const childNo = `${displayNo}.${childIdx + 1}`;
                                 catRows.push([
@@ -1019,7 +1066,7 @@
             if (hasLab) {
                 const lab = LABOR_DB[labSel];
                 labName = lab.name;
-                labUnitCost = lab.dailyRate / 8; // hourly rate
+                labUnitCost = lab.dailyRate / 8; 
                 labTotal = labHrs * labUnitCost;
             }
 
@@ -1054,6 +1101,17 @@
             scopeItemData[activeItemKey] = scopeItemData[activeItemKey].filter(item => item.id !== id);
             renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
         }
+
+        document.body.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'btn-save-estimate') {
+                const ready = localStorage.getItem('urc_ccc_calc_ready') === 'true'
+                           && localStorage.getItem('urc_ccc_ces_ready') === 'true'
+                           && localStorage.getItem('urc_ccc_labor_ready') === 'true';
+                if (ready) {
+                    showToast("Syncing Master Estimate parameters...", "info");
+                }
+            }
+        });
 
         function renderBuilderCart() {
             const container = document.getElementById('current-item-breakdown');
@@ -1100,9 +1158,9 @@
             const ufField = definedCost * 0.02;
             const ufUnlisted = definedCost * 0.02;
             const ufPost = definedCost * 0.01;
-            const undefinedTotal = ufField + ufUnlisted + ufPost; // 5%
+            const undefinedTotal = ufField + ufUnlisted + ufPost; 
             
-            const contingency = definedCost * 0.05; // 5% Risk Funds
+            const contingency = definedCost * 0.05; 
             
             const rawTotal = definedCost + undefinedTotal + contingency;
             const roundedTotal = Math.round(rawTotal / 1000) * 1000;
@@ -1120,13 +1178,24 @@
             
             document.getElementById('ledger-raw').textContent = fmt(rawTotal);
             document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
-        }
 
-        function goBackMain() {
-            document.body.style.transition = 'opacity 0.2s';
-            document.body.style.opacity = '0';
-            setTimeout(() => { Auth.logout(); }, 200);
-        }        
+            // Sync structural cost matrix totals out dynamically to cross-page session channels
+            try {
+                const cesStateSummary = {
+                    categoryTotals: {},
+                    itemPrices: {}
+                };
+                SCOPE_CATEGORIES.forEach(cat => {
+                    cesStateSummary.categoryTotals[cat.id] = calculateCategoryTotal(cat.id);
+                });
+                Object.keys(scopeItemData).forEach(key => {
+                    cesStateSummary.itemPrices[key] = scopeItemData[key].reduce((a, b) => a + b.total, 0);
+                });
+                localStorage.setItem('urc_ccc_ces_ready', String(definedCost > 0));
+                localStorage.setItem('urc_ces_cross_page', JSON.stringify(cesStateSummary));
+                sessionStorage.setItem('urc_ces_session', JSON.stringify(cesStateSummary));
+            } catch (e) { console.error(e); }
+        }
     </script>
 </body>
-</html>
+</html> 

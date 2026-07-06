@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URC CCC — Building Calculator</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter','-apple-system','BlinkMacSystemFont','"SF Pro"','"SF Pro Text"','"SF Pro Display"','"Segoe UI"','Roboto','Helvetica','Arial','sans-serif']
+                    },
+                    transitionTimingFunction: {
+                        'apple': 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .dim-input, .struct-select {
+            width: 100%;
+            background: white;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 8px 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #111;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .dim-input:focus, .struct-select:focus {
+            border-color: rgba(0,0,0,0.25);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        .dim-input::placeholder { color: #bbb; font-weight: 400; }
+        .struct-select { text-align-last: center; cursor: pointer; appearance: none; }
+        
+        .result-badge {
+            width: 100%;
+            background: #e5e7eb;
+            border-radius: 16px;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+        }
+    </style>
+</head>
+<body class="h-full flex bg-white font-sans overflow-hidden select-none">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="page-calculator" class="w-full h-full flex transition-opacity duration-300">
+
+        <aside class="w-64 bg-white flex flex-col flex-shrink-0 border-r border-neutral-200 z-20 relative">
+            <div class="p-6 pb-2">
+                <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
+                <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
+            </div>
+
+            <nav class="flex-1 px-3 mt-4 space-y-1">
+                <button id="nav-building" onclick="switchModule('building')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center text-neutral-900">
+                        <i class="fa-solid fa-house text-xs"></i>
+                    </div>
+                    <span class="truncate text-left flex-1">Building Calculator</span>
+                </button>
+
+                <button id="nav-footing" onclick="switchModule('footing')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                    <div class="w-5 h-5 flex items-center justify-center text-neutral-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </div>
+                    <span class="truncate text-left flex-1">Footing Pedestal</span>
+                </button>
+
+                <div class="pt-6">
+                    <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
+                    
+                    <button id="nav-contingency" onclick="switchModule('contingency')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                        <div class="w-5 h-5 flex items-center justify-center text-neutral-400">
+                            <i class="fa-solid fa-clipboard-check text-xs"></i>
+                        </div>
+                        <span class="truncate text-left flex-1">Contingency Score</span>
+                    </button>
+
+                    <button id="nav-undefined" onclick="switchModule('undefined')" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                        <div class="w-5 h-5 flex items-center justify-center text-neutral-400">
+                            <i class="fa-solid fa-file-invoice-dollar text-xs"></i>
+                        </div>
+                        <span class="truncate text-left flex-1">Undefined Cost Score</span>
+                    </button>
+                    
+                    <div class="pointer-events-none w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 select-none mt-2">
+                        <div class="w-5 h-5 flex items-center justify-center text-neutral-400">
+                            <i class="fa-solid fa-list-ul text-xs"></i>
+                        </div>
+                        <span class="truncate text-left flex-1">History</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="p-4 border-t border-neutral-100">
+                <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Main Page</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+            
+            <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
+                <div class="flex items-center gap-6">
+                    <h2 id="header-title" class="text-2xl font-bold text-neutral-900 transition-opacity duration-300">Building Calculator</h2>
+                    <div id="header-tabs-container" class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40 transition-opacity duration-300">
+                        <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
+                        <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
+                        <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
+                        <button id="tab-currency" onclick="switchSection('currency')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-save-estimate" onclick="openSaveModal()" class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm transition cursor-pointer">Save Estimate</button>
+                    <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
+                </div>
+            </header>
+
+            <div id="main-fade-wrapper" class="flex-1 w-full h-full relative transition-all duration-300 ease-apple opacity-100 transform scale-100 translate-y-0 overflow-hidden flex">
+
+                <div id="module-calculator-grid" class="flex-1 w-full h-full grid grid-cols-1 xl:grid-cols-12 absolute inset-0">
+                    
+                    <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
+                        <div id="calc-sections-container" class="transition-all duration-300 ease-apple opacity-100 transform translate-x-0 w-full">
+                            
+                            <div id="section-dimension" class="flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Length</h4>
+                                        <input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" />
+                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Width</h4>
+                                        <input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" />
+                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Clear Height</h4>
+                                        <input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" />
+                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">No. of Stories</h4>
+                                        <input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" />
+                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">floors</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[140px] md:col-span-2">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">% Mezzanine</h4>
+                                        <input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" />
+                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">percent (%)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="section-structure" class="hidden flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Structure Type</h4>
+                                        <select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
+                                            <option value="steel_rigid">Steel Rigid Frames</option>
+                                            <option value="steel_joist">Steel Joist and Column</option>
+                                            <option value="tilt_up">Tilt-Up Concrete</option>
+                                            <option value="pre_cast">Pre-Cast Concrete</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Roof Type</h4>
+                                        <select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
+                                            <option value="standing_seam">Standing Seam Metal</option>
+                                            <option value="r_panel">R Panel Metal</option>
+                                            <option value="tpo_membrane">TPO Membrane</option>
+                                            <option value="epdm_membrane">EPDM Membrane</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Wall Cladding</h4>
+                                        <select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
+                                            <option value="metal_panel">Metal Panel</option>
+                                            <option value="tilt_up_wall">Tilt-Up Concrete</option>
+                                            <option value="pre_cast_wall">Pre-Cast Panel</option>
+                                            <option value="masonry_block">Masonry Block</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Slab Thickness</h4>
+                                        <select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
+                                            <option value="100mm">100mm Light Storage</option>
+                                            <option value="150mm">150mm Standard</option>
+                                            <option value="200mm">200mm Heavy Loads</option>
+                                            <option value="250mm">250mm Very Heavy</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Dock Doors</h4>
+                                        <input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Drive-In Doors</h4>
+                                        <input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Skylights / Windows</h4>
+                                        <select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
+                                            <option value="standard">Standard</option>
+                                            <option value="none">None</option>
+                                            <option value="minimal">Minimal</option>
+                                            <option value="many">Many</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (L)</h4>
+                                        <input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (W)</h4>
+                                        <input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="section-capacity" class="hidden flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Height</h4>
+                                        <input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Size</h4>
+                                        <input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Isle Width</h4>
+                                        <input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bottom Clearance</h4>
+                                        <input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Storage Efficiency</h4>
+                                        <input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Dock / Staging Area</h4>
+                                        <input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Level Height</h4>
+                                        <input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Depth</h4>
+                                        <input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="section-currency" class="hidden flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Currency Conversion</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Base Currency</h4>
+                                        <select id="select-currencyBase" class="struct-select" onchange="handleSelect('currencyBase', this.value)">
+                                            <option value="PHP">PHP - Philippine Peso</option>
+                                            <option value="USD">USD - US Dollar</option>
+                                            <option value="EUR">EUR - Euro</option>
+                                            <option value="JPY">JPY - Japanese Yen</option>
+                                            <option value="SGD">SGD - Singapore Dollar</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Target Currency</h4>
+                                        <select id="select-currencyTarget" class="struct-select" onchange="handleSelect('currencyTarget', this.value)">
+                                            <option value="USD">USD - US Dollar</option>
+                                            <option value="PHP">PHP - Philippine Peso</option>
+                                            <option value="EUR">EUR - Euro</option>
+                                            <option value="JPY">JPY - Japanese Yen</option>
+                                            <option value="SGD">SGD - Singapore Dollar</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Exchange Rate</h4>
+                                        <input id="input-exchangeRate" class="dim-input select-text" type="number" min="0" step="0.0001" placeholder="0" oninput="handleInput('exchangeRate', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium mt-1">Multiplier Rate</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Amount to Convert</h4>
+                                        <input id="input-conversionAmount" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('conversionAmount', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium mt-1">In Base Currency</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-center items-center min-h-[120px] md:col-span-2">
+                                        <h4 class="text-sm font-semibold text-neutral-600 mb-2">Converted Result</h4>
+                                        <div class="bg-neutral-200 rounded-lg py-3 px-6 w-full text-center font-bold text-neutral-800 text-2xl shadow-sm transition" id="result-converted">
+                                            0.00 USD
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="section-footing-geometry" class="hidden flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Length</h4>
+                                        <input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Width</h4>
+                                        <input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Depth</h4>
+                                        <input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Length</h4>
+                                        <input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Width</h4>
+                                        <input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Height</h4>
+                                        <input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="section-footing-materials" class="hidden flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Concrete Class</h4>
+                                        <select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
+                                            <option value="C16/20">C16/20 — Lean/Blinding</option>
+                                            <option value="C20/25">C20/25 — Light Slabs</option>
+                                            <option value="C25/30">C25/30 — General</option>
+                                            <option value="C30/37" selected>C30/37 — Heavy Columns</option>
+                                            <option value="C35/45">C35/45 — High-Rise</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Price / m³</h4>
+                                        <input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Depth</h4>
+                                        <input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Cost / m³</h4>
+                                        <input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Rate / m³</h4>
+                                        <input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Ratio</h4>
+                                        <input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium">percent Ratio (%)</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Price / kg</h4>
+                                        <input id="input-rebarPriceKg" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('rebarPriceKg', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Overhead Profit</h4>
+                                        <input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Forms Price / m²</h4>
+                                        <input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Cost / day</h4>
+                                        <input id="input-laborCostDay" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('laborCostDay', this.value)" />
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
+                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Steel Density</h4>
+                                        <input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="module-calculator-sidebar" class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
+                        <div class="sticky top-0 space-y-6">
+                            <div>
+                                <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
+                                <p class="text-lg font-bold text-neutral-800 mt-1">Estimation Line Ledger</p>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-2xl border border-neutral-200/60 shadow-sm">
+                                <canvas id="costChart" height="200"></canvas>
+                            </div>
+
+                            <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4 text-sm">
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Floor Area</span>
+                                        <span id="side-floorArea" class="font-semibold text-neutral-900">0.00 sqm</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length × Width</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Gross Area</span>
+                                        <span id="side-grossArea" class="font-semibold text-neutral-900">0.00 sqm</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor + (Floor × Mezzanine %)</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Building Volume</span>
+                                        <span id="side-bldgVolume" class="font-semibold text-neutral-900">0.00 cu.m</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area × H) + (Area × Mezz % × 6)</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Perimeter Line</span>
+                                        <span id="side-perimeter" class="font-semibold text-neutral-900">0.00 m</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 × (Length + Width)</p>
+                                </div>
+                                <div class="pt-3 border-t border-neutral-100">
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Concrete Volume</span>
+                                        <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m³</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) × Nodes</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Total Nodes</span>
+                                        <span id="side-baySpacing" class="font-semibold text-neutral-900">0</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (L / Space L) + (W / Space W)</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Total Pallet Slots</span>
+                                        <span id="side-pallets" class="font-semibold text-neutral-900">0</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Pallet Footprint) × Levels</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
+                                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
+                                <div class="space-y-2 text-sm text-neutral-600">
+                                    <div class="flex justify-between"><span>Material Costs</span><span class="cost-materials font-bold text-neutral-900">₱0.00</span></div>
+                                    <div class="flex justify-between"><span>Labor Costs</span><span class="cost-labor font-bold text-blue-600">₱0.00</span></div>
+                                    <div class="flex justify-between"><span>Equipment Costs</span><span class="cost-equipment font-bold text-neutral-900">₱0.00</span></div>
+                                    <div class="flex justify-between"><span>Overhead & Profit</span><span class="cost-profit font-bold text-neutral-900">₱0.00</span></div>
+                                </div>
+                                <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
+                                        <p class="text-[10px] text-neutral-400 leading-tight">Calculated Estimate</p>
+                                    </div>
+                                    <div class="text-2xl font-black text-neutral-900 cost-total">₱0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="module-contingency-grid" class="flex-1 w-full h-full overflow-y-auto p-8 pb-32 hidden absolute inset-0 bg-white z-10">
+                    <div class="max-w-6xl mx-auto flex flex-col gap-8">
+                        
+                        <div>
+                            <h2 class="text-3xl font-bold text-neutral-900">Contingency Adjustment Score</h2>
+                            <p class="text-neutral-500 mt-2 font-medium">From Undefined cost: 50% of Subtotal Undefined % (rounded to the units)</p>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Site</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">0%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">All needed site information is included in estimate. Soil conditions, underground & above ground obstructions and site conditions are known and included in scope/estimate. No uncertainties exist.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Site visit has been made. Visible conditions and interferences have been observed. Major site conditions, scope and issues are known.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Site scope options are known but may not be final. Major site conditions are assumed.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">5%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">URC has not completed any significant construction at this site. Site conditions are unknown or site has not been chosen.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Resources (Construction, Engineering, & Business)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">All required construction, engineering, and business resources are available and experienced with URC, the site, and the process. Construction and sourcing plans exist.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Most project team resources are available. Construction method is known. Wages and productivity based on published data. Availability of skilled construction labor is assumed. Sourcing plan is mostly defined.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">4%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Some gap(s) exist in project team resources. Construction method is assumed. Wage rates, productivity and availability of skilled construction labor are assumed. Sourcing plan is not defined.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">7%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Significant gap(s) exist in key project team resources. Majority of construction, engineering, and business resources available have little experience with either URC, the site, or the process.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Schedule (Excl. Acceleration)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">1%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Timing is not an issue.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Minor time constraints exist along with some doubt about capability to achieve schedule</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Potential delays, changes in schedule requirements, or teams ability to meet existing schedule could result in schedule change of more than 10% but less than 20%.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">5%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Potential change in schedule requirements or team's ability to meet existing schedule could result in schedule change of 20% or more.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Pricing</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on quotes, purchase orders and recent experience. Escalation and currency fluctuation impact is negligible. No import duties or taxes.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">4%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on details with some allowances. Pricing is from URC experience or database. Escalation and currency fluctuation may be a factor. Import duties/taxes are well known.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on allowances and factored cost data. Variation in escalation, currency, import duties/taxes may affect the project cost by 10% or more. Project includes re-use and modification of 30% to 50% of equipment.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">4%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on allowances and/or escalation. Variation in escalation, currency, import duties/taxes may affect the project cost by 10% or more. Project includes re-use & modification of more than 50% of equipment.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 bg-emerald-50 rounded-3xl p-8 border border-emerald-300 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-emerald-900">Base Contingency Subtotal</h3>
+                                <p class="text-sm text-emerald-700 mt-2 font-medium leading-relaxed max-w-2xl">If the total Undefined and Contingency % is greater than 25%, consult with an Advanced or Expert Cost Engineer.</p>
+                            </div>
+                            <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm shrink-0">
+                                <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Overall Score</span>
+                                <div class="bg-emerald-500 text-white text-4xl font-black py-3 px-8 rounded-xl shadow-md">
+                                    0%
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="module-undefined-grid" class="flex-1 w-full h-full overflow-y-auto p-8 pb-32 hidden absolute inset-0 bg-white z-10">
+                    <div class="max-w-6xl mx-auto flex flex-col gap-8">
+                        
+                        <div>
+                            <h2 class="text-3xl font-bold text-neutral-900">Subtotal Undefined Cost %</h2>
+                            <p class="text-neutral-500 mt-2 font-medium">(Target for conceptual estimate: < 15%)</p>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Site</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">0%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">All needed site information is included in estimate. Soil conditions, underground & above ground obstructions and site conditions are known and included in scope/estimate. No uncertainties exist.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Site visit has been made. Visible conditions and interferences have been observed. Major site conditions, scope and issues are known.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Site scope options are known but may not be final. Major site conditions are assumed.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">5%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">URC has not completed any significant construction at this site. Site conditions are unknown or site has not been chosen.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Process / Definition</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Building layout, size and shape are known. Details required for estimate are defined. No scope or definition gaps exist. No capacity or operational unknowns exist.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Building layout, size, and shape are generally known. Key details are known with some assumptions. Minor scope or definition gaps exist. Capacity and operational parameters are known.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">4%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Building layout, size, and shape are assumed based on required capacity and operations.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">7%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Building layout, size, and shape are assumed based on vague capacity or operational requirements.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Engineering</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">1%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">All disciplines are complete. Specs, drawing, schematics, material lists, process flows are defined. Bids have been evaluated. Engineering is 100% complete.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Key disciplines are complete. Specs, drawings, schematics, material lists, process flows are mostly defined. Most bids evaluated. Engineering is > 60% complete.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Layouts exist. Specs, drawings, schematics, material lists, process flows are mostly assumptions based on recent experience. Engineering is > 30% complete.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">5%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Rough layouts exist. Specs, drawings, schematics, material lists, process flows are completely assumed. Engineering is < 30% complete.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f4f5f8] rounded-3xl p-6 border border-neutral-200/60 shadow-sm flex flex-col xl:flex-row gap-6 items-stretch">
+                            <div class="flex-1 flex flex-col">
+                                <h4 class="text-xl font-bold text-neutral-900 mb-4">Pricing</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 h-full">
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">2%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on quotes, purchase orders and recent experience. Escalation and currency fluctuation impact is negligible. No import duties or taxes.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">4%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on details with some allowances. Pricing is from URC experience or database. Escalation and currency fluctuation may be a factor. Import duties/taxes are well known.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">3%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on allowances and factored cost data. Variation in escalation, currency, import duties/taxes may affect the project cost by 10% or more. Project includes re-use and modification of 30% to 50% of equipment.</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col hover:border-neutral-300 transition-colors">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Score</span>
+                                            <span class="text-lg font-black text-neutral-800">4%</span>
+                                        </div>
+                                        <p class="text-xs text-neutral-500 leading-relaxed flex-1">Based on allowances and/or escalation. Variation in escalation, currency, import duties/taxes may affect the project cost by 10% or more. Project includes re-use & modification of more than 50% of equipment.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full xl:w-56 flex flex-col items-center justify-center bg-white p-6 rounded-2xl border border-neutral-200 shadow-sm shrink-0">
+                                <label class="text-sm font-bold text-neutral-700 mb-3 text-center">Score Input</label>
+                                <div class="relative w-full">
+                                    <input type="number" class="w-full text-center text-3xl font-black text-yellow-900 bg-yellow-50 border-2 border-yellow-400 rounded-xl py-4 outline-none focus:border-yellow-500 focus:ring-4 focus:ring-yellow-500/20 transition-all placeholder-yellow-600/30" placeholder="0">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-700 font-bold text-lg pointer-events-none">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 bg-emerald-50 rounded-3xl p-8 border border-emerald-300 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-emerald-900">Subtotal Undefined Cost %</h3>
+                                <p class="text-sm text-emerald-700 mt-2 font-medium leading-relaxed max-w-2xl">(Target for conceptual estimate: < 15%)</p>
+                            </div>
+                            <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm shrink-0">
+                                <span class="text-sm font-bold text-neutral-500 uppercase tracking-wider">Overall Score</span>
+                                <div class="bg-emerald-500 text-white text-4xl font-black py-3 px-8 rounded-xl shadow-md">
+                                    0%
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+            <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
+                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2" class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
+                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz" class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+            </div>
+            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // STATE
+        window.PRICES = null;
+        let estimateState = {
+            length: 0, width: 0, clearHeight: 0, stories: 0, mezzanine: 0,
+            structureType: 'steel_rigid', roofType: 'standing_seam', wallCladding: 'metal_panel', slabThickness: '100mm',
+            dockDoors: 0, driveInDoors: 0, skylights: 'standard', baySpacingL: 0, baySpacingW: 0,
+            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0, storageEfficiency: 0,
+            dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
+            footingLength: 0, footingWidth: 0, footingDepth: 0,
+            pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
+            concreteClass: 'C30/37', concretePriceM3: 0,
+            excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
+            rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0,
+            formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850,
+            globalEquipment: 0, globalProfit: 0,
+            currencyBase: 'PHP', currencyTarget: 'USD', exchangeRate: 0, conversionAmount: 0
+        };
+
+        let currentActiveModule = 'building';
+        let costChart = null;
+
+        // PRICES LOADER
+        async function loadPrices() {
+            try {
+                let res = await fetch('/prices.json');
+                if (!res.ok) throw new Error('relative failed');
+                window.PRICES = await res.json();
+            } catch(_) {
+                try {
+                    const res2 = await fetch('https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json');
+                    if (res2.ok) window.PRICES = await res2.json();
+                } catch(e) { console.warn('Could not load prices.json:', e); }
+            }
+            if (window.PRICES) { applyPricesToState(); showToast('Price data loaded.', 'success'); }
+            syncInputs();
+            updateUI();
+        }
+
+        function applyPricesToState() {
+            if (!window.PRICES) return;
+            const p = window.PRICES.tab1_tab2;
+            const cls = estimateState.concreteClass || 'C30/37';
+            const concretePrice = (p.concrete_classes && p.concrete_classes[cls]) ? p.concrete_classes[cls].price_per_m3 : 0;
+            const defaults = {
+                concretePriceM3: concretePrice, excavationCostM3: p.excavation_cost_per_m3,
+                rebarPriceKg: p.rebar_price_per_kg, overheadProfit: Math.round((p.overhead_profit_rate || 0) * 100),
+                formsPriceM2: p.forms_price_per_m2, laborCostDay: p.labor_cost_per_day, steelDensity: p.steel_density_kg_per_m3
+            };
+            Object.entries(defaults).forEach(([k, v]) => { if (estimateState[k] === 0) estimateState[k] = v; });
+            const concEl = document.getElementById('input-concretePriceM3');
+            if (concEl && concretePrice) concEl.value = concretePrice;
+            saveToCache();
+        }
+
+        function handleConcreteClassChange(value) {
+            estimateState.concreteClass = value;
+            if (window.PRICES) {
+                const cls = window.PRICES.tab1_tab2.concrete_classes;
+                if (cls && cls[value]) {
+                    estimateState.concretePriceM3 = cls[value].price_per_m3;
+                    const el = document.getElementById('input-concretePriceM3');
+                    if (el) el.value = estimateState.concretePriceM3;
+                }
+            } else {
+                estimateState.concretePriceM3 = 0;
+                const el = document.getElementById('input-concretePriceM3');
+                if (el) el.value = '';
+            }
+            saveToCache(); updateUI();
+        }
+
+        function goBackMain() {
+            document.body.style.transition = 'opacity 0.2s';
+            document.body.style.opacity = '0';
+            setTimeout(() => { if(typeof Auth !== 'undefined') Auth.logout(); }, 200);
+        }
+
+        function initCharts() {
+            try {
+                if (document.getElementById('costChart')) {
+                    const ctx = document.getElementById('costChart').getContext('2d');
+                    costChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: ['Floor Area', 'Concrete', 'Perimeter'], datasets: [{ data: [0,0,0], backgroundColor: ['#3b82f6','#10b981','#f59e0b'], borderRadius: 4 }] },
+                        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
+                    });
+                }
+            } catch(e) { console.warn('Chart.js failed:', e); }
+        }
+
+        // NAVIGATION MODULE SWITCHER
+        function switchModule(mod) {
+            if (currentActiveModule === mod) return;
+            currentActiveModule = mod;
+            
+            const fadeWrapper  = document.getElementById('main-fade-wrapper');
+            const headerTitle  = document.getElementById('header-title');
+            const headerTabs   = document.getElementById('header-tabs-container');
+            const calcGrid     = document.getElementById('module-calculator-grid');
+            const contingencyGrid = document.getElementById('module-contingency-grid');
+            const undefinedGrid = document.getElementById('module-undefined-grid');
+
+            // Set Active Menu Classes
+            ['building', 'footing', 'contingency', 'undefined'].forEach(m => {
+                const btn = document.getElementById('nav-' + m);
+                if (btn) btn.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors';
+            });
+            const activeNav = document.getElementById('nav-' + mod);
+            if (activeNav) activeNav.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors';
+
+            fadeWrapper.classList.remove('opacity-100','translate-y-0','scale-100');
+            fadeWrapper.classList.add('opacity-0','translate-y-2','scale-[0.99]');
+
+            setTimeout(() => {
+                // Hide all main containers
+                if (calcGrid) calcGrid.classList.add('hidden');
+                if (contingencyGrid) contingencyGrid.classList.add('hidden');
+                if (undefinedGrid) undefinedGrid.classList.add('hidden');
+                if (headerTabs) headerTabs.classList.add('hidden');
+
+                if (mod === 'contingency') {
+                    if (headerTitle) headerTitle.textContent = 'Contingency Scorecard';
+                    if (contingencyGrid) contingencyGrid.classList.remove('hidden');
+                } else if (mod === 'undefined') {
+                    if (headerTitle) headerTitle.textContent = 'Undefined Cost Scorecard';
+                    if (undefinedGrid) undefinedGrid.classList.remove('hidden');
+                } else {
+                    if (calcGrid) calcGrid.classList.remove('hidden');
+                    if (headerTabs) headerTabs.classList.remove('hidden');
+
+                    ['dimension','structure','capacity','currency','footing-geometry','footing-materials'].forEach(s => {
+                        const el = document.getElementById('section-' + s);
+                        if (el) el.classList.add('hidden');
+                    });
+                    
+                    if (mod === 'building') {
+                        if (headerTitle) headerTitle.textContent = 'Building Calculator';
+                        if (headerTabs) headerTabs.innerHTML = `
+                            <button onclick="switchSection('dimension')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
+                            <button onclick="switchSection('structure')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
+                            <button onclick="switchSection('capacity')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
+                            <button onclick="switchSection('currency')" id="tab-currency" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>`;
+                        const sec = document.getElementById('section-dimension');
+                        if (sec) sec.classList.remove('hidden');
+                    } else if (mod === 'footing') {
+                        if (headerTitle) headerTitle.textContent = 'Footing & Pedestal';
+                        if (headerTabs) headerTabs.innerHTML = `
+                            <button onclick="switchSection('footing-geometry')" id="tab-footing-geometry" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>
+                            <button onclick="switchSection('footing-materials')" id="tab-footing-materials" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>`;
+                        const sec = document.getElementById('section-footing-geometry');
+                        if (sec) sec.classList.remove('hidden');
+                    }
+                }
+                
+                updateUI();
+                void fadeWrapper.offsetWidth;
+                fadeWrapper.classList.remove('opacity-0','translate-y-2','scale-[0.99]');
+                fadeWrapper.classList.add('opacity-100','translate-y-0','scale-100');
+            }, 250);
+        }
+
+        function switchSection(section) {
+            const container = document.getElementById('calc-sections-container');
+            if (container) { container.classList.remove('opacity-100','translate-x-0'); container.classList.add('opacity-0','-translate-x-2'); }
+            setTimeout(() => {
+                const subSections = currentActiveModule === 'building' ? ['dimension','structure','capacity','currency'] : ['footing-geometry','footing-materials'];
+                subSections.forEach(s => {
+                    const el = document.getElementById('section-' + s); if (el) el.classList.add('hidden');
+                    const tab = document.getElementById('tab-' + s); if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
+                });
+                const activeSec = document.getElementById('section-' + section); if (activeSec) activeSec.classList.remove('hidden');
+                const targetTab = document.getElementById('tab-' + section); if (targetTab) targetTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
+                if (container) { void container.offsetWidth; container.classList.remove('opacity-0','-translate-x-2'); container.classList.add('opacity-100','translate-x-0'); }
+            }, 200);
+        }
+
+        // MODAL
+        function openSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('modal-project-name').focus();
+        }
+        function closeSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('modal-project-name').value = '';
+            document.getElementById('modal-engineer-name').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });   
+        
+        // INPUTS
+        function handleInput(field, value) {
+            const parsed = parseFloat(value);
+            estimateState[field] = isNaN(parsed) ? 0 : parsed;
+            saveToCache(); updateUI();
+        }
+
+        function handleSelect(field, value) {
+            estimateState[field] = value;
+            saveToCache(); updateUI();
+        }
+
+        function checkSaveButton() {
+            const btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            const ready = localStorage.getItem('urc_ccc_calc_ready') === 'true';
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
+        }
+
+        function confirmSaveEstimate() {
+            const projectName  = document.getElementById('modal-project-name').value.trim();
+            const engineerName = document.getElementById('modal-engineer-name').value.trim();
+            if (!projectName || !engineerName) {
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
+            showToast('Estimate saved successfully.', 'success');
+            closeSaveModal();
+        }
+        
+        // CALCULATION LOGIC
+        function updateUI() {
+            const L = estimateState.length || 0, W = estimateState.width || 0, H = estimateState.clearHeight || 0;
+            const M = (estimateState.mezzanine || 0) / 100;
+            const floorArea = L * W, grossArea = floorArea + floorArea * M;
+            const bldgVolume = L * W * H + L * W * M * 6, perimeter = 2 * (L + W);
+            const bsl = estimateState.baySpacingL || 0, bsw = estimateState.baySpacingW || 0;
+            let totalBaySpacing = 0;
+            if (bsl > 0 && bsw > 0) totalBaySpacing = L / bsl + W / bsw;
+            const nodes = Math.ceil(totalBaySpacing);
+            const rh = estimateState.rackHeight || 0, ps = estimateState.palletSize || 0;
+            const bc = estimateState.bottomClearance || 0, se = (estimateState.storageEfficiency || 0) / 100;
+            const ds = (estimateState.dockStagingArea || 0) / 100, rlh = estimateState.rackLevelHeight || 0, pd = estimateState.palletDepth || 0;
+            let rackLevels = 0;
+            if (rlh > 0 && rh > bc) rackLevels = Math.floor((rh - bc) / rlh);
+            let totalPalletPositions = 0;
+            if (ps * pd > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / (ps * pd)) * rackLevels;
+            const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
+            const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
+            const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
+
+            // Currency logic
+            const convAmt = estimateState.conversionAmount || 0;
+            const exRate = estimateState.exchangeRate || 0;
+            const convRes = convAmt * exRate;
+            const elConv = document.getElementById('result-converted');
+            if (elConv) {
+                elConv.textContent = convRes.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (estimateState.currencyTarget || 'USD');
+            }
+
+            if (currentActiveModule === 'building' || currentActiveModule === 'footing') {
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+                set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
+                set('side-grossArea',  grossArea.toFixed(2) + ' sqm');
+                set('side-bldgVolume', bldgVolume.toFixed(2) + ' cu.m');
+                set('side-perimeter',  perimeter.toFixed(2) + ' m');
+                set('side-concrete',   concreteVol.toFixed(2) + ' m³');
+                set('side-baySpacing', nodes);
+                set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
+                if (costChart) { costChart.data.datasets[0].data = [floorArea, concreteVol, perimeter]; costChart.update(); }
+            }
+
+            const calcReady = (estimateState.length > 0) && (estimateState.width > 0) && (estimateState.clearHeight > 0);
+            localStorage.setItem('urc_ccc_calc_ready', String(calcReady));
+            checkSaveButton();
+        }
+
+        function syncInputs() {
+            [
+                'length','width','clearHeight','stories','mezzanine',
+                'dockDoors','driveInDoors','baySpacingL','baySpacingW',
+                'rackHeight','palletSize','isleWidth','bottomClearance',
+                'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth',
+                'footingLength','footingWidth','footingDepth',
+                'pedestalLength','pedestalWidth','pedestalHeight',
+                'excavationDepth','excavationCostM3','laborRateM3',
+                'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity',
+                'exchangeRate', 'conversionAmount'
+            ].forEach(f => {
+                const el = document.getElementById('input-' + f);
+                if (el && estimateState[f] !== 0) el.value = estimateState[f];
+            });
+            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass', 'currencyBase', 'currencyTarget'].forEach(f => {
+                const el = document.getElementById('select-' + f);
+                if (el) el.value = estimateState[f];
+            });
+        }
+
+        function saveToCache() { try { localStorage.setItem('urc_ccc_state_v10', JSON.stringify(estimateState)); } catch(e) {} }
+
+        function loadFromCache() {
+            try {
+                const raw = localStorage.getItem('urc_ccc_state_v10');
+                if (raw) {
+                    const p = JSON.parse(raw);
+                    Object.keys(estimateState).forEach(k => { if (p[k] !== undefined) estimateState[k] = p[k]; });
+                }
+            } catch(e) {}
+            syncInputs(); updateUI();
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50','border-rose-100','text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50','border-neutral-100','text-slate-800');
+            else toast.classList.add('border-neutral-200','text-neutral-900');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2','opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('opacity-0','scale-95'); setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        window.onload = function() {
+            initCharts();
+            loadFromCache();
+            loadPrices();
+            checkSaveButton(); 
+        };
+    </script>
+</body>
+</html>

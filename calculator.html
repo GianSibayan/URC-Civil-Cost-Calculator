@@ -127,6 +127,7 @@
                         <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
                         <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
                         <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
+                        <button id="tab-currency" onclick="switchSection('currency')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -143,6 +144,7 @@
                         
                         <div id="calc-sections-container" class="transition-all duration-300 ease-apple opacity-100 transform translate-x-0 w-full">
                             
+                            <!-- DIMENSION SECTION -->
                             <div id="section-dimension" class="flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -174,6 +176,7 @@
                                 </div>
                             </div>
 
+                            <!-- STRUCTURE SECTION -->
                             <div id="section-structure" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -243,6 +246,7 @@
                                 </div>
                             </div>
 
+                            <!-- CAPACITY SECTION -->
                             <div id="section-capacity" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -289,6 +293,50 @@
                                 </div>
                             </div>
 
+                            <!-- CURRENCY CONVERSION SECTION -->
+                            <div id="section-currency" class="hidden flex flex-col gap-6">
+                                <h3 class="text-2xl font-bold text-neutral-900">Currency Conversion</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Base Currency</h4>
+                                        <select id="select-currencyBase" class="struct-select" onchange="handleSelect('currencyBase', this.value)">
+                                            <option value="PHP">PHP - Philippine Peso</option>
+                                            <option value="USD">USD - US Dollar</option>
+                                            <option value="EUR">EUR - Euro</option>
+                                            <option value="JPY">JPY - Japanese Yen</option>
+                                            <option value="SGD">SGD - Singapore Dollar</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Target Currency</h4>
+                                        <select id="select-currencyTarget" class="struct-select" onchange="handleSelect('currencyTarget', this.value)">
+                                            <option value="USD">USD - US Dollar</option>
+                                            <option value="PHP">PHP - Philippine Peso</option>
+                                            <option value="EUR">EUR - Euro</option>
+                                            <option value="JPY">JPY - Japanese Yen</option>
+                                            <option value="SGD">SGD - Singapore Dollar</option>
+                                        </select>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Exchange Rate</h4>
+                                        <input id="input-exchangeRate" class="dim-input select-text" type="number" min="0" step="0.0001" placeholder="0" oninput="handleInput('exchangeRate', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium mt-1">Multiplier Rate</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
+                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Amount to Convert</h4>
+                                        <input id="input-conversionAmount" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('conversionAmount', this.value)" />
+                                        <span class="text-xs text-neutral-400 text-center font-medium mt-1">In Base Currency</span>
+                                    </div>
+                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-center items-center min-h-[120px] md:col-span-2">
+                                        <h4 class="text-sm font-semibold text-neutral-600 mb-2">Converted Result</h4>
+                                        <div class="bg-neutral-200 rounded-lg py-3 px-6 w-full text-center font-bold text-neutral-800 text-2xl shadow-sm transition" id="result-converted">
+                                            0.00 USD
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- FOOTING GEOMETRY SECTION -->
                             <div id="section-footing-geometry" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -325,6 +373,7 @@
                                 </div>
                             </div>
 
+                            <!-- FOOTING MATERIALS SECTION -->
                             <div id="section-footing-materials" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
@@ -490,7 +539,8 @@
             excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
             rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0,
             formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850,
-            globalEquipment: 0, globalProfit: 0
+            globalEquipment: 0, globalProfit: 0,
+            currencyBase: 'PHP', currencyTarget: 'USD', exchangeRate: 0, conversionAmount: 0
         };
 
         let currentActiveModule = 'building';
@@ -598,7 +648,7 @@
                     if (calcGrid)    calcGrid.classList.remove('hidden');
                     if (calcSidebar) calcSidebar.classList.remove('hidden');
                     if (headerTabs)  headerTabs.classList.remove('hidden');
-                    ['dimension','structure','capacity','footing-geometry','footing-materials'].forEach(s => {
+                    ['dimension','structure','capacity','currency','footing-geometry','footing-materials'].forEach(s => {
                         const el = document.getElementById('section-' + s);
                         if (el) el.classList.add('hidden');
                     });
@@ -607,7 +657,8 @@
                         if (headerTabs) headerTabs.innerHTML = `
                             <button onclick="switchSection('dimension')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
                             <button onclick="switchSection('structure')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
-                            <button onclick="switchSection('capacity')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>`;
+                            <button onclick="switchSection('capacity')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
+                            <button onclick="switchSection('currency')" id="tab-currency" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>`;
                         const sec = document.getElementById('section-dimension');
                         if (sec) sec.classList.remove('hidden');
                     } else if (mod === 'footing') {
@@ -634,7 +685,7 @@
             const container = document.getElementById('calc-sections-container');
             if (container) { container.classList.remove('opacity-100','translate-x-0'); container.classList.add('opacity-0','-translate-x-2'); }
             setTimeout(() => {
-                const subSections = currentActiveModule === 'building' ? ['dimension','structure','capacity'] : ['footing-geometry','footing-materials'];
+                const subSections = currentActiveModule === 'building' ? ['dimension','structure','capacity','currency'] : ['footing-geometry','footing-materials'];
                 subSections.forEach(s => {
                     const el = document.getElementById('section-' + s); if (el) el.classList.add('hidden');
                     const tab = document.getElementById('tab-' + s); if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
@@ -676,8 +727,8 @@
             const btn = document.getElementById('btn-save-estimate');
             if (!btn) return;
             const ready = localStorage.getItem('urc_ccc_calc_ready')  === 'true'
-                    && localStorage.getItem('urc_ccc_ces_ready')   === 'true'
-                    && localStorage.getItem('urc_ccc_labor_ready') === 'true';
+                     && localStorage.getItem('urc_ccc_ces_ready')   === 'true'
+                     && localStorage.getItem('urc_ccc_labor_ready') === 'true';
             btn.disabled = !ready;
             btn.classList.toggle('opacity-40', !ready);
             btn.classList.toggle('pointer-events-none', !ready);
@@ -805,6 +856,15 @@
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
 
+            // Currency Conversion Calculation
+            const convAmt = estimateState.conversionAmount || 0;
+            const exRate = estimateState.exchangeRate || 0;
+            const convRes = convAmt * exRate;
+            const elConv = document.getElementById('result-converted');
+            if (elConv) {
+                elConv.textContent = convRes.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (estimateState.currencyTarget || 'USD');
+            }
+
             if (currentActiveModule === 'building' || currentActiveModule === 'footing') {
                 const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
                 set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
@@ -834,12 +894,13 @@
                 'footingLength','footingWidth','footingDepth',
                 'pedestalLength','pedestalWidth','pedestalHeight',
                 'excavationDepth','excavationCostM3','laborRateM3',
-                'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity'
+                'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity',
+                'exchangeRate', 'conversionAmount'
             ].forEach(f => {
                 const el = document.getElementById('input-' + f);
                 if (el && estimateState[f] !== 0) el.value = estimateState[f];
             });
-            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass'].forEach(f => {
+            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass', 'currencyBase', 'currencyTarget'].forEach(f => {
                 const el = document.getElementById('select-' + f);
                 if (el) el.value = estimateState[f];
             });

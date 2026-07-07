@@ -308,7 +308,7 @@
         let activeTabId = SCOPE_CATEGORIES[0].id;
 
         document.addEventListener("DOMContentLoaded", async () => {
-            initLaborDatabase(); 
+            await fetchLaborRates(); 
             await fetchAllDatabases(); 
             populateCategoryDropdown();
             populateLaborDropdown();
@@ -321,55 +321,57 @@
         // 2. DATA LOADING & DROPDOWNS
         // ============================================================
         
-        function initLaborDatabase() {
-            const defaultLaborState = {
-                ncr:          { rate: 695 },
-                visayas:      { rate: 500 },
-                mindanao:     { rate: 500 },
-                carpenter:    { rate: 700 },
-                mason:        { rate: 700 },
-                welder:       { rate: 815 },
-                electrician:  { rate: 875 },
-                plumber:      { rate: 700 },
-                pipeFitter:   { rate: 700 },
-                civilEng:     { rate: 2700 },
-                electricalEng:{ rate: 2100 },
-                mechanicalEng:{ rate: 2500 },
-                generalEng:   { rate: 1700 },
-                itEng:        { rate: 2500 },
-                consultant:   { rate: 5000 }
-            };
-
-            const roleLabels = {
-                ncr:'NCR Region', visayas:'Visayas Region', mindanao:'Mindanao Region',
-                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
-                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
-                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
-                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
-            };
-
-            try {
-                const raw = localStorage.getItem('urc_ccc_labor_2026');
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed.laborState) {
-                        Object.keys(parsed.laborState).forEach(role => {
-                            LABOR_DB[role] = {
-                                name: roleLabels[role] || role,
-                                dailyRate: parsed.laborState[role].rate
-                            };
-                        });
-                        return; 
+        async function fetchLaborRates() {
+            const urls = [
+                '/data/labor_rates.json',
+                'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/data/labor_rates.json'
+            ];
+            
+            let loaded = false;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const rawData = await res.json();
+                        // Support standard JSON Array format
+                        if (Array.isArray(rawData)) {
+                            rawData.forEach(item => {
+                                LABOR_DB[item.id] = { name: item.name, dailyRate: item.rate || item.dailyRate };
+                            });
+                        } 
+                        // Support Object literal format
+                        else {
+                            Object.keys(rawData).forEach(key => {
+                                LABOR_DB[key] = { name: rawData[key].name || key, dailyRate: rawData[key].rate || rawData[key].dailyRate };
+                            });
+                        }
+                        loaded = true;
+                        break;
                     }
-                }
-            } catch(e) { console.warn("Could not sync with labor session cache. Falling back to defaults."); }
+                } catch (e) { }
+            }
 
-            Object.keys(defaultLaborState).forEach(role => {
-                LABOR_DB[role] = {
-                    name: roleLabels[role] || role,
-                    dailyRate: defaultLaborState[role].rate
+            // Safety fallback if the JSON file is missing or failed to fetch
+            if (!loaded) {
+                console.warn("labor_rates.json not found, falling back to defaults.");
+                LABOR_DB = {
+                    ncr:          { name: 'NCR Region', dailyRate: 695 },
+                    visayas:      { name: 'Visayas Region', dailyRate: 500 },
+                    mindanao:     { name: 'Mindanao Region', dailyRate: 500 },
+                    carpenter:    { name: 'Carpenter', dailyRate: 700 },
+                    mason:        { name: 'Mason', dailyRate: 700 },
+                    welder:       { name: 'Welder', dailyRate: 815 },
+                    electrician:  { name: 'Electrician', dailyRate: 875 },
+                    plumber:      { name: 'Plumber', dailyRate: 700 },
+                    pipeFitter:   { name: 'Pipe Fitter', dailyRate: 700 },
+                    civilEng:     { name: 'Civil Engineer', dailyRate: 2700 },
+                    electricalEng:{ name: 'Electrical Engineer', dailyRate: 2100 },
+                    mechanicalEng:{ name: 'Mechanical Engineer', dailyRate: 2500 },
+                    generalEng:   { name: 'General Engineer', dailyRate: 1700 },
+                    itEng:        { name: 'IT / Software Engineer', dailyRate: 2500 },
+                    consultant:   { name: 'Consultant', dailyRate: 5000 }
                 };
-            });
+            }
         }
 
         async function fetchAllDatabases() {
@@ -915,13 +917,13 @@
 
                             const displayNo = cat.isIndirect ? item.code : itemCounter;
                             
-                            // 1. Parent Row
+                            // 1. Parent Row (Yellow)
                             catRows.push([
                                 c(displayNo, stItemCenterBold), c(item.desc, stItemLeftBold), c(1, stItemCenterBold), c('lot', stItemCenterBold),
                                 c(parentManHours, stItemRightBold), c(parentLaborCost, stItemRightBold), c(parentMatCost, stItemRightBold), c(parentTotal, stItemRightBold)
                             ]);
 
-                            // 2. Child Rows
+                            // 2. Child Rows (White)
                             itemData.forEach((row, childIdx) => {
                                 const childNo = `${displayNo}.${childIdx + 1}`;
                                 catRows.push([
@@ -1179,7 +1181,6 @@
             document.getElementById('ledger-raw').textContent = fmt(rawTotal);
             document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
 
-            // Sync structural cost matrix totals out dynamically to cross-page session channels
             try {
                 const cesStateSummary = {
                     categoryTotals: {},
@@ -1198,4 +1199,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

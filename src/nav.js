@@ -11,12 +11,20 @@
         { label: 'Labor Database Ref.', href: 'labor_resources.html',     match: 'labor_resources' },
     ];
 
-    const navItems = pages.map(p => {
+    const libraryPages = [
+        { label: 'Contingency Score', href: 'contingency_scorecard.html', match: 'contingency_scorecard' },
+        { label: 'History',           href: 'history.html',               match: 'history' },
+    ];
+
+    function navButton(p) {
         const isActive = path.includes(p.match);
         return isActive
             ? `<button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">${p.label}</button>`
             : `<button onclick="window.location.href='${p.href}'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">${p.label}</button>`;
-    }).join('');
+    }
+
+    const navItems    = pages.map(navButton).join('');
+    const libraryItems = libraryPages.map(navButton).join('');
 
     const navHTML = `
         <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
@@ -26,7 +34,7 @@
                 ${navItems}
                 <div class="pt-6">
                     <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-                    <button onclick="window.location.href='history.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">History</button>
+                    ${libraryItems}
                 </div>
             </nav>
             <div class="pt-4 border-t border-neutral-100 mt-auto">

@@ -131,7 +131,7 @@
 
                         <div class="ledger-row text-xs text-neutral-500 mt-2"><span>Risk Management Funds</span><span id="ledger-risk">₱0.00</span></div>
                         <div class="pl-4 text-[10px] text-neutral-400">
-                            <div class="flex justify-between"><span>Contingency (5%)</span><span id="ledger-contingency">₱0.00</span></div>
+                            <div class="flex justify-between"><span id="ledger-contingency-label">Contingency (5%)</span><span id="ledger-contingency">₱0.00</span></div>
                         </div>
                     </div>
 
@@ -539,6 +539,20 @@
                 const d = JSON.parse(raw);
                 if (d.scopeItemData) Object.assign(scopeItemData, d.scopeItemData);
             } catch(e) { console.error('CES load failed:', e); }
+        }
+
+        // Reads the Overall Score computed on the Contingency Scorecard page
+        // (urc_contingency_cross_page, written by contingency_scorecard.html).
+        // Falls back to the standard 5% if that page hasn't been scored yet.
+        function getContingencyRate() {
+            try {
+                const raw = localStorage.getItem('urc_contingency_cross_page');
+                if (raw) {
+                    const d = JSON.parse(raw);
+                    if (typeof d.overallScore === 'number' && d.overallScore >= 0) return d.overallScore;
+                }
+            } catch(e) { console.error('Contingency rate read failed:', e); }
+            return 5;
         }
 
         function checkSaveButton() {
@@ -1363,7 +1377,8 @@
             const ufPost = definedCost * 0.01;
             const undefinedTotal = ufField + ufUnlisted + ufPost; 
             
-            const contingency = definedCost * 0.05; 
+            const contingencyRate = getContingencyRate();
+            const contingency = definedCost * (contingencyRate / 100);
             
             const rawTotal = definedCost + undefinedTotal + contingency;
             const roundedTotal = Math.round(rawTotal / 1000) * 1000;
@@ -1378,6 +1393,7 @@
             
             document.getElementById('ledger-risk').textContent = fmt(contingency);
             document.getElementById('ledger-contingency').textContent = fmt(contingency);
+            document.getElementById('ledger-contingency-label').textContent = `Contingency (${(Math.round(contingencyRate * 100) / 100)}%)`;
             
             document.getElementById('ledger-raw').textContent = fmt(rawTotal);
             document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;

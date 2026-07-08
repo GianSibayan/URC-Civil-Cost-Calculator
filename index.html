@@ -356,5 +356,14 @@
         fr();
     })();
     </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Offline Engine Active: ', reg.scope))
+                .catch(err => console.error('Offline Engine Failed: ', err));
+        });
+    }
+</script>
 </body>
 </html>

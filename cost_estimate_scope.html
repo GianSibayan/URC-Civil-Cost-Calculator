@@ -51,7 +51,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     View BOQ Summary
                 </button>
-                <button id="btn-save-estimate" class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm transition-opacity cursor-pointer">Save Estimate</button>
+                <button id="btn-save-estimate" class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm transition-opacity cursor-pointer">Save Estimate</button><button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
             </div>
         </header>
 
@@ -149,11 +149,68 @@
         </div>
     </main>
 
+    <!-- Save Estimate Modal -->
+    <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+            <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
+                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
+                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz"
+                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                </div>
+            </div>
+            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================
         // 1. DATABASE & INITIALIZATION
         // ============================================================
         let MASTER_DB = {}; 
+
+        let PRICES_META = null;
+        const BASE_YEAR = 2026;
+
+        async function loadPricesMeta() {
+            try {
+                let res = await fetch('/prices.json');
+                if (!res.ok) throw new Error('relative failed');
+                PRICES_META = await res.json();
+            } catch (_) {
+                try {
+                    const res = await fetch('https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/prices.json');
+                    if (res.ok) PRICES_META = await res.json();
+                } catch (e) { console.error('Could not load prices.json meta:', e); }
+            }
+        }
+
+        function getYearMultiplier() {
+            const meta = PRICES_META?.meta;
+            const activeYear = meta?.active_year ?? BASE_YEAR;
+            const rates = meta?.year_rates ?? {};
+            const rate = rates[activeYear] ?? 10;
+            const steps = activeYear - BASE_YEAR;
+            return { multiplier: Math.pow(1 + rate / 100, steps), activeYear, rate, steps };
+        }
+
+        function scalePrice(basePrice) {
+            const { multiplier } = getYearMultiplier();
+            return Math.round(basePrice * multiplier * 100) / 100;
+        }
+        
         let LABOR_DB = {}; 
         let scopeItemData = {}; 
         let activeItemKey  = null;
@@ -308,13 +365,16 @@
         let activeTabId = SCOPE_CATEGORIES[0].id;
 
         document.addEventListener("DOMContentLoaded", async () => {
-            await fetchLaborRates(); 
-            await fetchAllDatabases(); 
+            await loadPricesMeta();
+            await fetchLaborRates();
+            await fetchAllDatabases();
             populateCategoryDropdown();
             populateLaborDropdown();
+            loadPersistedData();
             renderNavigation();
             renderContent();
             updateLedger();
+            checkSaveButton();
         });
 
         // ============================================================
@@ -397,14 +457,14 @@
             const addEntry = (id, name, price, unit) => {
                 MASTER_DB[id] = { name, price: price || 0, unit: unit || 'unit', category: config.id };
             };
-            if (config.schema === 'simple') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
-            else if (config.schema === 'masonry') data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, item.price_php, item.unit));
-            else if (config.schema === 'rebars') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size}`, item.price_php, "pc"));
-            else if (config.schema === 'concrete_mix') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, item.price_php, "cu.m"));
-            else if (config.schema === 'equipment') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, item.rate_min_php, item.unit));
+            if (config.schema === 'simple') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, scalePrice(item.price_php), item.unit));
+            else if (config.schema === 'masonry') data.prices.forEach((item, idx) => addEntry(`${config.id}_${idx}`, item.name, scalePrice(item.price_php), item.unit));
+            else if (config.schema === 'rebars') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.spec} - ${item.size}`, scalePrice(item.price_php), "pc"));
+            else if (config.schema === 'concrete_mix') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `${item.product} (${item.curing_time})`, scalePrice(item.price_php), "cu.m"));
+            else if (config.schema === 'equipment') data.forEach((item, idx) => addEntry(`${config.id}_${idx}`, `[${item.category}] ${item.name}`, scalePrice(item.rate_min_php), item.unit));
             else if (config.schema === 'pipes') {
                 let pipeIdx = 0;
-                if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english}`, item.price_per_6m_php, "6m"));
+                if (data.nominal_size_unit_price) data.nominal_size_unit_price.forEach(item => addEntry(`pipes_${pipeIdx++}`, `Nominal Size: ${item.english}`, scalePrice(item.price_per_6m_php), "6m"));
             }
         }
 
@@ -470,6 +530,26 @@
         function formatCompact(num) {
             if (num === 0) return "0.00";
             return num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+
+        function loadPersistedData() {
+            try {
+                const raw = sessionStorage.getItem('urc_ces_session');
+                if (!raw) return;
+                const d = JSON.parse(raw);
+                if (d.scopeItemData) Object.assign(scopeItemData, d.scopeItemData);
+            } catch(e) { console.error('CES load failed:', e); }
+        }
+
+        function checkSaveButton() {
+            const btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            const ready = localStorage.getItem('urc_ccc_calc_ready') === 'true'
+                       && localStorage.getItem('urc_ccc_ces_ready') === 'true'
+                       && localStorage.getItem('urc_ccc_labor_ready') === 'true';
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
         }
 
         function renderNavigation() {
@@ -1104,16 +1184,137 @@
             renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
         }
 
-        document.body.addEventListener('click', function(e) {
-            if (e.target && e.target.id === 'btn-save-estimate') {
-                const ready = localStorage.getItem('urc_ccc_calc_ready') === 'true'
-                           && localStorage.getItem('urc_ccc_ces_ready') === 'true'
-                           && localStorage.getItem('urc_ccc_labor_ready') === 'true';
-                if (ready) {
-                    showToast("Syncing Master Estimate parameters...", "info");
-                }
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const colors = { success: 'bg-emerald-600', error: 'bg-red-500', info: 'bg-blue-600' };
+            toast.className = `px-4 py-2.5 rounded-lg text-white text-sm font-medium shadow-lg pointer-events-auto ${colors[type] || colors.success}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function openSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('modal-project-name').focus();
+        }
+
+        function closeSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+            document.getElementById('modal-project-name').value = '';
+            document.getElementById('modal-engineer-name').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });
+
+        function confirmSaveEstimate() {
+            const projectName  = document.getElementById('modal-project-name').value.trim();
+            const engineerName = document.getElementById('modal-engineer-name').value.trim();
+            if (!projectName || !engineerName) {
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
             }
-        });
+
+            let calcSnap = {}, cesSnap = {}, laborSnap = {};
+            try { calcSnap  = JSON.parse(localStorage.getItem('urc_ccc_state_v10')  || '{}'); } catch(e) {}
+            try { cesSnap   = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
+            try { laborSnap = JSON.parse(localStorage.getItem('urc_ccc_labor_2026') || '{}'); } catch(e) {}
+
+            const L = calcSnap.length||0, W = calcSnap.width||0, H = calcSnap.clearHeight||0;
+            const M = (calcSnap.mezzanine||0) / 100;
+            const floorArea = L * W, grossArea = floorArea * (1 + M);
+            const bsl = calcSnap.baySpacingL||0, bsw = calcSnap.baySpacingW||0;
+            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L/bsl + W/bsw) : 0;
+            const fl=calcSnap.footingLength||0, fw=calcSnap.footingWidth||0, fd=calcSnap.footingDepth||0;
+            const pl=calcSnap.pedestalLength||0, pw=calcSnap.pedestalWidth||0, ph=calcSnap.pedestalHeight||0;
+            const concreteVol = (fl*fw*fd + pl*pw*ph) * nodes;
+            const structMap = { steel_rigid:'Steel Rigid Frame', concrete:'Concrete', tilt_up:'Tilt-Up', hybrid:'Hybrid' };
+            const roofMap   = { standing_seam:'Standing Seam', corrugated:'Corrugated', flat:'Flat', skylight:'Skylight' };
+            const wallMap   = { metal_panel:'Metal Panel', masonry:'Masonry', glass:'Glass Curtain', none:'None' };
+
+            const categoryTotals = cesSnap.categoryTotals || {};
+            const cesTotal    = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+            const pricedItems = Object.keys(cesSnap.itemPrices || {}).length;
+
+            const laborStateRaw   = laborSnap.laborState      || {};
+            const globalEquipment = laborSnap.globalEquipment || 0;
+            const globalProfit    = laborSnap.globalProfit    || 0;
+            const roleLabels = {
+                ncr:'NCR (Unskilled)', visayas:'Visayas (Unskilled)', mindanao:'Mindanao (Unskilled)',
+                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
+                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
+                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
+                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
+            };
+            let laborCost = 0, totalHeads = 0;
+            const roles = [];
+            Object.keys(laborStateRaw).forEach(role => {
+                const r = laborStateRaw[role], sub = r.rate * r.count * r.days;
+                laborCost += sub;
+                if (r.count > 0) { totalHeads += r.count; roles.push({ name:roleLabels[role]||role, rate:r.rate, count:r.count, days:r.days }); }
+            });
+            const execBase   = laborCost + globalEquipment;
+            const profitCost = execBase * (globalProfit / 100);
+            const grandTotal = cesTotal + execBase + profitCost;
+
+            const record = {
+                id: 'ccc_hist_' + Date.now(),
+                savedAt: new Date().toISOString(),
+                projectName, engineerName,
+                calculator: {
+                    snapshot: {
+                        length:L, width:W, clearHeight:H, stories:calcSnap.stories||1,
+                        mezzanine:calcSnap.mezzanine||0,
+                        structureType: structMap[calcSnap.structureType]||calcSnap.structureType,
+                        roofType:      roofMap[calcSnap.roofType]||calcSnap.roofType,
+                        wallCladding:  wallMap[calcSnap.wallCladding]||calcSnap.wallCladding,
+                        slabThickness: calcSnap.slabThickness,
+                        dockDoors:calcSnap.dockDoors||0, driveInDoors:calcSnap.driveInDoors||0,
+                        baySpacingL:bsl, baySpacingW:bsw,
+                        footingLength:fl, footingWidth:fw, footingDepth:fd,
+                        pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
+                        concretePriceM3:calcSnap.concretePriceM3||0, concreteClass:calcSnap.concreteClass
+                    },
+                    summary: {
+                        floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
+                        perimeter:+(2*(L+W)).toFixed(2), nodes, concreteVol:+concreteVol.toFixed(2)
+                    }
+                },
+                ces: { categoryTotals, pricedItems, grandTotal:+cesTotal.toFixed(2) },
+                labor: {
+                    roles, globalEquipment, globalProfit,
+                    laborCost:+laborCost.toFixed(2), equipmentCost:globalEquipment,
+                    profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads
+                },
+                grandTotal: +grandTotal.toFixed(2)
+            };
+
+            try {
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
+                h.unshift(record);
+                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+                closeSaveModal();
+                showToast('Estimate saved to history.', 'success');
+            } catch(e) { showToast('Could not save estimate.', 'error'); }
+        }
+
+        // document.body.addEventListener('click', function(e) {
+        //     if (e.target && e.target.id === 'btn-save-estimate') {
+        //         const ready = localStorage.getItem('urc_ccc_calc_ready') === 'true'
+        //                    && localStorage.getItem('urc_ccc_ces_ready') === 'true'
+        //                    && localStorage.getItem('urc_ccc_labor_ready') === 'true';
+        //         if (ready) {
+        //             showToast("Syncing Master Estimate parameters...", "info");
+        //         }
+        //     }
+        // });
 
         function renderBuilderCart() {
             const container = document.getElementById('current-item-breakdown');
@@ -1182,20 +1383,18 @@
             document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
 
             try {
-                const cesStateSummary = {
-                    categoryTotals: {},
-                    itemPrices: {}
-                };
+                const crossPage = { categoryTotals: {}, itemPrices: {} };
                 SCOPE_CATEGORIES.forEach(cat => {
-                    cesStateSummary.categoryTotals[cat.id] = calculateCategoryTotal(cat.id);
+                    crossPage.categoryTotals[cat.id] = calculateCategoryTotal(cat.id);
                 });
                 Object.keys(scopeItemData).forEach(key => {
-                    cesStateSummary.itemPrices[key] = scopeItemData[key].reduce((a, b) => a + b.total, 0);
+                    crossPage.itemPrices[key] = scopeItemData[key].reduce((a, b) => a + b.total, 0);
                 });
                 localStorage.setItem('urc_ccc_ces_ready', String(definedCost > 0));
-                localStorage.setItem('urc_ces_cross_page', JSON.stringify(cesStateSummary));
-                sessionStorage.setItem('urc_ces_session', JSON.stringify(cesStateSummary));
+                localStorage.setItem('urc_ces_cross_page', JSON.stringify(crossPage));
+                sessionStorage.setItem('urc_ces_session', JSON.stringify({ ...crossPage, scopeItemData }));
             } catch (e) { console.error(e); }
+            checkSaveButton();
         }
     </script>
 </body>

@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Cost Estimate Scope</title>
 
-    <!-- Navigation --> 
-    <!-- <script src="/src/nav.js"></script> -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -38,9 +36,13 @@
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
 
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- SIDEBAR -->
     <div id="nav-placeholder"></div>
     <script src="/src/nav.js"></script>
 
+    <!-- MAIN -->
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
             <h2 class="text-2xl font-bold text-neutral-900">Master Estimator</h2>
@@ -55,6 +57,7 @@
 
         <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
             
+            <!-- LEFT PANEL: SCOPE LIST -->
             <div class="xl:col-span-7 flex flex-col overflow-hidden border-r border-neutral-100">
                 <div class="p-6 pb-2 border-b border-neutral-100 bg-[#fbfbfc]">
                     <div id="tab-nav-container" class="flex space-x-2 overflow-x-auto pb-3 custom-scrollbar"></div>
@@ -62,6 +65,7 @@
                 <div id="dynamic-content-area" class="flex-1 overflow-y-auto p-6 pb-32 bg-white"></div>
             </div>
 
+            <!-- RIGHT PANEL: ITEM BUILDER & LEDGER -->
             <div id="builder-container" class="xl:col-span-5 bg-[#f8f9fa] flex flex-col h-full border-t xl:border-t-0 border-neutral-200 overflow-hidden">
                 <div class="flex-1 p-6 overflow-y-auto border-b border-neutral-200 flex flex-col">
                     <div class="mb-4">
@@ -150,16 +154,10 @@
         // 1. DATABASE & INITIALIZATION
         // ============================================================
         let MASTER_DB = {}; 
-        
-        const LABOR_DB = {
-            'carpenter': { name: 'Carpenter', dailyRate: 700 },
-            'mason': { name: 'Mason', dailyRate: 700 },
-            'welder': { name: 'Welder', dailyRate: 815 },
-            'electrician': { name: 'Electrician', dailyRate: 875 },
-            'plumber': { name: 'Plumber', dailyRate: 700 },
-            'ncr_unskilled': { name: 'Unskilled (NCR)', dailyRate: 695 },
-            'civil_eng': { name: 'Civil Engineer', dailyRate: 2700 }
-        };
+        let LABOR_DB = {}; 
+        let scopeItemData = {}; 
+        let activeItemKey  = null;
+        let activeItemDesc = null;
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -177,10 +175,6 @@
             { id: 'equipment', file: 'data/equipment.json', schema: 'equipment', label: 'Equipment' },
             { id: 'pipes', file: 'data/pipes.json', schema: 'pipes', label: 'Pipes' }
         ];
-
-        let scopeItemData = {}; 
-        let activeItemKey  = null;
-        let activeItemDesc = null;
 
         const commonShell = [
             { code: "105", desc: "Excavation & Fill" }, { code: "110", desc: "Foundations" }, { code: "115", desc: "Superstructure Slabs" },
@@ -314,7 +308,8 @@
         let activeTabId = SCOPE_CATEGORIES[0].id;
 
         document.addEventListener("DOMContentLoaded", async () => {
-            await fetchAllDatabases();
+            await fetchLaborRates(); 
+            await fetchAllDatabases(); 
             populateCategoryDropdown();
             populateLaborDropdown();
             renderNavigation();
@@ -323,8 +318,62 @@
         });
 
         // ============================================================
-        // 2. DATA LOADING & DROPDOWNS edit
+        // 2. DATA LOADING & DROPDOWNS
         // ============================================================
+        
+        async function fetchLaborRates() {
+            const urls = [
+                '/data/labor_rates.json',
+                'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/data/labor_rates.json'
+            ];
+            
+            let loaded = false;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const rawData = await res.json();
+                        // Support standard JSON Array format
+                        if (Array.isArray(rawData)) {
+                            rawData.forEach(item => {
+                                LABOR_DB[item.id] = { name: item.name, dailyRate: item.rate || item.dailyRate };
+                            });
+                        } 
+                        // Support Object literal format
+                        else {
+                            Object.keys(rawData).forEach(key => {
+                                LABOR_DB[key] = { name: rawData[key].name || key, dailyRate: rawData[key].rate || rawData[key].dailyRate };
+                            });
+                        }
+                        loaded = true;
+                        break;
+                    }
+                } catch (e) { }
+            }
+
+            // Safety fallback if the JSON file is missing or failed to fetch
+            if (!loaded) {
+                console.warn("labor_rates.json not found, falling back to defaults.");
+                LABOR_DB = {
+                    ncr:          { name: 'NCR Region', dailyRate: 695 },
+                    visayas:      { name: 'Visayas Region', dailyRate: 500 },
+                    mindanao:     { name: 'Mindanao Region', dailyRate: 500 },
+                    carpenter:    { name: 'Carpenter', dailyRate: 700 },
+                    mason:        { name: 'Mason', dailyRate: 700 },
+                    welder:       { name: 'Welder', dailyRate: 815 },
+                    electrician:  { name: 'Electrician', dailyRate: 875 },
+                    plumber:      { name: 'Plumber', dailyRate: 700 },
+                    pipeFitter:   { name: 'Pipe Fitter', dailyRate: 700 },
+                    civilEng:     { name: 'Civil Engineer', dailyRate: 2700 },
+                    electricalEng:{ name: 'Electrical Engineer', dailyRate: 2100 },
+                    mechanicalEng:{ name: 'Mechanical Engineer', dailyRate: 2500 },
+                    generalEng:   { name: 'General Engineer', dailyRate: 1700 },
+                    itEng:        { name: 'IT / Software Engineer', dailyRate: 2500 },
+                    consultant:   { name: 'Consultant', dailyRate: 5000 }
+                };
+            }
+        }
+
         async function fetchAllDatabases() {
             await Promise.all(DB_CONFIG.map(async (config) => {
                 const urls = [
@@ -1019,7 +1068,7 @@
             if (hasLab) {
                 const lab = LABOR_DB[labSel];
                 labName = lab.name;
-                labUnitCost = lab.dailyRate / 8; // hourly rate
+                labUnitCost = lab.dailyRate / 8; 
                 labTotal = labHrs * labUnitCost;
             }
 
@@ -1054,6 +1103,17 @@
             scopeItemData[activeItemKey] = scopeItemData[activeItemKey].filter(item => item.id !== id);
             renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
         }
+
+        document.body.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'btn-save-estimate') {
+                const ready = localStorage.getItem('urc_ccc_calc_ready') === 'true'
+                           && localStorage.getItem('urc_ccc_ces_ready') === 'true'
+                           && localStorage.getItem('urc_ccc_labor_ready') === 'true';
+                if (ready) {
+                    showToast("Syncing Master Estimate parameters...", "info");
+                }
+            }
+        });
 
         function renderBuilderCart() {
             const container = document.getElementById('current-item-breakdown');
@@ -1100,9 +1160,9 @@
             const ufField = definedCost * 0.02;
             const ufUnlisted = definedCost * 0.02;
             const ufPost = definedCost * 0.01;
-            const undefinedTotal = ufField + ufUnlisted + ufPost; // 5%
+            const undefinedTotal = ufField + ufUnlisted + ufPost; 
             
-            const contingency = definedCost * 0.05; // 5% Risk Funds
+            const contingency = definedCost * 0.05; 
             
             const rawTotal = definedCost + undefinedTotal + contingency;
             const roundedTotal = Math.round(rawTotal / 1000) * 1000;
@@ -1120,13 +1180,23 @@
             
             document.getElementById('ledger-raw').textContent = fmt(rawTotal);
             document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
-        }
 
-        function goBackMain() {
-            document.body.style.transition = 'opacity 0.2s';
-            document.body.style.opacity = '0';
-            setTimeout(() => { Auth.logout(); }, 200);
-        }        
+            try {
+                const cesStateSummary = {
+                    categoryTotals: {},
+                    itemPrices: {}
+                };
+                SCOPE_CATEGORIES.forEach(cat => {
+                    cesStateSummary.categoryTotals[cat.id] = calculateCategoryTotal(cat.id);
+                });
+                Object.keys(scopeItemData).forEach(key => {
+                    cesStateSummary.itemPrices[key] = scopeItemData[key].reduce((a, b) => a + b.total, 0);
+                });
+                localStorage.setItem('urc_ccc_ces_ready', String(definedCost > 0));
+                localStorage.setItem('urc_ces_cross_page', JSON.stringify(cesStateSummary));
+                sessionStorage.setItem('urc_ces_session', JSON.stringify(cesStateSummary));
+            } catch (e) { console.error(e); }
+        }
     </script>
 </body>
 </html>

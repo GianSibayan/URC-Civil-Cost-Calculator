@@ -131,7 +131,7 @@
 
                         <div class="ledger-row text-xs text-neutral-500 mt-2"><span>Risk Management Funds</span><span id="ledger-risk">₱0.00</span></div>
                         <div class="pl-4 text-[10px] text-neutral-400">
-                            <div class="flex justify-between"><span id="ledger-contingency-label">Contingency (5%)</span><span id="ledger-contingency">₱0.00</span></div>
+                            <div class="flex justify-between"><span id="ledger-contingency-label">Contingency (0%)</span><span id="ledger-contingency">₱0.00</span></div>
                         </div>
                     </div>
 
@@ -552,7 +552,7 @@
                     if (typeof d.overallScore === 'number' && d.overallScore >= 0) return d.overallScore;
                 }
             } catch(e) { console.error('Contingency rate read failed:', e); }
-            return 5;
+            return 0;
         }
 
         function checkSaveButton() {

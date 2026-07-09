@@ -57,9 +57,11 @@ const Auth = {
   // destination: 'calculator' or 'admin'
   async login(email, password, destination = 'calculator') {
     if (this.isLocalDev()) {
-      this.setToken('dev-token', 'dev@urc.com');
-      window.location.href = destination === 'admin' ? '/admin.html' : '/calculator.html';
-      return { success: true };
+    this.setToken('dev-token', 'dev@urc.com');
+    window.location.href = destination === 'admin' ? '/admin.html'
+        : destination === 'page-landing' ? '/index.html'
+        : '/calculator.html';
+    return { success: true };
     }
     try {
       const res = await fetch('/api/auth', {

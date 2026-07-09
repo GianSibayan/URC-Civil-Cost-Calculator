@@ -95,14 +95,37 @@
 
             <p class="text-2xl text-black text-center mt-2">What are we calculating today?</p>
 
-            <!-- Calculator Button -->
-            <button
-                onclick="showLoginForm('calculator')"
-                class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
-                <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
-            </button>
+            <!-- ============================================== -->
+            <!-- LOGGED-IN VIEW: hub buttons + logout            -->
+            <!-- Shown only when Auth.isLoggedIn() is true       -->
+            <!-- ============================================== -->
+            <div id="hub-buttons" class="hidden flex-col items-center gap-6 w-full">
+                <button
+                    onclick="window.location.href='calculator.html'"
+                    class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+                    <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
+                </button>
 
-            <!-- Login Form (hidden by default, shown on button click) -->
+                <div id="divider-section" class="flex flex-col items-center gap-4 w-full max-w-sm">
+                    <p class="text-zinc-500 text-base">Changing something?</p>
+                    <button
+                        onclick="window.location.href='admin.html'"
+                        class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+                        <span class="text-black text-lg font-semibold tracking-wide">Access Price List</span>
+                    </button>
+                </div>
+
+                <button
+                    onclick="Auth.logout()"
+                    class="w-72 h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
+                    <span class="text-white text-base font-medium">Logout</span>
+                </button>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- LOGGED-OUT VIEW: login form                     -->
+            <!-- Shown only when Auth.isLoggedIn() is false      -->
+            <!-- ============================================== -->
             <div id="login-form" class="login-form w-full max-w-sm">
                 <p id="login-label" class="text-sm font-semibold text-neutral-600 text-center">Enter your URC credentials</p>
                 <input
@@ -127,21 +150,6 @@
                     class="w-full h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
                     <span class="text-white text-base font-medium">Login</span>
                 </button>
-                <button
-                    onclick="hideLoginForm()"
-                    class="w-full h-10 bg-zinc-100 hover:bg-zinc-200 transition rounded-lg cursor-pointer flex items-center justify-center border border-zinc-200">
-                    <span class="text-black text-sm font-medium">Cancel</span>
-                </button>
-            </div>
-
-            <!-- Divider — hidden when login form is visible -->
-            <div id="divider-section" class="flex flex-col items-center gap-4 w-full max-w-sm">
-                <p class="text-zinc-500 text-base">Changing something?</p>
-                <button
-                    onclick="showLoginForm('admin')"
-                    class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
-                    <span class="text-black text-lg font-semibold tracking-wide">Access Price List</span>
-                </button>
             </div>
 
         </div>
@@ -151,36 +159,25 @@
     <script src="src/auth.js"></script>
 
     <script>
-        // Where to redirect after login — set by whichever button was clicked
+        // Login always redirects to the calculator by default.
+        // Admin is reached via the hub AFTER login, not before.
         let loginDestination = 'calculator';
 
-        // Show login form
-        function showLoginForm(destination) {
-            loginDestination = destination;
-            const form = document.getElementById('login-form');
-            const divider = document.getElementById('divider-section');
-            const label = document.getElementById('login-label');
+        // Decide which view to show based on current auth state
+        function renderAuthState() {
+            const hub = document.getElementById('hub-buttons');
+            const loginForm = document.getElementById('login-form');
 
-            form.classList.add('visible');
-            divider.style.display = 'none';
-
-            if (destination === 'admin') {
-                label.textContent = 'Login to manage prices';
+            if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+                hub.classList.remove('hidden');
+                hub.classList.add('flex');
+                loginForm.classList.remove('visible');
             } else {
-                label.textContent = 'Enter your URC credentials';
+                hub.classList.remove('flex');
+                hub.classList.add('hidden');
+                loginForm.classList.add('visible');
+                setTimeout(() => document.getElementById('login-email')?.focus(), 100);
             }
-
-            // Focus email field
-            setTimeout(() => document.getElementById('login-email').focus(), 100);
-        }
-
-        // Hide login form
-        function hideLoginForm() {
-            document.getElementById('login-form').classList.remove('visible');
-            document.getElementById('divider-section').style.display = 'flex';
-            document.getElementById('login-error').classList.remove('visible');
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-password').value = '';
         }
 
         // Submit login
@@ -228,17 +225,8 @@
             }, 3000);
         }
 
-        // If already logged in, redirect to calculator
-        window.onload = function() {
-            // if (Auth.isLoggedIn()) {
-            //     window.location.href = '/calculator.html';
-            // }
-        };
+        document.addEventListener('DOMContentLoaded', renderAuthState);
     </script>
-
-
-
-
 
     <canvas id="pc" style="position:fixed;bottom:0;left:0;width:100%;height:55vh;pointer-events:none;z-index:0;"></canvas>
     <script>
@@ -252,11 +240,8 @@
             H = c.height = c.offsetHeight;
         }
 
-        // Arc zone — particles live below a swooping curve
-        // Curve: y > arcY(px) where arcY is a parabola dipping low in center
         function arcY(px) {
-            // Parabola: highest at edges (y=0), lowest at center (y = H * 0.55)
-            var t = (px / W) * 2 - 1; // -1 to 1
+            var t = (px / W) * 2 - 1;
             return H * (0.55 - 0.55 * t * t);
         }
 
@@ -282,8 +267,6 @@
 
             for (var i = 0; i < P.length; i++) {
                 var p = P[i];
-
-                // Repel from mouse
                 var dx = p.x - M.x, dy = p.y - M.y;
                 var d = Math.sqrt(dx*dx+dy*dy);
                 if (d < 85 && d > 0) {
@@ -298,20 +281,17 @@
 
                 p.x += p.vx; p.y += p.vy;
 
-                // Bounce off arc boundary — push back down
                 var threshold = arcY(p.x);
                 if (p.y < threshold) {
                     p.y = threshold;
                     p.vy = Math.abs(p.vy) * .6;
                 }
 
-                // Bounce off screen edges
                 if (p.x < 0) { p.x = 0; p.vx *= -1; }
                 if (p.x > W) { p.x = W; p.vx *= -1; }
                 if (p.y > H) { p.y = H; p.vy *= -1; }
             }
 
-            // Draw connections
             for (var i = 0; i < P.length; i++) {
                 for (var j = i+1; j < P.length; j++) {
                     var dx = P[i].x-P[j].x, dy = P[i].y-P[j].y;
@@ -327,7 +307,6 @@
                 }
             }
 
-            // Draw dots
             for (var i = 0; i < P.length; i++) {
                 x.beginPath();
                 x.arc(P[i].x, P[i].y, 2.5, 0, 6.28);

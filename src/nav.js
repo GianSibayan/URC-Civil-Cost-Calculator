@@ -38,7 +38,7 @@
                 </div>
             </nav>
             <div class="pt-4 border-t border-neutral-100 mt-auto">
-                <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+                <button onclick="window.location.href='index.html'" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
                     Main Page
                 </button>
             </div>

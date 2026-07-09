@@ -78,6 +78,8 @@ const Auth = {
 
       if (destination === 'admin') {
         window.location.href = '/admin.html';
+      } else if (destination === 'page-landing') {
+        window.location.href = '/index.html';
       } else {
         window.location.href = '/calculator.html';
       }

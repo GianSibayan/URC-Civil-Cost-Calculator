@@ -6,7 +6,6 @@
     <title>URC CCC — Building Calculator</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Auth guard -->
     <script src="/src/auth.js"></script>
     
@@ -41,18 +40,37 @@
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
-        .dim-input, .struct-select {
-            width: 100%;
+        .dim-input {
+            width: 108px;
             background: white;
             border: 1.5px solid rgba(0,0,0,0.08);
-            border-radius: 12px;
-            padding: 8px 14px;
-            font-size: 15px;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 14px;
             font-weight: 600;
             color: #111;
             font-family: 'Inter', sans-serif;
-            text-align: center;
+            text-align: right;
             outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .struct-select {
+            width: 190px;
+            background: white;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 8px;
+            padding: 7px 28px 7px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+            font-family: 'Inter', sans-serif;
+            text-align: left;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
         .dim-input:focus, .struct-select:focus {
@@ -60,7 +78,42 @@
             box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
         }
         .dim-input::placeholder { color: #bbb; font-weight: 400; }
-        .struct-select { text-align-last: center; cursor: pointer; appearance: none; }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #f4f5f8;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 11px 16px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .field-row:focus-within {
+            border-color: rgba(0,0,0,0.18);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+        }
+        .field-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+        .field-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .field-unit {
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .field-row-result { background: #eef0f3; }
+        .field-result-value { font-size: 20px; font-weight: 800; color: #1f2937; }
         
         /* Custom Checkbox Styling */
         input[type=checkbox] {
@@ -121,15 +174,7 @@
         <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
             
             <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
-                <div class="flex items-center gap-6">
-                    <h2 id="header-title" onclick="toggleCalculatorModule()" title="Click to switch to Footing & Pedestal" class="text-2xl font-bold text-neutral-900 transition-all duration-200 cursor-pointer select-none hover:text-blue-600 hover:scale-[1.03] inline-block">Building Calculator</h2>
-                    <div id="header-tabs-container" class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40 transition-opacity duration-300">
-                        <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
-                        <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
-                        <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
-                        <button id="tab-currency" onclick="switchSection('currency')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>
-                    </div>
-                </div>
+                <h2 id="header-title" class="text-2xl font-bold text-neutral-900">Summary (tent name)</h2>
                 <div class="flex items-center gap-2">
                     <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
                     <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
@@ -140,302 +185,175 @@
 
                 <div id="module-calculator-grid" class="flex-1 w-full h-full grid grid-cols-1 xl:grid-cols-12 absolute inset-0">
                     
-                    <div class="xl:col-span-8 overflow-y-auto p-8 pb-32 border-r border-neutral-100">
+                    <div class="xl:col-span-7 overflow-y-auto px-8 pt-0 pb-32 border-r border-neutral-100">
                         
-                        <div id="calc-sections-container" class="transition-all duration-300 ease-apple opacity-100 transform translate-x-0 w-full">
-                            
+                        <div id="calc-sections-container" class="w-full">
+
+                            <div id="module-building">
+
+                            <div class="flex items-center gap-6 py-4 border-y border-neutral-200 mb-6 -mx-8 px-8">
+                                <h3 class="text-2xl font-bold text-neutral-900">Building Calculator</h3>
+                                <div class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40">
+                                    <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
+                                    <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
+                                    <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
+                                    <button id="tab-currency" onclick="switchSection('currency')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>
+                                </div>
+                            </div>
+
+                            <div id="building-sections-wrap" class="transition-opacity duration-200 ease-apple opacity-100">
+
                             <!-- DIMENSION SECTION -->
                             <div id="section-dimension" class="flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Length</h4>
-                                        <input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Width</h4>
-                                        <input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Clear Height</h4>
-                                        <input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[160px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">No. of Stories</h4>
-                                        <input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">floors</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[140px] md:col-span-2">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">% Mezzanine</h4>
-                                        <input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" />
-                                        <span class="text-xs text-neutral-400 mt-1 text-center font-medium">percent (%)</span>
-                                    </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label">Length</span><div class="field-control"><input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Width</span><div class="field-control"><input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Clear Height</span><div class="field-control"><input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">No. of Stories</span><div class="field-control"><input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" /><span class="field-unit">floors</span></div></div>
+                                    <div class="field-row md:col-span-2"><span class="field-label">% Mezzanine</span><div class="field-control"><input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" /><span class="field-unit">percent (%)</span></div></div>
                                 </div>
                             </div>
 
                             <!-- STRUCTURE SECTION -->
                             <div id="section-structure" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Structure Type</h4>
-                                        <select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label">Structure Type</span><div class="field-control"><select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
                                             <option value="steel_rigid">Steel Rigid Frames</option>
                                             <option value="steel_joist">Steel Joist and Column</option>
                                             <option value="tilt_up">Tilt-Up Concrete</option>
                                             <option value="pre_cast">Pre-Cast Concrete</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Roof Type</h4>
-                                        <select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Roof Type</span><div class="field-control"><select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
                                             <option value="standing_seam">Standing Seam Metal</option>
                                             <option value="r_panel">R Panel Metal</option>
                                             <option value="tpo_membrane">TPO Membrane</option>
                                             <option value="epdm_membrane">EPDM Membrane</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Wall Cladding</h4>
-                                        <select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Wall Cladding</span><div class="field-control"><select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
                                             <option value="metal_panel">Metal Panel</option>
                                             <option value="tilt_up_wall">Tilt-Up Concrete</option>
                                             <option value="pre_cast_wall">Pre-Cast Panel</option>
                                             <option value="masonry_block">Masonry Block</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Slab Thickness</h4>
-                                        <select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Slab Thickness</span><div class="field-control"><select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
                                             <option value="100mm">100mm Light Storage</option>
                                             <option value="150mm">150mm Standard</option>
                                             <option value="200mm">200mm Heavy Loads</option>
                                             <option value="250mm">250mm Very Heavy</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Dock Doors</h4>
-                                        <input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Drive-In Doors</h4>
-                                        <input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Skylights / Windows</h4>
-                                        <select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Dock Doors</span><div class="field-control"><input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label">Drive-In Doors</span><div class="field-control"><input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label">Skylights / Windows</span><div class="field-control"><select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
                                             <option value="standard">Standard</option>
                                             <option value="none">None</option>
                                             <option value="minimal">Minimal</option>
                                             <option value="many">Many</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (L)</h4>
-                                        <input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bay Spacing (W)</h4>
-                                        <input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Bay Spacing (L)</span><div class="field-control"><input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row md:col-span-2"><span class="field-label">Bay Spacing (W)</span><div class="field-control"><input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" /><span class="field-unit">meters</span></div></div>
                                 </div>
                             </div>
 
                             <!-- CAPACITY SECTION -->
                             <div id="section-capacity" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Height</h4>
-                                        <input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Size</h4>
-                                        <input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Isle Width</h4>
-                                        <input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Bottom Clearance</h4>
-                                        <input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Storage Efficiency</h4>
-                                        <input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Dock / Staging Area</h4>
-                                        <input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">percent (%)</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Rack Level Height</h4>
-                                        <input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pallet Depth</h4>
-                                        <input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label">Rack Height</span><div class="field-control"><input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Pallet Size</span><div class="field-control"><input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Isle Width</span><div class="field-control"><input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Bottom Clearance</span><div class="field-control"><input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Storage Efficiency</span><div class="field-control"><input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" /><span class="field-unit">percent (%)</span></div></div>
+                                    <div class="field-row"><span class="field-label">Dock / Staging Area</span><div class="field-control"><input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" /><span class="field-unit">percent (%)</span></div></div>
+                                    <div class="field-row"><span class="field-label">Rack Level Height</span><div class="field-control"><input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Pallet Depth</span><div class="field-control"><input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" /><span class="field-unit">meters</span></div></div>
                                 </div>
                             </div>
 
                             <!-- CURRENCY CONVERSION SECTION -->
                             <div id="section-currency" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Currency Conversion</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Base Currency</h4>
-                                        <select id="select-currencyBase" class="struct-select" onchange="handleSelect('currencyBase', this.value)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label">Base Currency</span><div class="field-control"><select id="select-currencyBase" class="struct-select" onchange="handleSelect('currencyBase', this.value)">
                                             <option value="PHP">PHP - Philippine Peso</option>
                                             <option value="USD">USD - US Dollar</option>
                                             <option value="EUR">EUR - Euro</option>
                                             <option value="JPY">JPY - Japanese Yen</option>
                                             <option value="SGD">SGD - Singapore Dollar</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Target Currency</h4>
-                                        <select id="select-currencyTarget" class="struct-select" onchange="handleSelect('currencyTarget', this.value)">
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Target Currency</span><div class="field-control"><select id="select-currencyTarget" class="struct-select" onchange="handleSelect('currencyTarget', this.value)">
                                             <option value="USD">USD - US Dollar</option>
                                             <option value="PHP">PHP - Philippine Peso</option>
                                             <option value="EUR">EUR - Euro</option>
                                             <option value="JPY">JPY - Japanese Yen</option>
                                             <option value="SGD">SGD - Singapore Dollar</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Exchange Rate</h4>
-                                        <input id="input-exchangeRate" class="dim-input select-text" type="number" min="0" step="0.0001" placeholder="0" oninput="handleInput('exchangeRate', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium mt-1">Multiplier Rate</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Amount to Convert</h4>
-                                        <input id="input-conversionAmount" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('conversionAmount', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium mt-1">In Base Currency</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-center items-center min-h-[120px] md:col-span-2">
-                                        <h4 class="text-sm font-semibold text-neutral-600 mb-2">Converted Result</h4>
-                                        <div class="bg-neutral-200 rounded-lg py-3 px-6 w-full text-center font-bold text-neutral-800 text-2xl shadow-sm transition" id="result-converted">
-                                            0.00 USD
-                                        </div>
-                                    </div>
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Exchange Rate</span><div class="field-control"><input id="input-exchangeRate" class="dim-input select-text" type="number" min="0" step="0.0001" placeholder="0" oninput="handleInput('exchangeRate', this.value)" /><span class="field-unit">Multiplier Rate</span></div></div>
+                                    <div class="field-row"><span class="field-label">Amount to Convert</span><div class="field-control"><input id="input-conversionAmount" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('conversionAmount', this.value)" /><span class="field-unit">In Base Currency</span></div></div>
+                                    <div class="field-row md:col-span-2 field-row-result"><span class="field-label">Converted Result</span><div class="field-result-value" id="result-converted">0.00 USD</div></div>
                                 </div>
                             </div>
 
+                            </div>
+                            </div>
+
+                            <div id="module-footing" class="mt-10">
+
+                            <div class="flex items-center gap-6 py-4 border-y border-neutral-200 mb-6 -mx-8 px-8">
+                                <h3 class="text-2xl font-bold text-neutral-900">Footing &amp; Pedestal</h3>
+                                <div class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40">
+                                    <button id="tab-footing-geometry" onclick="switchSection('footing-geometry')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>
+                                    <button id="tab-footing-materials" onclick="switchSection('footing-materials')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>
+                                </div>
+                            </div>
+
+                            <div id="footing-sections-wrap" class="transition-opacity duration-200 ease-apple opacity-100">
+
                             <!-- FOOTING GEOMETRY SECTION -->
-                            <div id="section-footing-geometry" class="hidden flex flex-col gap-6">
+                            <div id="section-footing-geometry" class="flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Length</h4>
-                                        <input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Width</h4>
-                                        <input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Footing Depth</h4>
-                                        <input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Length</h4>
-                                        <input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Width</h4>
-                                        <input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Pedestal Height</h4>
-                                        <input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label">Footing Length</span><div class="field-control"><input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Footing Width</span><div class="field-control"><input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Footing Depth</span><div class="field-control"><input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Pedestal Length</span><div class="field-control"><input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Pedestal Width</span><div class="field-control"><input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Pedestal Height</span><div class="field-control"><input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" /><span class="field-unit">meters</span></div></div>
                                 </div>
                             </div>
 
                             <!-- FOOTING MATERIALS SECTION -->
                             <div id="section-footing-materials" class="hidden flex flex-col gap-6">
                                 <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 flex flex-col justify-start min-h-[120px]">
-                                        <h4 class="text-base font-bold text-neutral-800 mb-2">Concrete Class</h4>
-                                        <select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label">Concrete Class</span><div class="field-control"><select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
                                             <option value="C16/20">C16/20 — Lean/Blinding</option>
                                             <option value="C20/25">C20/25 — Light Slabs</option>
                                             <option value="C25/30">C25/30 — General</option>
                                             <option value="C30/37" selected>C30/37 — Heavy Columns</option>
                                             <option value="C35/45">C35/45 — High-Rise</option>
-                                        </select>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Concrete Price / m³</h4>
-                                        <input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Depth</h4>
-                                        <input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">meters</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Excavation Cost / m³</h4>
-                                        <input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Rate / m³</h4>
-                                        <input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Ratio</h4>
-                                        <input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" />
-                                        <span class="text-xs text-neutral-400 text-center font-medium">percent Ratio (%)</span>
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Rebar Price / kg</h4>
-                                        <input id="input-rebarPriceKg" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('rebarPriceKg', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Overhead Profit</h4>
-                                        <input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Forms Price / m²</h4>
-                                        <input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px]">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Labor Cost / day</h4>
-                                        <input id="input-laborCostDay" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('laborCostDay', this.value)" />
-                                    </div>
-                                    <div class="bg-[#f4f5f8] rounded-2xl p-5 border border-neutral-200/60 shadow-sm flex flex-col justify-between min-h-[120px] md:col-span-2">
-                                        <h4 class="text-lg font-bold text-neutral-900 mb-3">Steel Density</h4>
-                                        <input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" />
-                                    </div>
+                                        </select></div></div>
+                                    <div class="field-row"><span class="field-label">Concrete Price / m³</span><div class="field-control"><input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" /></div></div>
+                                    <div class="field-row"><span class="field-label">Excavation Depth</span><div class="field-control"><input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label">Excavation Cost / m³</span><div class="field-control"><input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label">Labor Rate / m³</span><div class="field-control"><input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" /></div></div>
+                                    <div class="field-row"><span class="field-label">Rebar Ratio</span><div class="field-control"><input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" /><span class="field-unit">percent Ratio (%)</span></div></div>
+                                    <div class="field-row"><span class="field-label">Rebar Price / kg</span><div class="field-control"><input id="input-rebarPriceKg" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('rebarPriceKg', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label">Overhead Profit</span><div class="field-control"><input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label">Forms Price / m²</span><div class="field-control"><input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label">Labor Cost / day</span><div class="field-control"><input id="input-laborCostDay" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('laborCostDay', this.value)" /></div></div>
+                                    <div class="field-row md:col-span-2"><span class="field-label">Steel Density</span><div class="field-control"><input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" /></div></div>
                                 </div>
+                            </div>
+
+                            </div>
                             </div>
                         </div>
 
                     </div>
 
-                    <div id="module-calculator-sidebar" class="xl:col-span-4 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
+                    <div id="module-calculator-sidebar" class="xl:col-span-5 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
                         <div class="sticky top-0 space-y-6">
                             <div>
                                 <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
@@ -443,7 +361,7 @@
                             </div>
 
                             <div class="bg-white p-4 rounded-2xl border border-neutral-200/60 shadow-sm">
-                                <canvas id="costChart" height="200"></canvas>
+                                <svg id="isoBuilding" viewBox="0 0 400 260" style="width:100%;height:220px;display:block;"></svg>
                             </div>
 
                             <div class="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4 text-sm">
@@ -543,9 +461,6 @@
             currencyBase: 'PHP', currencyTarget: 'USD', exchangeRate: 0, conversionAmount: 0
         };
 
-        let currentActiveModule = 'building';
-        let costChart = null;
-
         // ============================================================
         // PRICES.JSON loader
         // ============================================================
@@ -608,96 +523,124 @@
             setTimeout(() => { Auth.logout(); }, 200);
         }
 
-        function initCharts() {
-            try {
-                if (document.getElementById('costChart')) {
-                    const ctx = document.getElementById('costChart').getContext('2d');
-                    costChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: { labels: ['Floor Area', 'Concrete', 'Perimeter'], datasets: [{ data: [0,0,0], backgroundColor: ['#3b82f6','#10b981','#f59e0b'], borderRadius: 4 }] },
-                        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
-                    });
+        const ISO_RIGHT = { x: 0.866, y: 0.5 };
+        const ISO_LEFT  = { x: -0.866, y: 0.5 };
+
+        function isoPoint(l, w, h, scale) {
+            return {
+                x: l * ISO_LEFT.x * scale + w * ISO_RIGHT.x * scale,
+                y: l * ISO_LEFT.y * scale + w * ISO_RIGHT.y * scale - h * scale
+            };
+        }
+        function isoPoly(pts) { return pts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' '); }
+
+        function renderIsoBuilding() {
+            const svg = document.getElementById('isoBuilding');
+            if (!svg) return;
+            const L = estimateState.length || 0, W = estimateState.width || 0, H = estimateState.clearHeight || 0;
+            let stories = estimateState.stories || 1; if (stories < 1) stories = 1;
+            const mez = estimateState.mezzanine || 0;
+            if (L <= 0 || W <= 0 || H <= 0) { svg.innerHTML = ''; return; }
+
+            const spanW = (L + W) * 0.866;
+            const spanH = (L + W) * 0.5 + H;
+            const scale = Math.min(340 / (spanW || 1), 160 / (spanH || 1));
+            const P = (l, w, h) => isoPoint(l, w, h, scale);
+
+            let c000 = P(0,0,0), c100 = P(L,0,0), c010 = P(0,W,0), c110 = P(L,W,0);
+            let c001 = P(0,0,H), c101 = P(L,0,H), c011 = P(0,W,H), c111 = P(L,W,H);
+            const xs = [c000,c100,c010,c110,c001,c101,c011,c111].map(p => p.x);
+            const ys = [c000,c100,c010,c110,c001,c101,c011,c111].map(p => p.y);
+            const offX = 200 - (Math.min(...xs) + Math.max(...xs)) / 2;
+            const offY = 205 - Math.max(...ys);
+            const sh = p => ({ x: p.x + offX, y: p.y + offY });
+            c000=sh(c000); c100=sh(c100); c010=sh(c010); c110=sh(c110);
+            c001=sh(c001); c101=sh(c101); c011=sh(c011); c111=sh(c111);
+
+            let parts = [];
+
+            parts.push('<polygon points="' + isoPoly([c001,c101,c111,c011]) + '" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>');
+            parts.push('<polygon points="' + isoPoly([c010,c110,c111,c011]) + '" fill="#d1d5db" stroke="#9ca3af" stroke-width="1"/>');
+            parts.push('<polygon points="' + isoPoly([c100,c110,c111,c101]) + '" fill="#9ca3af" stroke="#6b7280" stroke-width="1"/>');
+
+            if (stories > 1) {
+                for (let i = 1; i < stories; i++) {
+                    const hf = H * i / stories;
+                    const p1 = sh(P(0,W,hf)), p2 = sh(P(L,W,hf)), p3 = sh(P(L,0,hf));
+                    parts.push('<polyline points="' + isoPoly([p1,p2,p3]) + '" fill="none" stroke="#6b7280" stroke-width="1" stroke-dasharray="3,3"/>');
                 }
-            } catch(e) { console.warn('Chart.js failed:', e); }
+            }
+
+            if (mez > 0) {
+                const mezClamped = Math.max(0, Math.min(100, mez));
+                const mh = H * (stories - 0.5) / stories;
+                const ml = L * (mezClamped / 100);
+                const m0 = sh(P(0, 0, mh)), m1 = sh(P(ml, 0, mh));
+                const m2 = sh(P(ml, W, mh)), m3 = sh(P(0, W, mh));
+                parts.push('<polygon points="' + isoPoly([m0,m1,m2,m3]) + '" fill="#f59e0b" fill-opacity="0.55" stroke="#b45309" stroke-width="1"/>');
+            }
+
+            parts.push('<polygon points="' + isoPoly([c000,c100,c110,c010]) + '" fill="none" stroke="#d1d5db" stroke-width="1" stroke-dasharray="2,2"/>');
+
+            svg.innerHTML = parts.join('');
         }
 
-        function switchModule(mod) {
-            if (currentActiveModule === mod && mod !== 'building') return;
-            currentActiveModule = mod;
-            const fadeWrapper  = document.getElementById('main-fade-wrapper');
-            const headerTitle  = document.getElementById('header-title');
-            const headerTabs   = document.getElementById('header-tabs-container');
-            const calcGrid     = document.getElementById('module-calculator-grid');
-            const calcSidebar  = document.getElementById('module-calculator-sidebar');
-
-            ['building','footing'].forEach(m => {
-                const btn = document.getElementById('nav-' + m);
-                if (btn) btn.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors pointer-events-none';
-            });
-            const activeNav = document.getElementById('nav-' + mod);
-            if (activeNav) activeNav.className = 'w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left transition-colors pointer-events-none';
-
-            fadeWrapper.classList.remove('opacity-100','translate-y-0','scale-100');
-            fadeWrapper.classList.add('opacity-0','translate-y-2','scale-[0.99]');
-
-            setTimeout(() => {
-                [calcGrid, calcSidebar].forEach(el => { if(el) el.classList.add('hidden'); });
-                if (headerTabs) headerTabs.classList.add('hidden');
-
-                {
-                    if (calcGrid)    calcGrid.classList.remove('hidden');
-                    if (calcSidebar) calcSidebar.classList.remove('hidden');
-                    if (headerTabs)  headerTabs.classList.remove('hidden');
-                    ['dimension','structure','capacity','currency','footing-geometry','footing-materials'].forEach(s => {
-                        const el = document.getElementById('section-' + s);
-                        if (el) el.classList.add('hidden');
-                    });
-                    if (mod === 'building') {
-                        if (headerTitle) { headerTitle.textContent = 'Building Calculator'; headerTitle.title = 'Click to switch to Footing & Pedestal'; }
-                        if (headerTabs) headerTabs.innerHTML = `
-                            <button onclick="switchSection('dimension')" id="tab-dimension" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
-                            <button onclick="switchSection('structure')" id="tab-structure" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
-                            <button onclick="switchSection('capacity')" id="tab-capacity" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
-                            <button onclick="switchSection('currency')" id="tab-currency" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>`;
-                        const sec = document.getElementById('section-dimension');
-                        if (sec) sec.classList.remove('hidden');
-                    } else if (mod === 'footing') {
-                        if (headerTitle) { headerTitle.textContent = 'Footing & Pedestal'; headerTitle.title = 'Click to switch to Building Calculator'; }
-                        if (headerTabs) headerTabs.innerHTML = `
-                            <button onclick="switchSection('footing-geometry')" id="tab-footing-geometry" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry</button>
-                            <button onclick="switchSection('footing-materials')" id="tab-footing-materials" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs</button>`;
-                        const sec = document.getElementById('section-footing-geometry');
-                        if (sec) sec.classList.remove('hidden');
-                    }
-                }
-                updateUI();
-                void fadeWrapper.offsetWidth;
-                fadeWrapper.classList.remove('opacity-0','translate-y-2','scale-[0.99]');
-                fadeWrapper.classList.add('opacity-100','translate-y-0','scale-100');
-                ['building','footing'].forEach(m => {
-                    const btn = document.getElementById('nav-' + m);
-                    if (btn) btn.classList.remove('pointer-events-none');
-                });
-            }, 250);
-        }
-
-        function toggleCalculatorModule() {
-            switchModule(currentActiveModule === 'building' ? 'footing' : 'building');
-        }
+        const SECTION_GROUPS = {
+            'dimension':          { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
+            'structure':          { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
+            'capacity':           { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
+            'currency':           { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
+            'footing-geometry':   { group: ['footing-geometry','footing-materials'], wrapper: 'footing-sections-wrap' },
+            'footing-materials':  { group: ['footing-geometry','footing-materials'], wrapper: 'footing-sections-wrap' }
+        };
 
         function switchSection(section) {
-            const container = document.getElementById('calc-sections-container');
-            if (container) { container.classList.remove('opacity-100','translate-x-0'); container.classList.add('opacity-0','-translate-x-2'); }
+            const cfg = SECTION_GROUPS[section];
+            if (!cfg) return;
+            const wrapper = document.getElementById(cfg.wrapper);
+            if (!wrapper) return;
+
+            const startHeight = wrapper.getBoundingClientRect().height;
+            wrapper.style.transition = 'none';
+            wrapper.style.height = startHeight + 'px';
+            wrapper.style.overflow = 'hidden';
+            wrapper.style.opacity = '1';
+            void wrapper.offsetHeight;
+
+            requestAnimationFrame(() => {
+                wrapper.style.transition = 'opacity 120ms ease';
+                wrapper.style.opacity = '0';
+            });
+
             setTimeout(() => {
-                const subSections = currentActiveModule === 'building' ? ['dimension','structure','capacity','currency'] : ['footing-geometry','footing-materials'];
-                subSections.forEach(s => {
+                cfg.group.forEach(s => {
                     const el = document.getElementById('section-' + s); if (el) el.classList.add('hidden');
                     const tab = document.getElementById('tab-' + s); if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
                 });
                 const activeSec = document.getElementById('section-' + section); if (activeSec) activeSec.classList.remove('hidden');
                 const targetTab = document.getElementById('tab-' + section); if (targetTab) targetTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
-                if (container) { void container.offsetWidth; container.classList.remove('opacity-0','-translate-x-2'); container.classList.add('opacity-100','translate-x-0'); }
-            }, 200);
+
+                wrapper.style.transition = 'none';
+                wrapper.style.height = 'auto';
+                const endHeight = wrapper.getBoundingClientRect().height;
+                wrapper.style.height = startHeight + 'px';
+                void wrapper.offsetHeight;
+
+                requestAnimationFrame(() => {
+                    wrapper.style.transition = 'height 240ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 200ms ease 40ms';
+                    wrapper.style.height = endHeight + 'px';
+                    wrapper.style.opacity = '1';
+                });
+
+                const cleanup = (e) => {
+                    if (e && e.propertyName !== 'height') return;
+                    wrapper.style.transition = '';
+                    wrapper.style.height = 'auto';
+                    wrapper.style.overflow = '';
+                    wrapper.removeEventListener('transitionend', cleanup);
+                };
+                wrapper.addEventListener('transitionend', cleanup);
+            }, 130);
         }
 
         function openSaveModal() {
@@ -869,17 +812,15 @@
                 elConv.textContent = convRes.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (estimateState.currencyTarget || 'USD');
             }
 
-            if (currentActiveModule === 'building' || currentActiveModule === 'footing') {
-                const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-                set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
-                set('side-grossArea',  grossArea.toFixed(2) + ' sqm');
-                set('side-bldgVolume', bldgVolume.toFixed(2) + ' cu.m');
-                set('side-perimeter',  perimeter.toFixed(2) + ' m');
-                set('side-concrete',   concreteVol.toFixed(2) + ' m³');
-                set('side-baySpacing', nodes);
-                set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
-                if (costChart) { costChart.data.datasets[0].data = [floorArea, concreteVol, perimeter]; costChart.update(); }
-            }
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
+            set('side-grossArea',  grossArea.toFixed(2) + ' sqm');
+            set('side-bldgVolume', bldgVolume.toFixed(2) + ' cu.m');
+            set('side-perimeter',  perimeter.toFixed(2) + ' m');
+            set('side-concrete',   concreteVol.toFixed(2) + ' m³');
+            set('side-baySpacing', nodes);
+            set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
+            renderIsoBuilding();
 
             const materialCost = concreteVol * (estimateState.concretePriceM3 || 0);
             const equipCost = 0;
@@ -948,10 +889,9 @@
         // ============================================================
         window.onload = function() {
             if (typeof Auth !== 'undefined') Auth.requireLogin();
-            initCharts();
             loadFromCache();
             loadPrices();
-            checkSaveButton(); 
+            checkSaveButton();
         };
 
         

@@ -6,8 +6,8 @@
     const path = window.location.pathname;
 
     const pages = [
+        { label: 'Summary (tent name)',  href: 'calculator.html',          match: 'calculator' },
         { label: 'Master Estimator',    href: 'cost_estimate_scope.html', match: 'cost_estimate_scope' },
-        { label: 'Quantities Takeoff',  href: 'calculator.html',          match: 'calculator' },
         { label: 'Labor Database Ref.', href: 'labor_resources.html',     match: 'labor_resources' },
     ];
 

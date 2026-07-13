@@ -71,6 +71,14 @@
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <div id="selection-popover" class="hidden fixed z-50 bg-white border border-neutral-300 rounded-lg shadow-xl flex flex-col" style="max-height: 380px;">
+        <div class="p-2 border-b border-neutral-100 flex-shrink-0">
+            <input type="text" id="popover-search-input" placeholder="Search materials or labor..." class="w-full text-xs px-2 py-1.5 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="onPopoverSearchInput(this.value)">
+        </div>
+        <div id="popover-filters" class="grid grid-cols-3 gap-x-2 gap-y-1.5 px-2 py-2 border-b border-neutral-100 bg-neutral-50 max-h-28 overflow-y-auto custom-scrollbar flex-shrink-0"></div>
+        <div id="popover-options" class="flex-1 overflow-y-auto custom-scrollbar"></div>
+    </div>
+
     <div id="nav-placeholder"></div>
     <script src="/src/nav.js"></script>
 
@@ -120,36 +128,50 @@
         <div class="flex-1 flex overflow-hidden p-4 gap-4">
             
             <div class="flex-1 bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
-                <div class="p-3 border-b border-neutral-200 bg-neutral-50 flex justify-between items-center flex-shrink-0">
-                    <h3 class="font-bold text-sm text-neutral-800">Scope Items Grid</h3>
-                    <button onclick="clearWorksheet()" class="text-xs font-bold text-red-500 hover:text-red-700 px-3 py-1 rounded bg-red-50 transition cursor-pointer">Clear Worksheet</button>
+                <div class="p-3 border-b border-neutral-200 bg-neutral-50 flex justify-between items-center flex-shrink-0 gap-3">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button id="tab-btn-grid" onclick="switchTab('grid')" class="px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition">Scope Items Grid</button>
+                        <button id="tab-btn-contingency" onclick="switchTab('contingency')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Contingency Score Card</button>
+                        <button id="tab-btn-undefined" onclick="switchTab('undefinedCost')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Undefined Costs Score Card</button>
+                    </div>
+                    <div id="grid-toolbar-extras" class="flex-1 flex justify-end items-center gap-3">
+                        <div class="relative w-64">
+                            <input type="text" id="grid-search-input" placeholder="Search categories or scope items..." class="w-full text-xs pl-8 pr-3 py-1.5 border border-neutral-200 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="onGridSearchInput(this.value)">
+                            <svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"></path></svg>
+                        </div>
+                        <button onclick="clearWorksheet()" title="Clear Worksheet" class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 bg-white border border-neutral-200 rounded-lg transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="flex-1 overflow-auto custom-scrollbar relative">
-                    <table class="w-full text-left border-collapse table-fixed min-w-[1160px]">
+                <div id="tab-panel-grid" class="flex-1 overflow-auto custom-scrollbar relative">
+                    <table class="w-full text-left border-collapse table-fixed min-w-[1080px]">
                         <thead class="bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-20 shadow-sm">
                             <tr>
                                 <th class="border border-neutral-200 p-2 w-16 text-center">WBS</th>
-                                <th class="border border-neutral-200 p-2 w-64">Scope Description</th>
-                                <th class="border border-neutral-200 p-2 w-48 bg-amber-50 text-amber-800">Material Selection</th>
-                                <th class="border border-neutral-200 p-2 w-20 text-center bg-amber-50 text-amber-800">Mat Qty</th>
-                                <th class="border border-neutral-200 p-2 w-16 text-center bg-amber-50 text-amber-800">Unit</th>
-                                <th class="border border-neutral-200 p-2 w-48 bg-blue-50 text-blue-800">Labor Assignment</th>
-                                <th class="border border-neutral-200 p-2 w-20 text-center bg-blue-50 text-blue-800">Man Hrs</th>
-                                <th class="border border-neutral-200 p-2 w-24 text-right">Mat Cost (₱)</th>
-                                <th class="border border-neutral-200 p-2 w-24 text-right">Lab Cost (₱)</th>
+                                <th class="border border-neutral-200 p-2 w-52">Scope Description</th>
+                                <th class="border border-neutral-200 p-2 w-52">Selection</th>
+                                <th class="border border-neutral-200 p-2 w-24 text-center">Qty</th>
+                                <th class="border border-neutral-200 p-2 w-16 text-center">Unit</th>
+                                <th class="border border-neutral-200 p-2 w-24 text-right">Unit Cost (₱)</th>
+                                <th class="border border-neutral-200 p-2 w-24 text-right">Lump Sum (₱)</th>
                                 <th class="border border-neutral-200 p-2 w-28 text-right text-blue-700">Total Cost (₱)</th>
-                                <th class="border border-neutral-200 p-2 w-14 text-center">Lines</th>
+                                <th class="border border-neutral-200 p-2 w-16 text-center">Add Row</th>
                             </tr>
                         </thead>
                         <tbody id="excel-grid-body" class="text-xs text-neutral-800">
                             </tbody>
                     </table>
                 </div>
+
+                <div id="tab-panel-contingency" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
+                <div id="tab-panel-undefined" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
             </div>
 
-            <div class="w-80 flex-shrink-0 flex flex-col gap-4">
+            <div id="boq-panel" class="w-80 flex-shrink-0 flex flex-col gap-4">
                 <div class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 border-b border-neutral-100 pb-3">Bill Of Quantities</h3>
 
                     <div id="breakdown-empty" class="flex-1 flex flex-col items-center justify-center text-center gap-2 text-neutral-400">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -191,6 +213,14 @@
         let gridState = {};
         let selectedItem = null; // itemKey currently shown in the right-panel breakdown
         let estimateMeta = { project: '', plant: '', type: '', preparedBy: '', date: '', meanSpendingDate: '' };
+        // Categories collapsed by default keep hundreds of unused rows out of the DOM entirely
+        // (not just CSS-hidden) — populated properly once SCOPE_CATEGORIES is defined below.
+        let collapsedCategories = new Set();
+        let searchQuery = ''; // grid-level search (categories + scope descriptions)
+        let searchDebounceTimer = null;
+        let popoverTarget = null; // { itemKey, idx } — which line the shared Selection popover is currently editing
+        let popoverSearchQuery = '';
+        let popoverActiveFilter = 'all'; // single radio choice: 'all' | 'labor' | a DB_CONFIG id — only one narrows the list at a time
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -338,12 +368,195 @@
             }
         ];
 
+        // Default: only the first category expanded on first visit. Cuts initial DOM from ~300+
+        // rows to whatever the first category holds. loadCollapsedState() below may override this
+        // with the person's own last-used state.
+        collapsedCategories = new Set(SCOPE_CATEGORIES.slice(1).map(c => c.id));
+
+        // ============================================================
+        // SCORECARDS (Contingency + Undefined Cost)
+        // Data pulled directly from Sample_TEMPLATE_1.xlsx's CONTINGENCY / UNDEFINED COST sheets.
+        // Mechanism verified against the sheet's real formulas: pick the ONE description per
+        // criterion that matches the project, and SUM the picked values across criteria
+        // (confirmed via D9=SUM(D4:D8) and C8=SUM(C5:C7) — not an average of everything).
+        // ============================================================
+
+        const CONTINGENCY_CRITERIA = [
+            { id: 'site', label: 'Site', choices: [
+                { value: 0, desc: 'Site visit has been made. Visible conditions and interferences have been observed. Major site conditions, scope and issues are known.' },
+                { value: 2, desc: 'All needed site information is included in estimate. Soil conditions, underground & above ground obstructions and site conditions are known and included in scope/estimate. No uncertainties exist.' },
+                { value: 2, desc: 'Site scope options are known but may not be final. Major site conditions are assumed.' },
+                { value: 3, desc: 'URC has not completed any significant construction at this site. Site conditions are unknown or site has not been chosen.' }
+            ]},
+            { id: 'resources', label: 'Resources (Construction, Engineering, & Business)', choices: [
+                { value: 2, desc: 'All required construction, engineering, and business resources are available and experienced with URC, the site, and the process. Construction and sourcing plans exist.' },
+                { value: 2, desc: 'Most project team resources are available. Construction method is known. Wages and productivity based on published data. Availability of skilled construction labor is assumed. Sourcing plan is mostly defined.' },
+                { value: 3, desc: 'Some gap(s) exist in project team resources. Construction method is assumed. Wage rates, productivity and availability of skilled construction labor are assumed. Sourcing plan is not defined.' },
+                { value: 4, desc: 'Significant gap(s) exist in key project team resources. Majority of construction, engineering, and business resources available have little experience with either URC, the site, or the process.' }
+            ]},
+            { id: 'schedule', label: 'Schedule (excludes Cost of Project Acceleration, assessed separately)', choices: [
+                { value: 1, desc: 'Minor time constraints exist along with some doubt about capability to achieve schedule.' },
+                { value: 2, desc: 'Timing is not an issue.' },
+                { value: 2, desc: 'Potential delays, changes in schedule requirements, or team\'s ability to meet existing schedule could result in schedule change of more than 10% but less than 20%.' },
+                { value: 3, desc: 'Potential change in schedule requirements or team\'s ability to meet existing schedule could result in schedule change of 20% or more.' }
+            ]},
+            { id: 'pricing', label: 'Pricing', choices: [
+                { value: 2, desc: 'Based on quotes, purchase orders and recent experience. Escalation and currency fluctuation impact is negligible. No import duties or taxes.' },
+                { value: 2, desc: 'Based on details with some allowances. Pricing is from URC experience or database. Escalation and currency fluctuation may be a factor. Import duties/taxes are well known.' },
+                { value: 3, desc: 'Based on allowances and/or escalation. Variation in escalation, currency, import duties/taxes may affect the project cost by 10% or more. Project includes re-use & modification of more than 50% of equipment.' },
+                { value: 4, desc: 'Based on allowances and factored cost data. Variation in escalation, currency, import duties/taxes may be a factor. Project includes re-use and modification of 30% to 50% of equipment.' }
+            ]}
+        ];
+
+        const UNDEFINED_CRITERIA = [
+            { id: 'complexity', label: 'Project Complexity', choices: [
+                { value: 1, desc: 'Single site; reapplication of current process at same site or new simple system; minor change in capacity, size, location, details, etc. No impact on facilities, utilities, or other systems.' },
+                { value: 2, desc: 'Single site; reapplication of current process at same site; minor change in capacity, size, location, details, etc. Some impact on facilities, utilities, or other systems.' },
+                { value: 3, desc: 'Expansion of existing product line or process within category and region. May be multi-site. Significant change in capacity, size, location, details, etc. Significant impact on facilities, utilities, or other systems.' },
+                { value: 4, desc: 'Multi-category or multi-region project; first phase of a national or global program; grassroots plant; new brand initiative.' }
+            ]},
+            { id: 'technology', label: 'Technology', choices: [
+                { value: 0, desc: 'Reapplication of technology that exists in URC; standard equipment modules. Most equipment is vendor standard (same concepts apply to non-process scope).' },
+                { value: 1, desc: 'Some standard equipment modules, some customization of vendor equipment; application of existing technology not previously used at URC (same concepts apply to non-process scope).' },
+                { value: 2, desc: 'Scaleup or rollout of prototyped processes, custom designed equipment or modified vendor equipment (same concepts apply to non-process scope).' },
+                { value: 3, desc: 'New process or unique equipment; application of technology that is new to URC and industry in general (same concepts apply to non-process scope).' }
+            ]},
+            { id: 'completeness', label: 'Completeness of Definition (Project, Schedule, & Estimate)', choices: [
+                { value: 1, desc: 'All needed project definition is complete. All significant option studies are completed. Preliminary flowsheets exist. All engineering and plant input has been received and understood.' },
+                { value: 2, desc: 'All needed design and review is complete. Design Bases & P&ID\'s are complete. PS Management, Engineering, Plant & Product Development have sufficiently reviewed and agreed to the scope and estimate.' },
+                { value: 3, desc: 'Definition is incomplete. Several option studies are still underway. Early flowsheets and layout sketches may exist. Not all engineering and plant input has been received or understood.' },
+                { value: 4, desc: 'Conference grade or very conceptual scope. Flowsheet or layout ideas developed informally with input from only one product engineering resource.' }
+            ]}
+        ];
+
+        let contingencySelections = {}; // criterionId -> choice index
+        let undefinedSelections = {};
+        let activeTab = 'grid';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            try { localStorage.setItem('urc_ces_active_tab', tab); } catch(e) {}
+
+            document.getElementById('tab-panel-grid').classList.toggle('hidden', tab !== 'grid');
+            document.getElementById('tab-panel-contingency').classList.toggle('hidden', tab !== 'contingency');
+            document.getElementById('tab-panel-undefined').classList.toggle('hidden', tab !== 'undefinedCost');
+            // The BOQ breakdown panel and the search/clear controls only make sense for the grid —
+            // a scorecard has no rows to search or a per-row cost breakdown to show.
+            document.getElementById('boq-panel').classList.toggle('hidden', tab !== 'grid');
+            document.getElementById('grid-toolbar-extras').classList.toggle('hidden', tab !== 'grid');
+
+            const tabs = { grid: 'tab-btn-grid', contingency: 'tab-btn-contingency', undefinedCost: 'tab-btn-undefined' };
+            Object.keys(tabs).forEach(key => {
+                const btn = document.getElementById(tabs[key]);
+                if (key === tab) {
+                    btn.className = 'px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition';
+                } else {
+                    btn.className = 'px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer';
+                }
+            });
+
+            if (tab === 'contingency') renderScorecard('tab-panel-contingency', CONTINGENCY_CRITERIA, contingencySelections, 'contingency');
+            if (tab === 'undefinedCost') renderScorecard('tab-panel-undefined', UNDEFINED_CRITERIA, undefinedSelections, 'undefinedCost');
+        }
+
+        function renderScorecard(containerId, criteria, selections, scorecardType) {
+            const container = document.getElementById(containerId);
+            const title = scorecardType === 'contingency' ? 'Contingency Scorecard' : 'Undefined Cost Scorecard';
+            const subtitle = scorecardType === 'contingency'
+                ? 'For each criterion below, select the description that best matches this project. The percentages are summed, not averaged.'
+                : 'For each criterion below, select the description that best matches this project\u2019s current state of definition. The percentages are summed, not averaged.';
+
+            let subtotal = 0;
+            let html = `
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-lg font-bold text-neutral-900">${title}</h2>
+                    <p class="text-xs text-neutral-500 mt-1 mb-6">${subtitle}</p>
+                    <div class="space-y-4">`;
+
+            criteria.forEach(crit => {
+                const selectedIdx = selections[crit.id];
+                if (selectedIdx !== undefined) subtotal += crit.choices[selectedIdx].value;
+
+                html += `
+                    <div class="border border-neutral-200 rounded-xl overflow-hidden">
+                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wide">${crit.label}</h3>
+                            <span class="text-xs font-bold ${selectedIdx !== undefined ? 'text-blue-600' : 'text-neutral-300'}">${selectedIdx !== undefined ? crit.choices[selectedIdx].value + '%' : 'Not selected'}</span>
+                        </div>
+                        <div class="divide-y divide-neutral-100">`;
+
+                crit.choices.forEach((choice, idx) => {
+                    const isSelected = selectedIdx === idx;
+                    html += `
+                            <div onclick="selectScoreChoice('${scorecardType}', '${crit.id}', ${idx})" class="flex items-start gap-3 px-4 py-2.5 cursor-pointer transition hover:bg-blue-50/60 ${isSelected ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''}">
+                                <span class="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold mt-0.5 ${isSelected ? 'bg-blue-600 text-white' : 'bg-neutral-100 text-neutral-500'}">${choice.value}%</span>
+                                <p class="text-xs text-neutral-600 leading-relaxed">${choice.desc}</p>
+                            </div>`;
+                });
+
+                html += `
+                        </div>
+                    </div>`;
+            });
+
+            const allSelected = criteria.every(c => selections[c.id] !== undefined);
+            html += `
+                    </div>
+                    <div class="mt-6 p-4 rounded-xl border border-neutral-200 bg-neutral-50 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wide">${scorecardType === 'contingency' ? 'Base Contingency Subtotal' : 'Undefined Cost Subtotal'}</h4>
+                            ${!allSelected ? `<p class="text-[11px] text-amber-600 mt-0.5">${criteria.filter(c => selections[c.id] === undefined).length} criteria still need a selection</p>` : ''}
+                        </div>
+                        <span class="text-2xl font-black text-blue-600">${subtotal}%</span>
+                    </div>
+                </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function selectScoreChoice(scorecardType, criterionId, idx) {
+            const selections = scorecardType === 'contingency' ? contingencySelections : undefinedSelections;
+            selections[criterionId] = idx;
+            saveScorecardState();
+
+            const criteria = scorecardType === 'contingency' ? CONTINGENCY_CRITERIA : UNDEFINED_CRITERIA;
+            const containerId = scorecardType === 'contingency' ? 'tab-panel-contingency' : 'tab-panel-undefined';
+            renderScorecard(containerId, criteria, selections, scorecardType);
+
+            // Hand off the final subtotal for calculator.html to pick up later — separate keys per
+            // scorecard, written every time a selection changes so it's always current.
+            const subtotal = criteria.reduce((sum, c) => sum + (selections[c.id] !== undefined ? c.choices[selections[c.id]].value : 0), 0);
+            try { localStorage.setItem(`urc_ces_${scorecardType}_subtotal`, JSON.stringify({ subtotal, updatedAt: Date.now() })); } catch(e) {}
+        }
+
+        function saveScorecardState() {
+            try {
+                localStorage.setItem('urc_ces_contingency_selections', JSON.stringify(contingencySelections));
+                localStorage.setItem('urc_ces_undefined_selections', JSON.stringify(undefinedSelections));
+            } catch(e) {}
+        }
+
+        function loadScorecardState() {
+            try {
+                const c = localStorage.getItem('urc_ces_contingency_selections');
+                if (c) contingencySelections = JSON.parse(c);
+                const u = localStorage.getItem('urc_ces_undefined_selections');
+                if (u) undefinedSelections = JSON.parse(u);
+            } catch(e) {}
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             loadFromCache();
             loadMeta();
+            loadCollapsedState();
+            loadScorecardState();
             await fetchLaborRates(); 
             await fetchAllDatabases(); 
             renderGrid();
+
+            let savedTab = 'grid';
+            try { savedTab = localStorage.getItem('urc_ces_active_tab') || 'grid'; } catch(e) {}
+            switchTab(savedTab);
         });
 
         async function fetchLaborRates() {
@@ -418,52 +631,185 @@
         // 2. EXCEL GRID RENDERING & LOGIC
         // ============================================================
         
-        function getMaterialOptionsHTML(selectedId) {
-            let html = '<option value="">- Select Material -</option>';
-            DB_CONFIG.forEach(cfg => {
-                const items = Object.keys(MASTER_DB).filter(k => MASTER_DB[k].category === cfg.id);
-                if (items.length > 0) {
-                    html += `<optgroup label="${cfg.label}">`;
-                    items.forEach(k => {
-                        const sel = k === selectedId ? ' selected' : '';
-                        html += `<option value="${k}"${sel}>${MASTER_DB[k].name} (₱${MASTER_DB[k].price}/${MASTER_DB[k].unit})</option>`;
-                    });
-                    html += `</optgroup>`;
-                }
-            });
-            return html;
+        function openSelectionPopover(itemKey, idx, triggerEl) {
+            popoverTarget = { itemKey, idx };
+            popoverSearchQuery = '';
+            const rect = triggerEl.getBoundingClientRect();
+            const pop = document.getElementById('selection-popover');
+            const width = Math.max(rect.width, 280);
+            pop.style.width = `${width}px`;
+            // Fixed positioning is intentional — it's what keeps this panel from closing when the
+            // grid's own scroll container scrolls (fixed is relative to the viewport, not the grid).
+            let top = rect.bottom + 4;
+            let left = rect.left;
+            if (left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
+            if (top + 380 > window.innerHeight - 8) top = Math.max(8, rect.top - 384); // flip above if no room below
+            pop.style.top = `${top}px`;
+            pop.style.left = `${left}px`;
+            pop.classList.remove('hidden');
+
+            const searchInput = document.getElementById('popover-search-input');
+            searchInput.value = '';
+            renderPopoverFilters();
+            renderPopoverOptions();
+            searchInput.focus();
         }
 
-        function getLaborOptionsHTML(selectedId) {
-            let html = '<option value="">- Select Role -</option>';
-            Object.keys(LABOR_DB).forEach(k => {
-                const rate = (LABOR_DB[k].dailyRate / 8).toFixed(2);
-                const sel = k === selectedId ? ' selected' : '';
-                html += `<option value="${k}"${sel}>${LABOR_DB[k].name} (₱${rate}/hr)</option>`;
-            });
-            return html;
+        function closeSelectionPopover() {
+            popoverTarget = null;
+            document.getElementById('selection-popover').classList.add('hidden');
         }
+
+        function renderPopoverFilters() {
+            const container = document.getElementById('popover-filters');
+            const options = [{ id: 'all', label: 'All' }, { id: 'labor', label: 'Labor' }, ...DB_CONFIG.map(cfg => ({ id: cfg.id, label: cfg.label }))];
+            let html = '';
+            options.forEach(opt => {
+                const checked = popoverActiveFilter === opt.id ? 'checked' : '';
+                html += `<label class="flex items-center gap-1.5 text-[11px] text-neutral-700 cursor-pointer truncate"><input type="radio" name="popover-cat-filter" ${checked} onchange="setPopoverFilter('${opt.id}')"> ${opt.label}</label>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setPopoverFilter(id) {
+            popoverActiveFilter = id;
+            renderPopoverOptions();
+        }
+
+        function onPopoverSearchInput(value) {
+            popoverSearchQuery = value.trim().toLowerCase();
+            renderPopoverOptions();
+        }
+
+        function renderPopoverOptions() {
+            const container = document.getElementById('popover-options');
+            let html = '';
+            let any = false;
+            // While actively searching, search across everything regardless of the selected radio filter —
+            // the radio is for browsing one category at a time; search is a deliberate global lookup.
+            const searching = !!popoverSearchQuery;
+
+            DB_CONFIG.forEach(cfg => {
+                const categoryVisible = searching || popoverActiveFilter === 'all' || popoverActiveFilter === cfg.id;
+                if (!categoryVisible) return;
+                const items = Object.keys(MASTER_DB).filter(k => MASTER_DB[k].category === cfg.id);
+                const filtered = items.filter(k => !popoverSearchQuery || MASTER_DB[k].name.toLowerCase().includes(popoverSearchQuery));
+                if (filtered.length === 0) return;
+                any = true;
+                html += `<div class="px-2 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase sticky top-0 bg-white">${cfg.label}</div>`;
+                filtered.forEach(k => {
+                    html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('mat:${k}')">${MASTER_DB[k].name} (₱${MASTER_DB[k].price}/${MASTER_DB[k].unit})</div>`;
+                });
+            });
+
+            const laborVisible = searching || popoverActiveFilter === 'all' || popoverActiveFilter === 'labor';
+            if (laborVisible) {
+                const laborKeys = Object.keys(LABOR_DB).filter(k => !popoverSearchQuery || LABOR_DB[k].name.toLowerCase().includes(popoverSearchQuery));
+                if (laborKeys.length > 0) {
+                    any = true;
+                    html += `<div class="px-2 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase sticky top-0 bg-white">Labor</div>`;
+                    laborKeys.forEach(k => {
+                        html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('lab:${k}')">${LABOR_DB[k].name} (₱${LABOR_DB[k].dailyRate}/day)</div>`;
+                    });
+                }
+            }
+
+            container.innerHTML = any ? html : '<div class="px-2 py-6 text-xs text-neutral-400 text-center">No matches</div>';
+        }
+
+        function pickFromPopover(rawValue) {
+            if (!popoverTarget) return;
+            updateSelection(popoverTarget.itemKey, popoverTarget.idx, rawValue);
+            closeSelectionPopover();
+        }
+
+        // Close on outside click / Escape — but never on a click that originated from a trigger
+        // button, since that click is what opens (or re-targets) the popover in the first place.
+        document.addEventListener('click', (e) => {
+            const pop = document.getElementById('selection-popover');
+            if (!pop || pop.classList.contains('hidden')) return;
+            if (pop.contains(e.target)) return;
+            if (e.target.closest && e.target.closest('[data-selection-trigger]')) return;
+            closeSelectionPopover();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSelectionPopover();
+        });
 
         function computeLineCost(line) {
-            let matCost = 0, unitStr = '-';
-            if (line && line.matId) {
-                const mat = MASTER_DB[line.matId];
-                if (mat) {
-                    unitStr = mat.unit;
-                    if (line.matQty && parseFloat(line.matQty) > 0) matCost = mat.price * parseFloat(line.matQty);
-                }
-            }
-            let labCost = 0;
-            if (line && line.labId && line.labHrs && parseFloat(line.labHrs) > 0) {
+            if (!line) return { total: 0, unitCost: 0, unitStr: '-' };
+            const lumpSum = parseFloat(line.lumpSum) || 0;
+
+            if (line.labId) {
                 const lab = LABOR_DB[line.labId];
-                if (lab) labCost = (lab.dailyRate / 8) * parseFloat(line.labHrs);
+                const unitCost = lab ? lab.dailyRate : 0; // day rate, not hourly — matches "# of Days" input
+                const headcount = parseFloat(line.headcount) || 0;
+                const days = parseFloat(line.days) || 0;
+                return { total: (unitCost * headcount * days) + lumpSum, unitCost, unitStr: 'Days' };
             }
-            return { matCost, labCost, total: matCost + labCost, unitStr };
+            if (line.matId) {
+                const mat = MASTER_DB[line.matId];
+                const unitCost = mat ? mat.price : 0;
+                const qty = parseFloat(line.qty) || 0;
+                return { total: (unitCost * qty) + lumpSum, unitCost, unitStr: mat ? mat.unit : '-' };
+            }
+            // Nothing selected yet — a pure Lump Sum line is still valid on its own.
+            return { total: lumpSum, unitCost: 0, unitStr: '-' };
+        }
+
+        function defaultLine() {
+            return { matId: '', qty: '', labId: '', headcount: '', days: '', lumpSum: '' };
+        }
+
+        function lineHasData(line) {
+            if (!line) return false;
+            return !!(line.matId || line.labId || (line.lumpSum && parseFloat(line.lumpSum) > 0));
         }
 
         function getLines(itemKey) {
             const lines = gridState[itemKey];
-            return (lines && lines.length > 0) ? lines : [{ matId: '', matQty: '', labId: '', labHrs: '' }];
+            return (lines && lines.length > 0) ? lines : [defaultLine()];
+        }
+
+        function itemTotal(itemKey) {
+            return getLines(itemKey).reduce((sum, l) => sum + computeLineCost(l).total, 0);
+        }
+
+        function sectionTotal(sectionKey) {
+            const [catId, sIdx] = sectionKey.split('__');
+            const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
+            if (!cat) return 0;
+            const sec = cat.sections[parseInt(sIdx)];
+            if (!sec) return 0;
+            let sum = 0;
+            sec.items.forEach((item, iIdx) => { sum += itemTotal(`${catId}__${sIdx}__${iIdx}`); });
+            return sum;
+        }
+
+        function categoryTotal(cat) {
+            let sum = 0;
+            cat.sections.forEach((sec, sIdx) => { sum += sectionTotal(`${cat.id}__${sIdx}`); });
+            return sum;
+        }
+
+        function toggleCategory(catId) {
+            if (collapsedCategories.has(catId)) collapsedCategories.delete(catId);
+            else collapsedCategories.add(catId);
+            saveCollapsedState();
+            renderGrid();
+            // Re-apply row highlighting if the currently-selected item's category just got expanded again.
+            if (selectedItem && selectedItem.startsWith(catId + '__')) selectItem(selectedItem);
+        }
+
+        function saveCollapsedState() {
+            try { localStorage.setItem('urc_ces_collapsed_categories', JSON.stringify([...collapsedCategories])); } catch(e) {}
+        }
+
+        function loadCollapsedState() {
+            try {
+                const raw = localStorage.getItem('urc_ces_collapsed_categories');
+                if (raw) collapsedCategories = new Set(JSON.parse(raw));
+            } catch(e) {}
         }
 
         function renderGrid() {
@@ -472,55 +818,95 @@
             const fmt = (num) => num > 0 ? num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
 
             SCOPE_CATEGORIES.forEach((cat, cIdx) => {
+                const catLabelMatches = matchesSearch(cat.label);
+                const catHasAnyMatch = !searchQuery || catLabelMatches || cat.sections.some(sec => matchesSearch(sec.title) || sec.items.some(item => matchesSearch(item.desc)));
+                if (searchQuery && !catHasAnyMatch) return; // hide the whole category while it has zero matches
+
+                const isCollapsed = searchQuery ? false : collapsedCategories.has(cat.id); // auto-expand while searching so matches are visible
                 html += `
-                <tr class="bg-slate-700 text-white shadow-sm border-b-2 border-white">
-                    <td colspan="11" class="p-2.5 font-bold text-xs uppercase tracking-widest pl-4">${cat.label}</td>
+                <tr class="bg-slate-700 text-white shadow-sm border-b-2 border-white cursor-pointer select-none" onclick="toggleCategory('${cat.id}')">
+                    <td colspan="9" class="p-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest pl-2">
+                                <span class="inline-block transition-transform duration-150 text-[10px] ${isCollapsed ? '' : 'rotate-90'}">▸</span>
+                                ${cat.label}
+                            </span>
+                            ${isCollapsed ? `<span class="text-[10px] font-semibold normal-case text-neutral-300 pr-2">${fmt(categoryTotal(cat))}</span>` : ''}
+                        </div>
+                    </td>
                 </tr>`;
+
+                if (isCollapsed) return; // don't build this category's sections/items into the DOM at all
                 
                 cat.sections.forEach((sec, sIdx) => {
+                    const sectionKey = `${cat.id}__${sIdx}`;
+                    const secTitleMatches = catLabelMatches || matchesSearch(sec.title);
+                    const secHasAnyMatch = !searchQuery || secTitleMatches || sec.items.some(item => matchesSearch(item.desc));
+                    if (searchQuery && !secHasAnyMatch) return; // hide whole section while it has zero matches
+
                     html += `
                     <tr class="bg-blue-100 text-blue-900 border-b border-blue-200">
-                        <td colspan="11" class="p-2 pl-4 font-bold text-[11px] uppercase tracking-wide">${sec.title}</td>
+                        <td colspan="9" class="p-2 pl-4 font-bold text-[11px] uppercase tracking-wide">${sec.title}</td>
                     </tr>`;
                     
                     sec.items.forEach((item, iIdx) => {
+                        if (searchQuery && !secTitleMatches && !matchesSearch(item.desc)) return; // hide non-matching individual items
+
                         const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
                         const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
                         const lines = getLines(itemKey);
 
                         lines.forEach((line, lIdx) => {
                             const lineKey = `${itemKey}__${lIdx}`;
-                            const { matCost, labCost, total, unitStr } = computeLineCost(line);
-                            const isLast = lIdx === lines.length - 1;
+                            const { total, unitCost, unitStr } = computeLineCost(line);
 
                             html += `<tr class="hover:bg-neutral-50 transition-colors border-b border-neutral-200 ${total > 0 ? 'bg-blue-50/40' : ''}" id="row-${lineKey}">`;
 
                             if (lIdx === 0) {
                                 html += `
                                 <td class="excel-cell readonly-cell text-center font-bold cursor-pointer" rowspan="${lines.length}" onclick="selectItem('${itemKey}')">${code}</td>
-                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" onclick="selectItem('${itemKey}')"><div class="truncate w-64">${item.desc}</div></td>`;
+                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" onclick="selectItem('${itemKey}')"><div class="truncate w-52">${item.desc}</div></td>`;
                             }
 
+                            // Quantity cell splits into Headcount / Days only when a laborer is selected — kept tight and centered so short numbers don't float apart.
+                            let qtyInner;
+                            if (line.labId) {
+                                qtyInner = `<div class="flex h-full divide-x divide-neutral-200">
+                                    <input type="number" id="inp-headcount-${lineKey}" class="excel-input text-right text-blue-900 font-medium" style="width:50%" min="0" step="1" placeholder="Head" value="${line.headcount || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'headcount', this.value)">
+                                    <input type="number" id="inp-days-${lineKey}" class="excel-input text-right text-blue-900 font-medium" style="width:50%" min="0" step="any" placeholder="Days" value="${line.days || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'days', this.value)">
+                                </div>`;
+                            } else {
+                                qtyInner = `<input type="number" id="inp-qty-${lineKey}" class="excel-input text-right text-amber-900 font-medium" min="0" step="any" placeholder="-" value="${line.qty || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'qty', this.value)">`;
+                            }
+
+                            // Button opens the shared popover instead of a native <select> — a native select can't
+                            // support the filter checkboxes / in-dropdown search / stay-open-while-scrolling behavior.
                             html += `
-                                <td class="excel-cell bg-amber-50/20"><select id="sel-mat-${lineKey}" class="excel-select text-amber-900" onchange="updateLine('${itemKey}', ${lIdx}, 'matId', this.value)">${getMaterialOptionsHTML(line.matId)}</select></td>
-                                <td class="excel-cell bg-amber-50/20"><input type="number" id="inp-matqty-${lineKey}" class="excel-input text-right text-amber-900 font-medium" min="0" step="any" placeholder="-" value="${line.matQty || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'matQty', this.value)"></td>
-                                <td class="excel-cell readonly-cell text-center text-xs text-amber-700" id="txt-unit-${lineKey}">${unitStr}</td>
-                                
-                                <td class="excel-cell bg-blue-50/30"><select id="sel-lab-${lineKey}" class="excel-select text-blue-900" onchange="updateLine('${itemKey}', ${lIdx}, 'labId', this.value)">${getLaborOptionsHTML(line.labId)}</select></td>
-                                <td class="excel-cell bg-blue-50/30"><input type="number" id="inp-labhrs-${lineKey}" class="excel-input text-right text-blue-900 font-medium" min="0" step="any" placeholder="-" value="${line.labHrs || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'labHrs', this.value)"></td>
-                                
-                                <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-matcost-${lineKey}">${fmt(matCost)}</td>
-                                <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-labcost-${lineKey}">${fmt(labCost)}</td>
+                                <td class="excel-cell"><button type="button" data-selection-trigger="1" onclick="openSelectionPopover('${itemKey}', ${lIdx}, this)" class="excel-select text-left truncate ${(line.labId || line.matId) ? 'text-neutral-800' : 'text-neutral-400'}">${selectionLabelFor(line)}</button></td>
+                                <td class="excel-cell">${qtyInner}</td>
+                                <td class="excel-cell readonly-cell text-center text-xs" id="txt-unit-${lineKey}">${unitStr}</td>
+                                <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-unitcost-${lineKey}">${unitCost > 0 ? fmt(unitCost) : '-'}</td>
+                                <td class="excel-cell"><input type="number" id="inp-lumpsum-${lineKey}" class="excel-input text-right text-purple-800 font-medium" min="0" step="any" placeholder="-" value="${line.lumpSum || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'lumpSum', this.value)"></td>
                                 <td class="excel-cell readonly-cell text-right font-bold text-blue-700 bg-blue-50/50" id="txt-totalcost-${lineKey}">${fmt(total)}</td>
                                 <td class="excel-cell readonly-cell text-center">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <button onclick="removeLine('${itemKey}', ${lIdx})" class="text-neutral-300 hover:text-red-500 transition text-xs" title="Remove this line">✕</button>
-                                        ${isLast ? `<button onclick="addLine('${itemKey}')" class="text-neutral-300 hover:text-blue-600 transition text-xs font-bold" title="Add another line to this item">+</button>` : ''}
+                                        <button onclick="removeLine('${itemKey}', ${lIdx})" class="text-neutral-300 hover:text-red-500 transition text-xs font-bold" title="Remove this row">✕</button>
+                                        <button onclick="addLineAfter('${itemKey}', ${lIdx})" class="text-neutral-300 hover:text-blue-600 transition text-xs font-bold" title="Add a row below this one">+</button>
                                     </div>
                                 </td>
                             </tr>`;
                         });
                     });
+
+                    // One TOTAL row per section (e.g. after the last item of "Yard & Underground"),
+                    // not one per WBS item. Value lands under the Total Cost column. Always reflects
+                    // the section's real total regardless of any active search filter.
+                    html += `
+                    <tr class="bg-neutral-50 border-b-2 border-neutral-300" id="totalrow-${sectionKey}">
+                        <td colspan="7" class="excel-cell readonly-cell text-right text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Total</td>
+                        <td class="excel-cell readonly-cell text-right font-bold text-neutral-700" id="txt-sectiontotal-${sectionKey}">${fmt(sectionTotal(sectionKey))}</td>
+                        <td class="excel-cell readonly-cell"></td>
+                    </tr>`;
                 });
             });
             
@@ -528,9 +914,47 @@
             updateTotals();
         }
 
+        function matchesSearch(text) {
+            if (!searchQuery) return true;
+            return (text || '').toLowerCase().includes(searchQuery);
+        }
+
+        function onGridSearchInput(value) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                searchQuery = value.trim().toLowerCase();
+                renderGrid();
+            }, 150);
+        }
+
+        function selectionLabelFor(line) {
+            if (line.labId && LABOR_DB[line.labId]) return `${LABOR_DB[line.labId].name} (₱${LABOR_DB[line.labId].dailyRate}/day)`;
+            if (line.matId && MASTER_DB[line.matId]) return `${MASTER_DB[line.matId].name} (₱${MASTER_DB[line.matId].price}/${MASTER_DB[line.matId].unit})`;
+            return '- Select Material or Labor -';
+        }
+
+        function updateSelection(itemKey, idx, rawValue) {
+            if (!gridState[itemKey]) gridState[itemKey] = [defaultLine()];
+            if (!gridState[itemKey][idx]) gridState[itemKey][idx] = defaultLine();
+            const line = gridState[itemKey][idx];
+
+            if (!rawValue) {
+                line.matId = ''; line.labId = '';
+            } else if (rawValue.startsWith('mat:')) {
+                line.matId = rawValue.slice(4);
+                line.labId = ''; line.headcount = ''; line.days = ''; // clear labor-only fields
+            } else if (rawValue.startsWith('lab:')) {
+                line.labId = rawValue.slice(4);
+                line.matId = ''; line.qty = ''; // clear material-only field
+            }
+            saveToCache();
+            renderGrid(); // structural: Quantity cell shape changes between single input and Headcount/Days split
+            if (selectedItem === itemKey) selectItem(itemKey);
+        }
+
         function updateLine(itemKey, idx, field, value) {
-            if (!gridState[itemKey]) gridState[itemKey] = [{ matId: '', matQty: '', labId: '', labHrs: '' }];
-            if (!gridState[itemKey][idx]) gridState[itemKey][idx] = { matId: '', matQty: '', labId: '', labHrs: '' };
+            if (!gridState[itemKey]) gridState[itemKey] = [defaultLine()];
+            if (!gridState[itemKey][idx]) gridState[itemKey][idx] = defaultLine();
             gridState[itemKey][idx][field] = value;
             calculateLine(itemKey, idx);
             updateTotals();
@@ -540,19 +964,17 @@
 
         function calculateLine(itemKey, idx) {
             const line = gridState[itemKey] && gridState[itemKey][idx];
-            if (!line) return { matCost: 0, labCost: 0, total: 0 };
+            if (!line) return { total: 0 };
 
-            const { matCost, labCost, total, unitStr } = computeLineCost(line);
+            const { total, unitCost, unitStr } = computeLineCost(line);
             const lineKey = `${itemKey}__${idx}`;
             const fmt = (num) => num > 0 ? num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
 
             const elUnit = document.getElementById(`txt-unit-${lineKey}`);
-            const elMatCost = document.getElementById(`txt-matcost-${lineKey}`);
-            const elLabCost = document.getElementById(`txt-labcost-${lineKey}`);
+            const elUnitCost = document.getElementById(`txt-unitcost-${lineKey}`);
             const elTotalCost = document.getElementById(`txt-totalcost-${lineKey}`);
             if (elUnit) elUnit.textContent = unitStr;
-            if (elMatCost) elMatCost.textContent = fmt(matCost);
-            if (elLabCost) elLabCost.textContent = fmt(labCost);
+            if (elUnitCost) elUnitCost.textContent = unitCost > 0 ? fmt(unitCost) : '-';
             if (elTotalCost) elTotalCost.textContent = fmt(total);
 
             const tr = document.getElementById(`row-${lineKey}`);
@@ -561,15 +983,20 @@
                 else tr.classList.remove('bg-blue-50/40');
             }
 
-            return { matCost, labCost, total };
+            // Keep the section's inline TOTAL row live without a full grid re-render.
+            const sectionKey = itemKey.split('__').slice(0, 2).join('__');
+            const elSectionTotal = document.getElementById(`txt-sectiontotal-${sectionKey}`);
+            if (elSectionTotal) elSectionTotal.textContent = fmt(sectionTotal(sectionKey));
+
+            return { total };
         }
 
-        function addLine(itemKey) {
-            if (!gridState[itemKey]) gridState[itemKey] = [{ matId: '', matQty: '', labId: '', labHrs: '' }];
-            gridState[itemKey].push({ matId: '', matQty: '', labId: '', labHrs: '' });
+        function addLineAfter(itemKey, afterIdx) {
+            if (!gridState[itemKey]) gridState[itemKey] = [defaultLine()];
+            gridState[itemKey].splice(afterIdx + 1, 0, defaultLine());
             saveToCache();
             renderGrid();
-            selectItem(itemKey);
+            if (selectedItem === itemKey) selectItem(itemKey);
         }
 
         function removeLine(itemKey, idx) {
@@ -635,17 +1062,33 @@
             let html = '';
 
             lines.forEach((line) => {
-                if (!line.matId && !line.labId) return; // skip untouched placeholder lines
-                const { matCost, labCost, total } = computeLineCost(line);
+                if (!lineHasData(line)) return; // skip untouched placeholder lines
+                const { total } = computeLineCost(line);
                 subtotal += total;
 
-                const matName = line.matId && MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : null;
-                const labName = line.labId && LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : null;
+                let label, tag;
+                if (line.labId) {
+                    const labName = LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : 'Labor';
+                    label = `${labName} — ${line.headcount || 0} × ${line.days || 0} day(s)`;
+                    tag = { text: 'LAB', cls: 'text-blue-600 bg-blue-50' };
+                } else if (line.matId) {
+                    const matName = MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : 'Material';
+                    label = `${matName} × ${line.qty || 0}`;
+                    tag = { text: 'MAT', cls: 'text-amber-600 bg-amber-50' };
+                } else {
+                    label = 'Lump sum item';
+                    tag = { text: 'LS', cls: 'text-purple-600 bg-purple-50' };
+                }
+                const lumpSum = parseFloat(line.lumpSum) || 0;
+                if (lumpSum > 0 && (line.matId || line.labId)) label += ` (+ ${fmt(lumpSum)} lump sum)`;
 
-                html += `<div class="p-2.5 bg-neutral-50 border border-neutral-100 rounded-lg text-xs space-y-1">`;
-                if (matName) html += `<div class="flex justify-between text-neutral-600"><span class="truncate pr-2">${matName} × ${line.matQty || 0}</span><span class="font-medium text-neutral-900 flex-shrink-0">${fmt(matCost)}</span></div>`;
-                if (labName) html += `<div class="flex justify-between text-neutral-600"><span class="truncate pr-2">${labName} × ${line.labHrs || 0}h</span><span class="font-medium text-neutral-900 flex-shrink-0">${fmt(labCost)}</span></div>`;
-                html += `</div>`;
+                html += `<div class="p-2.5 bg-neutral-50 border border-neutral-100 rounded-lg text-xs flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${tag.cls}">${tag.text}</span>
+                        <span class="truncate text-neutral-600">${label}</span>
+                    </div>
+                    <span class="font-medium text-neutral-900 flex-shrink-0">${fmt(total)}</span>
+                </div>`;
             });
 
             document.getElementById('breakdown-lines').innerHTML = html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added to this item yet.</p>';
@@ -770,7 +1213,7 @@
                 [],
                 [
                     { v: 'ITEM NO.', t: 's', s: stHeader }, { v: 'SCOPE DESCRIPTION', t: 's', s: stHeader }, { v: 'QTY', t: 's', s: stHeader }, { v: 'UNIT', t: 's', s: stHeader }, 
-                    { v: 'MAN HOUR', t: 's', s: stHeader }, { v: 'LABOR COST (Php)', t: 's', s: stHeader }, { v: 'MATERIALS COST (Php)', t: 's', s: stHeader }, { v: 'TOTAL COST', t: 's', s: stHeader }
+                    { v: 'DAYS', t: 's', s: stHeader }, { v: 'LABOR COST (Php)', t: 's', s: stHeader }, { v: 'MATERIALS COST (Php)', t: 's', s: stHeader }, { v: 'TOTAL COST', t: 's', s: stHeader }
                 ]
             ];
 
@@ -792,37 +1235,41 @@
                 cat.sections.forEach((sec, sIdx) => {
                     sec.items.forEach((item, iIdx) => {
                         const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
-                        // An item can have multiple lines (multiple material/labor combos) — export one row per line.
-                        const lines = (gridState[itemKey] || []).filter(l => (l.matId && parseFloat(l.matQty) > 0) || (l.labId && parseFloat(l.labHrs) > 0));
+                        // An item can have multiple lines (material, labor, and/or lumpsum) — export one row per line.
+                        const lines = (gridState[itemKey] || []).filter(l => lineHasData(l));
                         if (lines.length === 0) return;
 
                         hasCategoryData = true;
                         const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
 
                         lines.forEach((s) => {
-                            let matCost = 0, labCost = 0, matUnit = '-';
-                            if (s.matId && parseFloat(s.matQty) > 0) {
+                            const { total } = computeLineCost(s);
+                            let qty = 0, unit = '-', days = 0, labCost = 0, matCost = 0;
+
+                            if (s.labId) {
+                                qty = parseFloat(s.headcount) || 0;
+                                days = parseFloat(s.days) || 0;
+                                unit = 'workers';
+                                labCost = total;
+                            } else if (s.matId) {
+                                qty = parseFloat(s.qty) || 0;
                                 const m = MASTER_DB[s.matId];
-                                matCost = m.price * parseFloat(s.matQty);
-                                matUnit = m.unit;
-                            }
-                            if (s.labId && parseFloat(s.labHrs) > 0) {
-                                const l = LABOR_DB[s.labId];
-                                labCost = (l.dailyRate / 8) * parseFloat(s.labHrs);
+                                unit = m ? m.unit : '-';
+                                matCost = total;
+                            } else {
+                                unit = 'lumpsum';
+                                // Pure lump-sum-only row — total still lands in TOTAL COST below,
+                                // just not bucketed into LABOR/MATERIALS COST since it's neither.
                             }
 
-                            const total = matCost + labCost;
-                            const hrs = s.labHrs ? parseFloat(s.labHrs) : 0;
-                            const mQty = s.matQty ? parseFloat(s.matQty) : 0;
-
-                            catTotal += total; catManHours += hrs; catLabor += labCost; catMat += matCost;
+                            catTotal += total; catManHours += days; catLabor += labCost; catMat += matCost;
 
                             catRows.push([
                                 cStr(code, stItemCenterBold),
                                 cStr(item.desc, stItemLeftBold),
-                                c(mQty, stItemCenterBold),
-                                cStr(matUnit, stItemCenterBold),
-                                c(hrs, stItemRightBold),
+                                c(qty, stItemCenterBold),
+                                cStr(unit, stItemCenterBold),
+                                c(days, stItemRightBold),
                                 c(labCost, stItemRightBold),
                                 c(matCost, stItemRightBold),
                                 c(total, stItemRightBold)

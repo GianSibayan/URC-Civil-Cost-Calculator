@@ -85,6 +85,38 @@
             </div>
         </header>
 
+        <div class="px-8 py-3 border-b border-neutral-200 bg-white flex-shrink-0 flex flex-wrap items-end gap-x-6 gap-y-2">
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Project Title</label>
+                <input type="text" id="meta-project" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-48 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="e.g. Additional Cooling Tower" oninput="updateMeta('project', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Plant</label>
+                <input type="text" id="meta-plant" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="e.g. Batangas" oninput="updateMeta('plant', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Estimate Type</label>
+                <input type="text" id="meta-type" list="meta-type-list" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Feasibility" oninput="updateMeta('type', this.value)">
+                <datalist id="meta-type-list">
+                    <option value="Feasibility"></option>
+                    <option value="Budgetary"></option>
+                    <option value="Definitive"></option>
+                </datalist>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Prepared By</label>
+                <input type="text" id="meta-preparedby" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Your name" oninput="updateMeta('preparedBy', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Date</label>
+                <input type="date" id="meta-date" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="updateMeta('date', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Mean Spending Date</label>
+                <input type="date" id="meta-meanspend" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="updateMeta('meanSpendingDate', this.value)">
+            </div>
+        </div>
+
         <div class="flex-1 flex overflow-hidden p-4 gap-4">
             
             <div class="flex-1 bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
@@ -94,7 +126,7 @@
                 </div>
                 
                 <div class="flex-1 overflow-auto custom-scrollbar relative">
-                    <table class="w-full text-left border-collapse table-fixed min-w-[1100px]">
+                    <table class="w-full text-left border-collapse table-fixed min-w-[1160px]">
                         <thead class="bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-20 shadow-sm">
                             <tr>
                                 <th class="border border-neutral-200 p-2 w-16 text-center">WBS</th>
@@ -107,6 +139,7 @@
                                 <th class="border border-neutral-200 p-2 w-24 text-right">Mat Cost (₱)</th>
                                 <th class="border border-neutral-200 p-2 w-24 text-right">Lab Cost (₱)</th>
                                 <th class="border border-neutral-200 p-2 w-28 text-right text-blue-700">Total Cost (₱)</th>
+                                <th class="border border-neutral-200 p-2 w-14 text-center">Lines</th>
                             </tr>
                         </thead>
                         <tbody id="excel-grid-body" class="text-xs text-neutral-800">
@@ -117,34 +150,31 @@
 
             <div class="w-80 flex-shrink-0 flex flex-col gap-4">
                 <div class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
-                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 border-b border-neutral-100 pb-3">Financial Ledger</h3>
-                    
-                    <div class="space-y-3 text-sm text-neutral-600 mb-6 flex-1">
-                        <div class="ledger-row font-bold text-neutral-900 border-b border-neutral-100 pb-2">
-                            <span>Direct Cost Subtotal</span>
-                            <span id="ledger-defined">₱0.00</span>
-                        </div>
-                        
-                        <div class="ledger-row text-xs text-neutral-500 pt-2"><span>Undefined Allowances (5%)</span><span id="ledger-undefined" class="font-medium text-neutral-700">₱0.00</span></div>
-                        <div class="pl-3 border-l-2 border-neutral-100 text-[10px] text-neutral-400 space-y-1 py-1">
-                            <div class="flex justify-between"><span>Field Instructions (2%)</span><span id="ledger-uf-field">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Unlisted Items (2%)</span><span id="ledger-uf-unlisted">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Post Start-up (1%)</span><span id="ledger-uf-post">₱0.00</span></div>
+
+                    <div id="breakdown-empty" class="flex-1 flex flex-col items-center justify-center text-center gap-2 text-neutral-400">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-xs font-medium">Click a scope item to view its cost breakdown</p>
+                    </div>
+
+                    <div id="breakdown-content" class="hidden flex-1 flex flex-col overflow-hidden">
+                        <div class="flex items-start justify-between gap-2 mb-1 border-b border-neutral-100 pb-3">
+                            <div>
+                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest" id="breakdown-code">—</p>
+                                <h3 class="text-sm font-bold text-neutral-900 leading-snug" id="breakdown-desc">—</h3>
+                            </div>
+                            <button onclick="clearSelection()" class="text-neutral-300 hover:text-neutral-600 transition text-lg leading-none flex-shrink-0" title="Close">✕</button>
                         </div>
 
-                        <div class="ledger-row text-xs text-neutral-500 pt-2"><span>Risk Management</span><span id="ledger-risk" class="font-medium text-neutral-700">₱0.00</span></div>
-                        <div class="pl-3 border-l-2 border-neutral-100 text-[10px] text-neutral-400 py-1">
-                            <div class="flex justify-between"><span>Contingency (5%)</span><span id="ledger-contingency">₱0.00</span></div>
+                        <div id="breakdown-lines" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 py-3"></div>
+
+                        <div class="border-t border-neutral-200 pt-4 mt-auto">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-neutral-500 uppercase tracking-wide">Item Subtotal</span>
+                                <span class="text-xl font-black text-blue-600" id="breakdown-subtotal">₱0.00</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="border-t border-neutral-200 pt-5 mt-auto">
-                        <div class="flex flex-col gap-1">
-                            <h4 class="text-sm font-bold text-neutral-900 uppercase">Estimated Grand Total</h4>
-                            <p class="text-[10px] text-neutral-400">Raw Data: <span id="ledger-raw">₱0.00</span></p>
-                            <div class="text-3xl font-black text-blue-600 mt-2 tracking-tight" id="ledger-rounded">₱0.00</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -156,7 +186,11 @@
         // ============================================================
         let MASTER_DB = {}; 
         let LABOR_DB = {}; 
-        let gridState = {}; // Mapped as: gridState['yard-underground__0__1'] = { matId: '', matQty: '', labId: '', labHrs: '' }
+        // gridState['yard-underground__0__1'] = [ { matId: '', matQty: '', labId: '', labHrs: '' }, ... ]
+        // Each scope item can hold MULTIPLE lines (multiple material/labor combos), not just one.
+        let gridState = {};
+        let selectedItem = null; // itemKey currently shown in the right-panel breakdown
+        let estimateMeta = { project: '', plant: '', type: '', preparedBy: '', date: '', meanSpendingDate: '' };
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -306,6 +340,7 @@
 
         document.addEventListener("DOMContentLoaded", async () => {
             loadFromCache();
+            loadMeta();
             await fetchLaborRates(); 
             await fetchAllDatabases(); 
             renderGrid();
@@ -383,144 +418,144 @@
         // 2. EXCEL GRID RENDERING & LOGIC
         // ============================================================
         
-        function getMaterialOptionsHTML() {
+        function getMaterialOptionsHTML(selectedId) {
             let html = '<option value="">- Select Material -</option>';
             DB_CONFIG.forEach(cfg => {
                 const items = Object.keys(MASTER_DB).filter(k => MASTER_DB[k].category === cfg.id);
                 if (items.length > 0) {
                     html += `<optgroup label="${cfg.label}">`;
-                    items.forEach(k => { html += `<option value="${k}">${MASTER_DB[k].name} (₱${MASTER_DB[k].price}/${MASTER_DB[k].unit})</option>`; });
+                    items.forEach(k => {
+                        const sel = k === selectedId ? ' selected' : '';
+                        html += `<option value="${k}"${sel}>${MASTER_DB[k].name} (₱${MASTER_DB[k].price}/${MASTER_DB[k].unit})</option>`;
+                    });
                     html += `</optgroup>`;
                 }
             });
             return html;
         }
 
-        function getLaborOptionsHTML() {
+        function getLaborOptionsHTML(selectedId) {
             let html = '<option value="">- Select Role -</option>';
             Object.keys(LABOR_DB).forEach(k => {
                 const rate = (LABOR_DB[k].dailyRate / 8).toFixed(2);
-                html += `<option value="${k}">${LABOR_DB[k].name} (₱${rate}/hr)</option>`;
+                const sel = k === selectedId ? ' selected' : '';
+                html += `<option value="${k}"${sel}>${LABOR_DB[k].name} (₱${rate}/hr)</option>`;
             });
             return html;
+        }
+
+        function computeLineCost(line) {
+            let matCost = 0, unitStr = '-';
+            if (line && line.matId) {
+                const mat = MASTER_DB[line.matId];
+                if (mat) {
+                    unitStr = mat.unit;
+                    if (line.matQty && parseFloat(line.matQty) > 0) matCost = mat.price * parseFloat(line.matQty);
+                }
+            }
+            let labCost = 0;
+            if (line && line.labId && line.labHrs && parseFloat(line.labHrs) > 0) {
+                const lab = LABOR_DB[line.labId];
+                if (lab) labCost = (lab.dailyRate / 8) * parseFloat(line.labHrs);
+            }
+            return { matCost, labCost, total: matCost + labCost, unitStr };
+        }
+
+        function getLines(itemKey) {
+            const lines = gridState[itemKey];
+            return (lines && lines.length > 0) ? lines : [{ matId: '', matQty: '', labId: '', labHrs: '' }];
         }
 
         function renderGrid() {
             const tbody = document.getElementById('excel-grid-body');
             let html = '';
-            
-            const matOpts = getMaterialOptionsHTML();
-            const labOpts = getLaborOptionsHTML();
+            const fmt = (num) => num > 0 ? num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
 
             SCOPE_CATEGORIES.forEach((cat, cIdx) => {
                 html += `
                 <tr class="bg-slate-700 text-white shadow-sm border-b-2 border-white">
-                    <td colspan="10" class="p-2.5 font-bold text-xs uppercase tracking-widest pl-4">${cat.label}</td>
+                    <td colspan="11" class="p-2.5 font-bold text-xs uppercase tracking-widest pl-4">${cat.label}</td>
                 </tr>`;
                 
                 cat.sections.forEach((sec, sIdx) => {
                     html += `
                     <tr class="bg-blue-100 text-blue-900 border-b border-blue-200">
-                        <td colspan="10" class="p-2 pl-4 font-bold text-[11px] uppercase tracking-wide">${sec.title}</td>
+                        <td colspan="11" class="p-2 pl-4 font-bold text-[11px] uppercase tracking-wide">${sec.title}</td>
                     </tr>`;
                     
                     sec.items.forEach((item, iIdx) => {
-                        const rowKey = `${cat.id}__${sIdx}__${iIdx}`;
+                        const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
                         const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
-                        
-                        html += `
-                        <tr class="hover:bg-neutral-50 transition-colors border-b border-neutral-200" id="row-${rowKey}">
-                            <td class="excel-cell readonly-cell text-center font-bold">${code}</td>
-                            <td class="excel-cell readonly-cell font-medium text-neutral-900" title="${item.desc}"><div class="truncate w-64">${item.desc}</div></td>
-                            
-                            <td class="excel-cell bg-amber-50/20"><select id="sel-mat-${rowKey}" class="excel-select text-amber-900" onchange="updateGrid('${rowKey}', 'matId', this.value)">${matOpts}</select></td>
-                            <td class="excel-cell bg-amber-50/20"><input type="number" id="inp-matqty-${rowKey}" class="excel-input text-right text-amber-900 font-medium" min="0" step="any" placeholder="-" oninput="updateGrid('${rowKey}', 'matQty', this.value)"></td>
-                            <td class="excel-cell readonly-cell text-center text-xs text-amber-700" id="txt-unit-${rowKey}">-</td>
-                            
-                            <td class="excel-cell bg-blue-50/30"><select id="sel-lab-${rowKey}" class="excel-select text-blue-900" onchange="updateGrid('${rowKey}', 'labId', this.value)">${labOpts}</select></td>
-                            <td class="excel-cell bg-blue-50/30"><input type="number" id="inp-labhrs-${rowKey}" class="excel-input text-right text-blue-900 font-medium" min="0" step="any" placeholder="-" oninput="updateGrid('${rowKey}', 'labHrs', this.value)"></td>
-                            
-                            <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-matcost-${rowKey}">-</td>
-                            <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-labcost-${rowKey}">-</td>
-                            <td class="excel-cell readonly-cell text-right font-bold text-blue-700 bg-blue-50/50" id="txt-totalcost-${rowKey}">-</td>
-                        </tr>`;
+                        const lines = getLines(itemKey);
+
+                        lines.forEach((line, lIdx) => {
+                            const lineKey = `${itemKey}__${lIdx}`;
+                            const { matCost, labCost, total, unitStr } = computeLineCost(line);
+                            const isLast = lIdx === lines.length - 1;
+
+                            html += `<tr class="hover:bg-neutral-50 transition-colors border-b border-neutral-200 ${total > 0 ? 'bg-blue-50/40' : ''}" id="row-${lineKey}">`;
+
+                            if (lIdx === 0) {
+                                html += `
+                                <td class="excel-cell readonly-cell text-center font-bold cursor-pointer" rowspan="${lines.length}" onclick="selectItem('${itemKey}')">${code}</td>
+                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" onclick="selectItem('${itemKey}')"><div class="truncate w-64">${item.desc}</div></td>`;
+                            }
+
+                            html += `
+                                <td class="excel-cell bg-amber-50/20"><select id="sel-mat-${lineKey}" class="excel-select text-amber-900" onchange="updateLine('${itemKey}', ${lIdx}, 'matId', this.value)">${getMaterialOptionsHTML(line.matId)}</select></td>
+                                <td class="excel-cell bg-amber-50/20"><input type="number" id="inp-matqty-${lineKey}" class="excel-input text-right text-amber-900 font-medium" min="0" step="any" placeholder="-" value="${line.matQty || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'matQty', this.value)"></td>
+                                <td class="excel-cell readonly-cell text-center text-xs text-amber-700" id="txt-unit-${lineKey}">${unitStr}</td>
+                                
+                                <td class="excel-cell bg-blue-50/30"><select id="sel-lab-${lineKey}" class="excel-select text-blue-900" onchange="updateLine('${itemKey}', ${lIdx}, 'labId', this.value)">${getLaborOptionsHTML(line.labId)}</select></td>
+                                <td class="excel-cell bg-blue-50/30"><input type="number" id="inp-labhrs-${lineKey}" class="excel-input text-right text-blue-900 font-medium" min="0" step="any" placeholder="-" value="${line.labHrs || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'labHrs', this.value)"></td>
+                                
+                                <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-matcost-${lineKey}">${fmt(matCost)}</td>
+                                <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-labcost-${lineKey}">${fmt(labCost)}</td>
+                                <td class="excel-cell readonly-cell text-right font-bold text-blue-700 bg-blue-50/50" id="txt-totalcost-${lineKey}">${fmt(total)}</td>
+                                <td class="excel-cell readonly-cell text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button onclick="removeLine('${itemKey}', ${lIdx})" class="text-neutral-300 hover:text-red-500 transition text-xs" title="Remove this line">✕</button>
+                                        ${isLast ? `<button onclick="addLine('${itemKey}')" class="text-neutral-300 hover:text-blue-600 transition text-xs font-bold" title="Add another line to this item">+</button>` : ''}
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
                     });
                 });
             });
             
             tbody.innerHTML = html;
-            hydrateGrid();
+            updateTotals();
         }
 
-        function hydrateGrid() {
-            Object.keys(gridState).forEach(rowKey => {
-                const s = gridState[rowKey];
-                const selMat = document.getElementById(`sel-mat-${rowKey}`);
-                const inpQty = document.getElementById(`inp-matqty-${rowKey}`);
-                const selLab = document.getElementById(`sel-lab-${rowKey}`);
-                const inpHrs = document.getElementById(`inp-labhrs-${rowKey}`);
-                
-                if (s.matId && selMat) selMat.value = s.matId;
-                if (s.matQty && inpQty) inpQty.value = s.matQty;
-                if (s.labId && selLab) selLab.value = s.labId;
-                if (s.labHrs && inpHrs) inpHrs.value = s.labHrs;
-                
-                calculateRow(rowKey);
-            });
-            updateLedger();
-        }
-
-        function updateGrid(rowKey, field, value) {
-            if (!gridState[rowKey]) gridState[rowKey] = { matId: '', matQty: '', labId: '', labHrs: '' };
-            gridState[rowKey][field] = value;
-            calculateRow(rowKey);
-            updateLedger();
+        function updateLine(itemKey, idx, field, value) {
+            if (!gridState[itemKey]) gridState[itemKey] = [{ matId: '', matQty: '', labId: '', labHrs: '' }];
+            if (!gridState[itemKey][idx]) gridState[itemKey][idx] = { matId: '', matQty: '', labId: '', labHrs: '' };
+            gridState[itemKey][idx][field] = value;
+            calculateLine(itemKey, idx);
+            updateTotals();
             saveToCache();
+            if (selectedItem === itemKey) renderBreakdownPanel();
         }
 
-        function calculateRow(rowKey) {
-            const state = gridState[rowKey];
-            if (!state) return 0;
+        function calculateLine(itemKey, idx) {
+            const line = gridState[itemKey] && gridState[itemKey][idx];
+            if (!line) return { matCost: 0, labCost: 0, total: 0 };
 
-            let matCost = 0;
-            let unitStr = '-';
-            
-            if (state.matId) {
-                const mat = MASTER_DB[state.matId];
-                if (mat) {
-                    unitStr = mat.unit;
-                    if (state.matQty && parseFloat(state.matQty) > 0) {
-                        matCost = mat.price * parseFloat(state.matQty);
-                    }
-                }
-            }
-            
-            let labCost = 0;
-            if (state.labId && state.labHrs && parseFloat(state.labHrs) > 0) {
-                const lab = LABOR_DB[state.labId];
-                if (lab) {
-                    const hourlyRate = lab.dailyRate / 8;
-                    labCost = hourlyRate * parseFloat(state.labHrs);
-                }
-            }
-            
-            const total = matCost + labCost;
-            
-            const elUnit = document.getElementById(`txt-unit-${rowKey}`);
-            const elMatCost = document.getElementById(`txt-matcost-${rowKey}`);
-            const elLabCost = document.getElementById(`txt-labcost-${rowKey}`);
-            const elTotalCost = document.getElementById(`txt-totalcost-${rowKey}`);
-            
-            if (elUnit) elUnit.textContent = unitStr;
-            
+            const { matCost, labCost, total, unitStr } = computeLineCost(line);
+            const lineKey = `${itemKey}__${idx}`;
             const fmt = (num) => num > 0 ? num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
-            
+
+            const elUnit = document.getElementById(`txt-unit-${lineKey}`);
+            const elMatCost = document.getElementById(`txt-matcost-${lineKey}`);
+            const elLabCost = document.getElementById(`txt-labcost-${lineKey}`);
+            const elTotalCost = document.getElementById(`txt-totalcost-${lineKey}`);
+            if (elUnit) elUnit.textContent = unitStr;
             if (elMatCost) elMatCost.textContent = fmt(matCost);
             if (elLabCost) elLabCost.textContent = fmt(labCost);
             if (elTotalCost) elTotalCost.textContent = fmt(total);
-            
-            // Auto Highlight Row
-            const tr = document.getElementById(`row-${rowKey}`);
+
+            const tr = document.getElementById(`row-${lineKey}`);
             if (tr) {
                 if (total > 0) tr.classList.add('bg-blue-50/40');
                 else tr.classList.remove('bg-blue-50/40');
@@ -529,51 +564,109 @@
             return { matCost, labCost, total };
         }
 
+        function addLine(itemKey) {
+            if (!gridState[itemKey]) gridState[itemKey] = [{ matId: '', matQty: '', labId: '', labHrs: '' }];
+            gridState[itemKey].push({ matId: '', matQty: '', labId: '', labHrs: '' });
+            saveToCache();
+            renderGrid();
+            selectItem(itemKey);
+        }
+
+        function removeLine(itemKey, idx) {
+            const lines = gridState[itemKey];
+            if (!lines) return;
+            if (lines.length <= 1) {
+                delete gridState[itemKey]; // collapses back to a single blank placeholder line
+            } else {
+                lines.splice(idx, 1);
+            }
+            saveToCache();
+            renderGrid();
+            if (selectedItem === itemKey) renderBreakdownPanel();
+        }
+
         function clearWorksheet() {
             if(confirm('Are you sure you want to clear the entire worksheet?')) {
                 gridState = {};
                 saveToCache();
                 renderGrid();
+                clearSelection();
                 showToast('Worksheet cleared.', 'info');
             }
         }
 
         // ============================================================
-        // 3. LEDGER & CACHING
+        // 3. ITEM SELECTION, BREAKDOWN PANEL, TOTALS & CACHING
         // ============================================================
 
-        function updateLedger() {
-            let definedCost = 0;
-            
-            Object.keys(gridState).forEach(rowKey => {
-                const costs = calculateRow(rowKey);
-                definedCost += (costs ? costs.total : 0);
+        function selectItem(itemKey) {
+            selectedItem = itemKey;
+            document.querySelectorAll('[id^="row-"]').forEach(el => el.classList.remove('ring-2', 'ring-inset', 'ring-blue-400'));
+            document.querySelectorAll(`[id^="row-${itemKey}__"]`).forEach(el => el.classList.add('ring-2', 'ring-inset', 'ring-blue-400'));
+            renderBreakdownPanel();
+        }
+
+        function clearSelection() {
+            selectedItem = null;
+            document.querySelectorAll('[id^="row-"]').forEach(el => el.classList.remove('ring-2', 'ring-inset', 'ring-blue-400'));
+            document.getElementById('breakdown-empty').classList.remove('hidden');
+            document.getElementById('breakdown-content').classList.add('hidden');
+        }
+
+        function renderBreakdownPanel() {
+            if (!selectedItem) { clearSelection(); return; }
+
+            const [catId, sIdx, iIdx] = selectedItem.split('__');
+            const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
+            if (!cat) return;
+            const sec = cat.sections[parseInt(sIdx)];
+            const item = sec.items[parseInt(iIdx)];
+            const cIdx = SCOPE_CATEGORIES.indexOf(cat);
+            const code = cat.isIndirect ? item.code : `${cIdx+1}.${parseInt(sIdx)+1}.${parseInt(iIdx)+1}`;
+
+            document.getElementById('breakdown-empty').classList.add('hidden');
+            document.getElementById('breakdown-content').classList.remove('hidden');
+            document.getElementById('breakdown-code').textContent = `WBS ${code}`;
+            document.getElementById('breakdown-desc').textContent = item.desc;
+
+            const lines = getLines(selectedItem);
+            const fmt = (num) => `₱${num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            let subtotal = 0;
+            let html = '';
+
+            lines.forEach((line) => {
+                if (!line.matId && !line.labId) return; // skip untouched placeholder lines
+                const { matCost, labCost, total } = computeLineCost(line);
+                subtotal += total;
+
+                const matName = line.matId && MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : null;
+                const labName = line.labId && LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : null;
+
+                html += `<div class="p-2.5 bg-neutral-50 border border-neutral-100 rounded-lg text-xs space-y-1">`;
+                if (matName) html += `<div class="flex justify-between text-neutral-600"><span class="truncate pr-2">${matName} × ${line.matQty || 0}</span><span class="font-medium text-neutral-900 flex-shrink-0">${fmt(matCost)}</span></div>`;
+                if (labName) html += `<div class="flex justify-between text-neutral-600"><span class="truncate pr-2">${labName} × ${line.labHrs || 0}h</span><span class="font-medium text-neutral-900 flex-shrink-0">${fmt(labCost)}</span></div>`;
+                html += `</div>`;
             });
 
-            const ufField = definedCost * 0.02;
-            const ufUnlisted = definedCost * 0.02;
-            const ufPost = definedCost * 0.01;
-            const undefinedTotal = ufField + ufUnlisted + ufPost; 
-            const contingency = definedCost * 0.05; 
-            
-            const rawTotal = definedCost + undefinedTotal + contingency;
-            const roundedTotal = Math.round(rawTotal / 1000) * 1000;
+            document.getElementById('breakdown-lines').innerHTML = html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added to this item yet.</p>';
+            document.getElementById('breakdown-subtotal').textContent = fmt(subtotal);
+        }
 
-            const fmt = (num) => `₱${num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            
-            document.getElementById('ledger-defined').textContent = fmt(definedCost);
-            document.getElementById('ledger-undefined').textContent = fmt(undefinedTotal);
-            document.getElementById('ledger-uf-field').textContent = fmt(ufField);
-            document.getElementById('ledger-uf-unlisted').textContent = fmt(ufUnlisted);
-            document.getElementById('ledger-uf-post').textContent = fmt(ufPost);
-            
-            document.getElementById('ledger-risk').textContent = fmt(contingency);
-            document.getElementById('ledger-contingency').textContent = fmt(contingency);
-            
-            document.getElementById('ledger-raw').textContent = fmt(rawTotal);
-            document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
+        // The full Financial Ledger (Undefined Allowances, Contingency, Grand Total) is moving
+        // to calculator.html per Sir Tony's direction. CES now only tracks its own Defined Cost
+        // subtotal quietly in the background and hands it off via cross-page storage.
+        function updateTotals() {
+            let definedCost = 0;
+            Object.keys(gridState).forEach(itemKey => {
+                (gridState[itemKey] || []).forEach((line) => {
+                    definedCost += computeLineCost(line).total;
+                });
+            });
 
             localStorage.setItem('urc_ccc_ces_ready', String(definedCost > 0));
+            try {
+                localStorage.setItem('urc_ces_cross_page', JSON.stringify({ definedCost, updatedAt: Date.now() }));
+            } catch(e) {}
         }
 
         function saveToCache() {
@@ -583,8 +676,31 @@
         function loadFromCache() {
             try {
                 const raw = localStorage.getItem('urc_ces_grid_state');
-                if (raw) gridState = JSON.parse(raw);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                // Defensive: only accept entries already in the new array-per-item shape.
+                // Old single-object-per-row caches (pre multi-line) are dropped instead of crashing the page.
+                Object.keys(parsed).forEach(key => {
+                    if (Array.isArray(parsed[key])) gridState[key] = parsed[key];
+                });
             } catch(e) {}
+        }
+
+        function updateMeta(field, value) {
+            estimateMeta[field] = value;
+            try { localStorage.setItem('urc_ces_meta', JSON.stringify(estimateMeta)); } catch(e) {}
+        }
+
+        function loadMeta() {
+            try {
+                const raw = localStorage.getItem('urc_ces_meta');
+                if (raw) estimateMeta = { ...estimateMeta, ...JSON.parse(raw) };
+            } catch(e) {}
+            const map = { project: 'meta-project', plant: 'meta-plant', type: 'meta-type', preparedBy: 'meta-preparedby', date: 'meta-date', meanSpendingDate: 'meta-meanspend' };
+            Object.keys(map).forEach(field => {
+                const el = document.getElementById(map[field]);
+                if (el && estimateMeta[field]) el.value = estimateMeta[field];
+            });
         }
 
         function showToast(message, type = 'success') {
@@ -606,7 +722,9 @@
         // ============================================================
 
         function exportToExcelBOQ() {
-            const estDate = new Date().toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'});
+            const estDate = estimateMeta.date
+                ? new Date(estimateMeta.date + 'T00:00:00').toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'})
+                : new Date().toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'});
 
             const borderAll = { top: {style: 'thin'}, bottom: {style: 'thin'}, left: {style: 'thin'}, right: {style: 'thin'} };
             const fontArial = { name: "Arial", sz: 11 };
@@ -647,7 +765,8 @@
             const ws_data = [
                 [cStr('ENGINEERING ESTIMATE TEMPLATE', stTitleRow)],
                 [],
-                [cStr('PROJECT TITLE', stMetaLabel), cStr('Custom Worksheet Export', stMetaValue), '', '', '', cStr('Date', stMetaLabel), cStr(estDate, stMetaValue)],
+                [cStr('PROJECT TITLE', stMetaLabel), cStr(estimateMeta.project || 'Untitled Estimate', stMetaValue), '', '', '', cStr('Date', stMetaLabel), cStr(estDate, stMetaValue)],
+                [cStr('PLANT', stMetaLabel), cStr(estimateMeta.plant || '-', stMetaValue), '', '', '', cStr('Prepared by', stMetaLabel), cStr(estimateMeta.preparedBy || '-', stMetaValue)],
                 [],
                 [
                     { v: 'ITEM NO.', t: 's', s: stHeader }, { v: 'SCOPE DESCRIPTION', t: 's', s: stHeader }, { v: 'QTY', t: 's', s: stHeader }, { v: 'UNIT', t: 's', s: stHeader }, 
@@ -658,7 +777,7 @@
             let merges = [];
             merges.push({s: {r: 0, c: 0}, e: {r: 0, c: 3}});
 
-            let currentRow = 5; 
+            let currentRow = 6; 
 
             let grandDirectTotal = 0, grandDirectManHours = 0, grandDirectLabor = 0, grandDirectMat = 0;
             let grandIndirectTotal = 0, grandIndirectManHours = 0, grandIndirectLabor = 0, grandIndirectMat = 0;
@@ -672,12 +791,15 @@
 
                 cat.sections.forEach((sec, sIdx) => {
                     sec.items.forEach((item, iIdx) => {
-                        const rowKey = `${cat.id}__${sIdx}__${iIdx}`;
-                        const s = gridState[rowKey];
-                        
-                        if (s && ( (s.matId && parseFloat(s.matQty) > 0) || (s.labId && parseFloat(s.labHrs) > 0) )) {
-                            hasCategoryData = true;
-                            
+                        const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+                        // An item can have multiple lines (multiple material/labor combos) — export one row per line.
+                        const lines = (gridState[itemKey] || []).filter(l => (l.matId && parseFloat(l.matQty) > 0) || (l.labId && parseFloat(l.labHrs) > 0));
+                        if (lines.length === 0) return;
+
+                        hasCategoryData = true;
+                        const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+
+                        lines.forEach((s) => {
                             let matCost = 0, labCost = 0, matUnit = '-';
                             if (s.matId && parseFloat(s.matQty) > 0) {
                                 const m = MASTER_DB[s.matId];
@@ -688,15 +810,13 @@
                                 const l = LABOR_DB[s.labId];
                                 labCost = (l.dailyRate / 8) * parseFloat(s.labHrs);
                             }
-                            
+
                             const total = matCost + labCost;
                             const hrs = s.labHrs ? parseFloat(s.labHrs) : 0;
                             const mQty = s.matQty ? parseFloat(s.matQty) : 0;
-                            
+
                             catTotal += total; catManHours += hrs; catLabor += labCost; catMat += matCost;
-                            
-                            const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
-                            
+
                             catRows.push([
                                 cStr(code, stItemCenterBold),
                                 cStr(item.desc, stItemLeftBold),
@@ -707,7 +827,7 @@
                                 c(matCost, stItemRightBold),
                                 c(total, stItemRightBold)
                             ]);
-                        }
+                        });
                     });
                 });
 

@@ -84,14 +84,50 @@
 
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-[#f4f5f8] relative">
         <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white flex-shrink-0">
-            <h2 class="text-2xl font-bold text-neutral-900">Master Estimator Worksheet</h2>
+            <h2 class="text-2xl font-bold text-neutral-900">Master Estimator</h2>
             <div class="flex items-center gap-3">
                 <button onclick="exportToExcelBOQ()" class="px-4 py-2 text-sm font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Export to Excel
                 </button>
+                <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-bold bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
             </div>
         </header>
+
+        <!-- Save Estimate Modal -->
+        <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+                <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+                <p class="text-sm text-neutral-400 mb-6">This saves a snapshot of the current worksheet and scorecards to History.</p>
+
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Project Title</label>
+                            <p id="modal-preview-project" class="text-sm font-medium text-neutral-800">—</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Prepared By</label>
+                            <p id="modal-preview-preparedby" class="text-sm font-medium text-neutral-800">—</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-neutral-100 pt-3 space-y-1.5">
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Defined Cost</span><span id="modal-preview-defined" class="font-semibold text-neutral-800">₱0.00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Contingency</span><span id="modal-preview-contingency" class="font-semibold text-neutral-800">0%</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Undefined Cost</span><span id="modal-preview-undefined" class="font-semibold text-neutral-800">0%</span></div>
+                        <div class="flex justify-between text-sm pt-1.5 border-t border-neutral-100"><span class="text-neutral-700 font-semibold">Estimated Grand Total</span><span id="modal-preview-grandtotal" class="font-bold text-blue-600">₱0.00</span></div>
+                    </div>
+                </div>
+
+                <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Project Title and Prepared By need to be filled in the header bar above before saving.</p>
+
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                    <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+                </div>
+            </div>
+        </div>
 
         <div class="px-8 py-3 border-b border-neutral-200 bg-white flex-shrink-0 flex flex-wrap items-end gap-x-6 gap-y-2">
             <div class="flex flex-col gap-1">
@@ -131,8 +167,8 @@
                 <div class="p-3 border-b border-neutral-200 bg-neutral-50 flex justify-between items-center flex-shrink-0 gap-3">
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="tab-btn-grid" onclick="switchTab('grid')" class="px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition">Scope Items Grid</button>
-                        <button id="tab-btn-contingency" onclick="switchTab('contingency')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Contingency Score Card</button>
-                        <button id="tab-btn-undefined" onclick="switchTab('undefinedCost')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Undefined Costs Score Card</button>
+                        <button id="tab-btn-contingency" onclick="switchTab('contingency')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Contingency Scorecard</button>
+                        <button id="tab-btn-undefined" onclick="switchTab('undefinedCost')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Undefined Costs Scorecard</button>
                     </div>
                     <div id="grid-toolbar-extras" class="flex-1 flex justify-end items-center gap-3">
                         <div class="relative w-64">
@@ -461,7 +497,6 @@
 
         function renderScorecard(containerId, criteria, selections, scorecardType) {
             const container = document.getElementById(containerId);
-            const title = scorecardType === 'contingency' ? 'Contingency Scorecard' : 'Undefined Cost Scorecard';
             const subtitle = scorecardType === 'contingency'
                 ? 'For each criterion below, select the description that best matches this project. The percentages are summed, not averaged.'
                 : 'For each criterion below, select the description that best matches this project\u2019s current state of definition. The percentages are summed, not averaged.';
@@ -469,8 +504,7 @@
             let subtotal = 0;
             let html = `
                 <div class="max-w-4xl mx-auto">
-                    <h2 class="text-lg font-bold text-neutral-900">${title}</h2>
-                    <p class="text-xs text-neutral-500 mt-1 mb-6">${subtitle}</p>
+                    <p class="text-xs text-neutral-500 mb-6">${subtitle}</p>
                     <div class="space-y-4">`;
 
             criteria.forEach(crit => {
@@ -514,6 +548,10 @@
             container.innerHTML = html;
         }
 
+        function scorecardSubtotal(criteria, selections) {
+            return criteria.reduce((sum, c) => sum + (selections[c.id] !== undefined ? c.choices[selections[c.id]].value : 0), 0);
+        }
+
         function selectScoreChoice(scorecardType, criterionId, idx) {
             const selections = scorecardType === 'contingency' ? contingencySelections : undefinedSelections;
             selections[criterionId] = idx;
@@ -525,8 +563,9 @@
 
             // Hand off the final subtotal for calculator.html to pick up later — separate keys per
             // scorecard, written every time a selection changes so it's always current.
-            const subtotal = criteria.reduce((sum, c) => sum + (selections[c.id] !== undefined ? c.choices[selections[c.id]].value : 0), 0);
+            const subtotal = scorecardSubtotal(criteria, selections);
             try { localStorage.setItem(`urc_ces_${scorecardType}_subtotal`, JSON.stringify({ subtotal, updatedAt: Date.now() })); } catch(e) {}
+            updateSaveButtonState();
         }
 
         function saveScorecardState() {
@@ -545,6 +584,191 @@
             } catch(e) {}
         }
 
+        // ============================================================
+        // SAVE ESTIMATE → History
+        // Labor now lives inside CES itself (no more separate labor.html),
+        // so this record combines: CES's own grid breakdown (material/labor/
+        // lump sum, aggregated by category and by labor role), both
+        // scorecards, and a best-effort read of calculator.html's snapshot
+        // if one exists yet.
+        // ============================================================
+
+        function fmtPeso(n) {
+            return `₱${(n||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        function getCategoryTotals() {
+            const totals = {};
+            SCOPE_CATEGORIES.forEach(cat => { totals[cat.label] = categoryTotal(cat); });
+            return totals;
+        }
+
+        function getCostBreakdown() {
+            let materialCost = 0, laborCost = 0, lumpSumCost = 0;
+            Object.keys(gridState).forEach(itemKey => {
+                (gridState[itemKey] || []).forEach(line => {
+                    lumpSumCost += parseFloat(line.lumpSum) || 0;
+                    if (line.labId) {
+                        const lab = LABOR_DB[line.labId];
+                        const headcount = parseFloat(line.headcount) || 0;
+                        const days = parseFloat(line.days) || 0;
+                        if (lab && headcount > 0 && days > 0) laborCost += headcount * days * lab.dailyRate * 8;
+                    } else if (line.matId) {
+                        const mat = MASTER_DB[line.matId];
+                        const qty = parseFloat(line.qty) || 0;
+                        if (mat && qty > 0) materialCost += mat.price * qty;
+                    }
+                });
+            });
+            return { materialCost, laborCost, lumpSumCost, definedCost: materialCost + laborCost + lumpSumCost };
+        }
+
+        function getLaborBreakdown() {
+            // Aggregated by role across every scope item that used it. personDays (headcount × days,
+            // summed) is the honest additive unit here — a plain summed "headcount" isn't meaningful
+            // once the same role is used across many unrelated lines with different crew sizes.
+            const byRole = {};
+            Object.keys(gridState).forEach(itemKey => {
+                (gridState[itemKey] || []).forEach(line => {
+                    if (!line.labId) return;
+                    const lab = LABOR_DB[line.labId];
+                    const headcount = parseFloat(line.headcount) || 0;
+                    const days = parseFloat(line.days) || 0;
+                    if (!lab || headcount <= 0 || days <= 0) return;
+                    const ratePerDay = lab.dailyRate * 8;
+                    const personDays = headcount * days;
+                    if (!byRole[line.labId]) byRole[line.labId] = { name: lab.name, ratePerDay, personDays: 0, subtotal: 0 };
+                    byRole[line.labId].personDays += personDays;
+                    byRole[line.labId].subtotal += personDays * ratePerDay;
+                });
+            });
+            return Object.values(byRole);
+        }
+
+        function countPricedLines() {
+            let n = 0;
+            Object.keys(gridState).forEach(itemKey => { (gridState[itemKey] || []).forEach(line => { if (lineHasData(line)) n++; }); });
+            return n;
+        }
+
+        function scorecardDetail(criteria, selections) {
+            return criteria.map(c => {
+                const idx = selections[c.id];
+                return { label: c.label, value: idx !== undefined ? c.choices[idx].value : null, desc: idx !== undefined ? c.choices[idx].desc : null };
+            });
+        }
+
+        function estimatedGrandTotal() {
+            const { definedCost } = getCostBreakdown();
+            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
+            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+            return definedCost * (1 + (contSubtotal + undefSubtotal) / 100);
+        }
+
+        function updateSaveButtonState() {
+            const btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            const { definedCost } = getCostBreakdown();
+            const ready = definedCost > 0 && !!estimateMeta.project && !!estimateMeta.preparedBy;
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
+        }
+
+        function openSaveModal() {
+            const breakdown = getCostBreakdown();
+            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
+            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+
+            document.getElementById('modal-preview-project').textContent = estimateMeta.project || '—';
+            document.getElementById('modal-preview-preparedby').textContent = estimateMeta.preparedBy || '—';
+            document.getElementById('modal-preview-defined').textContent = fmtPeso(breakdown.definedCost);
+            document.getElementById('modal-preview-contingency').textContent = contSubtotal + '%';
+            document.getElementById('modal-preview-undefined').textContent = undefSubtotal + '%';
+            document.getElementById('modal-preview-grandtotal').textContent = fmtPeso(estimatedGrandTotal());
+            document.getElementById('modal-error').classList.add('hidden');
+
+            document.getElementById('save-modal').classList.remove('hidden');
+            document.getElementById('save-modal').classList.add('flex');
+        }
+
+        function closeSaveModal() {
+            document.getElementById('save-modal').classList.add('hidden');
+            document.getElementById('save-modal').classList.remove('flex');
+        }
+
+        function confirmSaveEstimate() {
+            if (!estimateMeta.project || !estimateMeta.preparedBy) {
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
+
+            const breakdown = getCostBreakdown();
+            const grandTotal = estimatedGrandTotal();
+
+            // Best-effort read of calculator.html's snapshot, if one exists yet — same shape as
+            // before so this stays forward-compatible once that page's ledger is finished.
+            let calcSnap = {};
+            try { calcSnap = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}'); } catch(e) {}
+            const L = calcSnap.length || 0, W = calcSnap.width || 0, H = calcSnap.clearHeight || 0;
+            const M = (calcSnap.mezzanine || 0) / 100;
+            const floorArea = L * W, grossArea = floorArea * (1 + M);
+            const bsl = calcSnap.baySpacingL || 0, bsw = calcSnap.baySpacingW || 0;
+            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L / bsl + W / bsw) : 0;
+            const fl = calcSnap.footingLength || 0, fw = calcSnap.footingWidth || 0, fd = calcSnap.footingDepth || 0;
+            const pl = calcSnap.pedestalLength || 0, pw = calcSnap.pedestalWidth || 0, ph = calcSnap.pedestalHeight || 0;
+            const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
+
+            const record = {
+                id: 'ccc_hist_' + Date.now(),
+                savedAt: new Date().toISOString(),
+                projectName: estimateMeta.project,
+                engineerName: estimateMeta.preparedBy,
+                plant: estimateMeta.plant || '',
+                estimateType: estimateMeta.type || '',
+                estimateDate: estimateMeta.date || '',
+                meanSpendingDate: estimateMeta.meanSpendingDate || '',
+
+                calculator: (L || W) ? {
+                    snapshot: {
+                        length: L, width: W, clearHeight: H, stories: calcSnap.stories || 1, mezzanine: calcSnap.mezzanine || 0,
+                        structureType: calcSnap.structureType, roofType: calcSnap.roofType, wallCladding: calcSnap.wallCladding,
+                        slabThickness: calcSnap.slabThickness, dockDoors: calcSnap.dockDoors || 0, driveInDoors: calcSnap.driveInDoors || 0,
+                        baySpacingL: bsl, baySpacingW: bsw, footingLength: fl, footingWidth: fw, footingDepth: fd,
+                        pedestalLength: pl, pedestalWidth: pw, pedestalHeight: ph, concretePriceM3: calcSnap.concretePriceM3 || 0, concreteClass: calcSnap.concreteClass
+                    },
+                    summary: { floorArea: +floorArea.toFixed(2), grossArea: +grossArea.toFixed(2), perimeter: +(2 * (L + W)).toFixed(2), nodes, concreteVol: +concreteVol.toFixed(2) }
+                } : null,
+
+                ces: {
+                    categoryTotals: getCategoryTotals(),
+                    materialCost: +breakdown.materialCost.toFixed(2),
+                    laborCost: +breakdown.laborCost.toFixed(2),
+                    lumpSumCost: +breakdown.lumpSumCost.toFixed(2),
+                    definedCost: +breakdown.definedCost.toFixed(2),
+                    pricedLines: countPricedLines(),
+                    laborBreakdown: getLaborBreakdown().map(r => ({ name: r.name, ratePerDay: +r.ratePerDay.toFixed(2), personDays: +r.personDays.toFixed(2), subtotal: +r.subtotal.toFixed(2) }))
+                },
+
+                scorecards: {
+                    contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections), criteria: scorecardDetail(CONTINGENCY_CRITERIA, contingencySelections) },
+                    undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
+                },
+
+                grandTotal: +grandTotal.toFixed(2)
+            };
+
+            try {
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history') || '[]');
+                h.unshift(record);
+                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+                closeSaveModal();
+                showToast('Estimate saved to history.', 'success');
+            } catch(e) {
+                showToast('Could not save estimate.', 'error');
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             loadFromCache();
             loadMeta();
@@ -557,6 +781,7 @@
             let savedTab = 'grid';
             try { savedTab = localStorage.getItem('urc_ces_active_tab') || 'grid'; } catch(e) {}
             switchTab(savedTab);
+            updateSaveButtonState();
         });
 
         async function fetchLaborRates() {
@@ -709,7 +934,7 @@
                     any = true;
                     html += `<div class="px-2 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase sticky top-0 bg-white">Labor</div>`;
                     laborKeys.forEach(k => {
-                        html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('lab:${k}')">${LABOR_DB[k].name} (₱${LABOR_DB[k].dailyRate}/day)</div>`;
+                        html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('lab:${k}')">${LABOR_DB[k].name} (₱${LABOR_DB[k].dailyRate * 8}/day)</div>`;
                     });
                 }
             }
@@ -742,7 +967,7 @@
 
             if (line.labId) {
                 const lab = LABOR_DB[line.labId];
-                const unitCost = lab ? lab.dailyRate : 0; // day rate, not hourly — matches "# of Days" input
+                const unitCost = lab ? lab.dailyRate : 0; // dailyRate field is actually PER HOUR in the database — ×8 for the real daily cost used by the "# of Days" input
                 const headcount = parseFloat(line.headcount) || 0;
                 const days = parseFloat(line.days) || 0;
                 return { total: (unitCost * headcount * days) + lumpSum, unitCost, unitStr: 'Days' };
@@ -1110,6 +1335,7 @@
             try {
                 localStorage.setItem('urc_ces_cross_page', JSON.stringify({ definedCost, updatedAt: Date.now() }));
             } catch(e) {}
+            updateSaveButtonState();
         }
 
         function saveToCache() {
@@ -1132,6 +1358,7 @@
         function updateMeta(field, value) {
             estimateMeta[field] = value;
             try { localStorage.setItem('urc_ces_meta', JSON.stringify(estimateMeta)); } catch(e) {}
+            updateSaveButtonState();
         }
 
         function loadMeta() {

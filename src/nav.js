@@ -6,13 +6,13 @@
     const path = window.location.pathname;
 
     const pages = [
-        { label: 'Summary (tent name)',  href: 'calculator.html',          match: 'calculator' },
+        { label: 'Building Summary',  href: 'calculator.html',          match: 'calculator' },
         { label: 'Master Estimator',    href: 'cost_estimate_scope.html', match: 'cost_estimate_scope' },
-        { label: 'Labor Database Ref.', href: 'labor_resources.html',     match: 'labor_resources' },
+        // { label: 'Labor Database Ref.', href: 'labor_resources.html',     match: 'labor_resources' },
     ];
 
     const libraryPages = [
-        { label: 'Contingency Score', href: 'contingency_scorecard.html', match: 'contingency_scorecard' },
+        // { label: 'Contingency Score', href: 'contingency_scorecard.html', match: 'contingency_scorecard' },
         { label: 'History',           href: 'history.html',               match: 'history' },
     ];
 

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-    <link rel="icon" type="image/png" href="urclogo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Cost Estimate Scope</title>
@@ -212,12 +211,18 @@
                     <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 border-b border-neutral-100 pb-3">Bill Of Quantities</h3>
 
                     <div id="breakdown-content" class="flex-1 flex flex-col overflow-hidden">
-                        <div id="breakdown-header" class="flex items-start justify-between gap-2 mb-1 border-b border-neutral-100 pb-3">
-                            <div>
-                                <p class="text-[10px] font-bold text-neutral-900 uppercase tracking-widest" id="breakdown-code">—</p>
-                                <h3 class="text-sm font-bold text-neutral-900 leading-snug" id="breakdown-desc">—</h3>
+                        <div id="breakdown-header" class="mb-1">
+                            <div id="breakdown-category-badge" style="display:none;" class="flex items-center justify-between gap-2 mb-2 px-3 py-2 bg-slate-700 rounded-lg">
+                                <p class="text-xs font-bold text-white uppercase tracking-wide" id="breakdown-category-label">—</p>
+                                <button id="breakdown-category-close-btn" style="display:none;" onclick="clearSelection()" class="text-white/60 hover:text-white transition text-lg leading-none flex-shrink-0" title="Back to all categories">✕</button>
                             </div>
-                            <button id="breakdown-close-btn" onclick="clearSelection()" class="text-neutral-300 hover:text-neutral-600 transition text-lg leading-none flex-shrink-0" title="Back to all categories">✕</button>
+                            <div id="breakdown-item-row" style="display:none;" class="flex items-start justify-between gap-2 border-b border-neutral-100 pb-3">
+                                <div>
+                                    <p class="text-[10px] font-bold text-neutral-900 uppercase tracking-widest" id="breakdown-code">—</p>
+                                    <h3 class="text-sm font-bold text-neutral-900 leading-snug" id="breakdown-desc">—</h3>
+                                </div>
+                                <button id="breakdown-close-btn" onclick="clearSelection()" class="text-neutral-300 hover:text-neutral-600 transition text-lg leading-none flex-shrink-0" title="Back to all categories">✕</button>
+                            </div>
                         </div>
 
                         <div id="breakdown-lines" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 py-3"></div>
@@ -1418,13 +1423,33 @@
             return { html, subtotal: grouped.subtotal };
         }
 
-        // show=false hides the whole code/desc/close-button header — used for the all-categories
-        // view, where "OVERVIEW / All Categories" was redundant with the category headers below it.
-        function setBreakdownHeader(codeLabel, descLabel, show) {
-            document.getElementById('breakdown-header').classList.toggle('hidden', !show);
-            if (show) {
-                document.getElementById('breakdown-code').textContent = codeLabel;
-                document.getElementById('breakdown-desc').textContent = descLabel;
+        // mode: 'none' (all-categories view — nothing shown, redundant with the cards below it),
+        // 'category' (dark-navy category badge only, own close button), or 'item' (the same
+        // dark-navy category badge — so it's always clear which category a selected WBS item
+        // belongs to — plus the plain WBS code/description row underneath, with its own close
+        // button, unchanged from the original design).
+        function setBreakdownHeader(mode, categoryLabel, codeLabel, descLabel) {
+            const badge = document.getElementById('breakdown-category-badge');
+            const badgeLabel = document.getElementById('breakdown-category-label');
+            const badgeCloseBtn = document.getElementById('breakdown-category-close-btn');
+            const itemRow = document.getElementById('breakdown-item-row');
+            const codeEl = document.getElementById('breakdown-code');
+            const descEl = document.getElementById('breakdown-desc');
+
+            if (mode === 'none') {
+                badge.style.display = 'none';
+                itemRow.style.display = 'none';
+                return;
+            }
+
+            badgeLabel.textContent = categoryLabel;
+            badge.style.display = 'flex';
+            badgeCloseBtn.style.display = (mode === 'category') ? '' : 'none';
+            itemRow.style.display = (mode === 'item') ? 'flex' : 'none';
+
+            if (mode === 'item') {
+                codeEl.textContent = codeLabel;
+                descEl.textContent = descLabel;
             }
         }
 
@@ -1452,7 +1477,7 @@
             const cIdx = SCOPE_CATEGORIES.indexOf(cat);
             const code = cat.isIndirect ? item.code : `${cIdx+1}.${parseInt(sIdx)+1}.${parseInt(iIdx)+1}`;
 
-            setBreakdownHeader(`WBS ${code}`, item.desc, true);
+            setBreakdownHeader('item', cat.label, `WBS ${code}`, item.desc);
 
             const grouped = buildGroupedLinesHtml(getLines(selectedItem));
             document.getElementById('breakdown-lines').innerHTML = grouped.html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added to this item yet.</p>';
@@ -1466,7 +1491,7 @@
             if (!cat) { clearSelection(); return; }
             const cIdx = SCOPE_CATEGORIES.indexOf(cat);
 
-            setBreakdownHeader('CATEGORY', cat.label, true);
+            setBreakdownHeader('category', cat.label, '', '');
 
             let html = '';
             let subtotal = 0;
@@ -1486,7 +1511,7 @@
         // outside the grid, or the ✕ button on the item/category views). No header block —
         // the category headings below already identify what's being shown.
         function renderAllBreakdownPanel() {
-            setBreakdownHeader('', '', false);
+            setBreakdownHeader('none', '', '', '');
 
             let html = '';
             let grand = 0;

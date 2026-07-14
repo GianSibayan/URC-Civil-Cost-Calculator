@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
+    <link rel="icon" type="image/png" href="urclogo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civil Cost Calculator — ESD / URC</title>
@@ -74,11 +75,27 @@
         .error-msg.visible {
             display: block;
         }
+
+        #page-transition-circle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: #000;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="h-full overflow-hidden select-none">
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="page-transition-circle"></div>
 
     <!-- ============================================================ -->
     <!-- LANDING PAGE                                                  -->
@@ -88,7 +105,7 @@
 
             <!-- Title -->
             <div class="text-center">
-                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-2">ESD · URC / JG Summit</p>
+                <img src="urclogo.png" alt="URC Logo" class="w-24 h-24 mx-auto mb-3 rounded-2xl object-cover shadow-sm">
                 <h1 class="text-5xl font-semibold text-black leading-tight">Civil Cost Calculator</h1>
                 <p class="text-neutral-500 text-base mt-2">Engineering Services Department</p>
             </div>
@@ -101,7 +118,7 @@
             <!-- ============================================== -->
             <div id="hub-buttons" class="hidden flex-col items-center gap-6 w-full">
                 <button
-                    onclick="window.location.href='calculator.html'"
+                    onclick="navigateWithTransition('calculator.html', event)"
                     class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
                     <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
                 </button>
@@ -109,7 +126,7 @@
                 <div id="divider-section" class="flex flex-col items-center gap-4 w-full max-w-sm">
                     <p class="text-zinc-500 text-base">Changing something?</p>
                     <button
-                        onclick="window.location.href='admin.html'"
+                        onclick="navigateWithTransition('admin.html', event)"
                         class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
                         <span class="text-black text-lg font-semibold tracking-wide">Access Price List</span>
                     </button>
@@ -163,6 +180,38 @@
         // Admin is reached via the hub AFTER login, not before.
         let loginDestination = 'page-landing';
 
+        // Circle-reveal page transition, expanding from the click point
+        function playTransition(x, y) {
+            const circle = document.getElementById('page-transition-circle');
+            const size = Math.hypot(window.innerWidth, window.innerHeight) * 2.2;
+            circle.style.left = x + 'px';
+            circle.style.top = y + 'px';
+            circle.style.width = size + 'px';
+            circle.style.height = size + 'px';
+            circle.style.opacity = '1';
+            circle.style.transform = 'translate(-50%, -50%) scale(0)';
+            void circle.offsetWidth; // force reflow so the transition actually plays
+            circle.style.transform = 'translate(-50%, -50%) scale(1)';
+        }
+
+        // Snap the circle back to invisible, e.g. after a failed login
+        function resetTransition() {
+            const circle = document.getElementById('page-transition-circle');
+            circle.style.transition = 'none';
+            circle.style.transform = 'translate(-50%, -50%) scale(0)';
+            circle.style.opacity = '0';
+            void circle.offsetWidth;
+            circle.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease';
+        }
+
+        // Play the transition, then navigate once it's had time to cover the screen
+        function navigateWithTransition(url, evt) {
+            const x = evt ? evt.clientX : window.innerWidth / 2;
+            const y = evt ? evt.clientY : window.innerHeight / 2;
+            playTransition(x, y);
+            setTimeout(() => { window.location.href = url; }, 420);
+        }
+
         // Decide which view to show based on current auth state
         function renderAuthState() {
             const hub = document.getElementById('hub-buttons');
@@ -198,9 +247,13 @@
             loginBtn.disabled = true;
             errorEl.classList.remove('visible');
 
+            const btnRect = loginBtn.getBoundingClientRect();
+            playTransition(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2);
+
             const result = await Auth.login(email, password, loginDestination);
 
             if (!result.success) {
+                resetTransition();
                 errorEl.textContent = result.error || 'Invalid email or password.';
                 errorEl.classList.add('visible');
                 loginBtn.innerHTML = '<span class="text-white text-base font-medium">Login</span>';

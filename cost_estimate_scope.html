@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
+    <link rel="icon" type="image/png" href="urclogo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Cost Estimate Scope</title>
@@ -162,7 +163,7 @@
             </div>
         </div>
 
-        <div class="flex-1 flex overflow-hidden p-4 gap-4">
+        <div id="ces-workspace" class="flex-1 flex overflow-hidden p-4 gap-4">
             
             <div class="flex-1 bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
                 <div class="p-3 border-b border-neutral-200 bg-neutral-50 flex justify-between items-center flex-shrink-0 gap-3">
@@ -210,25 +211,20 @@
                 <div class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
                     <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 border-b border-neutral-100 pb-3">Bill Of Quantities</h3>
 
-                    <div id="breakdown-empty" class="flex-1 flex flex-col items-center justify-center text-center gap-2 text-neutral-400">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <p class="text-xs font-medium">Click a scope item to view its cost breakdown</p>
-                    </div>
-
-                    <div id="breakdown-content" class="hidden flex-1 flex flex-col overflow-hidden">
-                        <div class="flex items-start justify-between gap-2 mb-1 border-b border-neutral-100 pb-3">
+                    <div id="breakdown-content" class="flex-1 flex flex-col overflow-hidden">
+                        <div id="breakdown-header" class="flex items-start justify-between gap-2 mb-1 border-b border-neutral-100 pb-3">
                             <div>
-                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest" id="breakdown-code">—</p>
+                                <p class="text-[10px] font-bold text-neutral-900 uppercase tracking-widest" id="breakdown-code">—</p>
                                 <h3 class="text-sm font-bold text-neutral-900 leading-snug" id="breakdown-desc">—</h3>
                             </div>
-                            <button onclick="clearSelection()" class="text-neutral-300 hover:text-neutral-600 transition text-lg leading-none flex-shrink-0" title="Close">✕</button>
+                            <button id="breakdown-close-btn" onclick="clearSelection()" class="text-neutral-300 hover:text-neutral-600 transition text-lg leading-none flex-shrink-0" title="Back to all categories">✕</button>
                         </div>
 
                         <div id="breakdown-lines" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 py-3"></div>
 
                         <div class="border-t border-neutral-200 pt-4 mt-auto">
                             <div class="flex justify-between items-baseline">
-                                <span class="text-xs font-bold text-neutral-500 uppercase tracking-wide">Item Subtotal</span>
+                                <span class="text-xs font-bold text-neutral-500 uppercase tracking-wide" id="breakdown-subtotal-label">Item Subtotal</span>
                                 <span class="text-xl font-black text-blue-600" id="breakdown-subtotal">₱0.00</span>
                             </div>
                         </div>
@@ -249,6 +245,9 @@
         // Each scope item can hold MULTIPLE lines (multiple material/labor combos), not just one.
         let gridState = {};
         let selectedItem = null; // itemKey currently shown in the right-panel breakdown
+        let selectedCategory = null; // catId currently shown in the right-panel breakdown (category-wide view)
+        // Right panel shows exactly one of: an item breakdown (selectedItem set), a category
+        // roll-up (selectedCategory set), or — when neither is set — the all-categories overview.
         let estimateMeta = { project: '', plant: '', type: '', preparedBy: '', date: '', meanSpendingDate: '' };
         // Categories collapsed by default keep hundreds of unused rows out of the DOM entirely
         // (not just CSS-hidden) — populated properly once SCOPE_CATEGORIES is defined below.
@@ -809,6 +808,7 @@
             await fetchLaborRates(); 
             await fetchAllDatabases(); 
             renderGrid();
+            renderBreakdownPanel(); // default view: all-categories overview
 
             let savedTab = 'grid';
             try { savedTab = localStorage.getItem('urc_ces_active_tab') || 'grid'; } catch(e) {}
@@ -993,6 +993,21 @@
             if (e.key === 'Escape') closeSelectionPopover();
         });
 
+        // Clicking outside the grid/BOQ workspace entirely (header bar, metadata fields,
+        // sidebar nav, etc.) clears the current item/category selection and falls back to the
+        // all-categories overview — same as clicking the ✕ button.
+        document.addEventListener('click', (e) => {
+            if (activeTab !== 'grid') return;
+            if (!selectedItem && !selectedCategory) return; // already on the overview, nothing to do
+            // Category/section clicks re-render the grid (replacing the clicked row's DOM node),
+            // which detaches it — e.target.closest() would fail on a detached node. composedPath()
+            // is captured at dispatch time, before that mutation happens, so it stays reliable.
+            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+            const insideWorkspace = path.some(node => node && node.id && (node.id === 'ces-workspace' || node.id === 'selection-popover'));
+            if (insideWorkspace) return;
+            clearSelection();
+        });
+
         function computeLineCost(line) {
             if (!line) return { total: 0, unitCost: 0, unitStr: '-' };
             const lumpSum = parseFloat(line.lumpSum) || 0;
@@ -1054,8 +1069,9 @@
             else collapsedCategories.add(catId);
             saveCollapsedState();
             renderGrid();
-            // Re-apply row highlighting if the currently-selected item's category just got expanded again.
-            if (selectedItem && selectedItem.startsWith(catId + '__')) selectItem(selectedItem);
+            // Clicking the category header (whether it's opening or closing) shows that
+            // category's full BOQ roll-up on the right, same as clicking the light-blue section row.
+            selectCategoryBreakdown(catId);
         }
 
         function saveCollapsedState() {
@@ -1081,7 +1097,7 @@
 
                 const isCollapsed = searchQuery ? false : collapsedCategories.has(cat.id); // auto-expand while searching so matches are visible
                 html += `
-                <tr class="bg-slate-700 text-white shadow-sm border-b-2 border-white cursor-pointer select-none" onclick="toggleCategory('${cat.id}')">
+                <tr id="cathead-${cat.id}" data-boq-trigger="1" class="bg-slate-700 text-white shadow-sm border-b-2 border-white cursor-pointer select-none" onclick="toggleCategory('${cat.id}')">
                     <td colspan="9" class="p-2.5">
                         <div class="flex items-center justify-between">
                             <span class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest pl-2">
@@ -1102,7 +1118,7 @@
                     if (searchQuery && !secHasAnyMatch) return; // hide whole section while it has zero matches
 
                     html += `
-                    <tr class="bg-blue-100 text-blue-900 border-b border-blue-200">
+                    <tr id="sechead-${cat.id}__${sIdx}" data-boq-trigger="1" onclick="selectCategoryBreakdown('${cat.id}')" class="bg-blue-100 text-blue-900 border-b border-blue-200 cursor-pointer select-none hover:bg-blue-200/70 transition-colors">
                         <td colspan="9" class="p-2 pl-4 font-bold text-[11px] uppercase tracking-wide">${sec.title}</td>
                     </tr>`;
                     
@@ -1121,8 +1137,8 @@
 
                             if (lIdx === 0) {
                                 html += `
-                                <td class="excel-cell readonly-cell text-center font-bold cursor-pointer" rowspan="${lines.length}" onclick="selectItem('${itemKey}')">${code}</td>
-                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" onclick="selectItem('${itemKey}')"><div class="truncate w-52">${item.desc}</div></td>`;
+                                <td class="excel-cell readonly-cell text-center font-bold cursor-pointer" rowspan="${lines.length}" data-boq-trigger="1" onclick="selectItem('${itemKey}')">${code}</td>
+                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" data-boq-trigger="1" onclick="selectItem('${itemKey}')"><div class="truncate w-52">${item.desc}</div></td>`;
                             }
 
                             // Quantity cell splits into Headcount / Days only when a laborer is selected — kept tight and centered so short numbers don't float apart.
@@ -1139,7 +1155,7 @@
                             // Button opens the shared popover instead of a native <select> — a native select can't
                             // support the filter checkboxes / in-dropdown search / stay-open-while-scrolling behavior.
                             html += `
-                                <td class="excel-cell"><button type="button" data-selection-trigger="1" onclick="openSelectionPopover('${itemKey}', ${lIdx}, this)" class="excel-select text-left truncate ${(line.labId || line.matId) ? 'text-neutral-800' : 'text-neutral-400'}">${selectionLabelFor(line)}</button></td>
+                                <td class="excel-cell"><button type="button" data-selection-trigger="1" onclick="openSelectionPopover('${itemKey}', ${lIdx}, this)" title="${escapeHtml(selectionLabelFor(line))}" class="excel-select text-left truncate ${(line.labId || line.matId) ? 'text-neutral-800' : 'text-neutral-400'}">${selectionLabelFor(line)}</button></td>
                                 <td class="excel-cell">${qtyInner}</td>
                                 <td class="excel-cell readonly-cell text-center text-xs" id="txt-unit-${lineKey}">${unitStr}</td>
                                 <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-unitcost-${lineKey}">${unitCost > 0 ? fmt(unitCost) : '-'}</td>
@@ -1206,7 +1222,8 @@
             }
             saveToCache();
             renderGrid(); // structural: Quantity cell shape changes between single input and Headcount/Days split
-            if (selectedItem === itemKey) selectItem(itemKey);
+            applyBoqHighlight();
+            renderBreakdownPanel();
         }
 
         function updateLine(itemKey, idx, field, value) {
@@ -1216,7 +1233,7 @@
             calculateLine(itemKey, idx);
             updateTotals();
             saveToCache();
-            if (selectedItem === itemKey) renderBreakdownPanel();
+            renderBreakdownPanel();
         }
 
         function calculateLine(itemKey, idx) {
@@ -1253,7 +1270,8 @@
             gridState[itemKey].splice(afterIdx + 1, 0, defaultLine());
             saveToCache();
             renderGrid();
-            if (selectedItem === itemKey) selectItem(itemKey);
+            applyBoqHighlight();
+            renderBreakdownPanel();
         }
 
         function removeLine(itemKey, idx) {
@@ -1266,7 +1284,8 @@
             }
             saveToCache();
             renderGrid();
-            if (selectedItem === itemKey) renderBreakdownPanel();
+            applyBoqHighlight();
+            renderBreakdownPanel();
         }
 
         function clearWorksheet() {
@@ -1285,71 +1304,224 @@
 
         function selectItem(itemKey) {
             selectedItem = itemKey;
-            document.querySelectorAll('[id^="row-"]').forEach(el => el.classList.remove('ring-2', 'ring-inset', 'ring-blue-400'));
-            document.querySelectorAll(`[id^="row-${itemKey}__"]`).forEach(el => el.classList.add('ring-2', 'ring-inset', 'ring-blue-400'));
+            selectedCategory = null;
+            applyBoqHighlight();
             renderBreakdownPanel();
         }
 
-        function clearSelection() {
+        function selectCategoryBreakdown(catId) {
+            selectedCategory = catId;
             selectedItem = null;
-            document.querySelectorAll('[id^="row-"]').forEach(el => el.classList.remove('ring-2', 'ring-inset', 'ring-blue-400'));
-            document.getElementById('breakdown-empty').classList.remove('hidden');
-            document.getElementById('breakdown-content').classList.add('hidden');
+            applyBoqHighlight();
+            renderBreakdownPanel();
         }
 
-        function renderBreakdownPanel() {
-            if (!selectedItem) { clearSelection(); return; }
+        // Clears any item/category selection and falls back to the all-categories overview.
+        // Bound to the panel's ✕ button, and to clicking outside the grid/BOQ workspace.
+        function clearSelection() {
+            selectedItem = null;
+            selectedCategory = null;
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
 
+        // Keeps the blue selection ring in sync with whichever row/header is the current
+        // selection source — a WBS/description cell, a category header, or a section row.
+        // Called after every renderGrid() (which wipes these classes when it rebuilds the tbody).
+        function applyBoqHighlight() {
+            document.querySelectorAll('[id^="row-"], [id^="cathead-"], [id^="sechead-"]').forEach(el => el.classList.remove('ring-2', 'ring-inset', 'ring-blue-400'));
+            if (selectedItem) {
+                document.querySelectorAll(`[id^="row-${selectedItem}__"]`).forEach(el => el.classList.add('ring-2', 'ring-inset', 'ring-blue-400'));
+            } else if (selectedCategory) {
+                const cathead = document.getElementById(`cathead-${selectedCategory}`);
+                if (cathead) cathead.classList.add('ring-2', 'ring-inset', 'ring-blue-400');
+                document.querySelectorAll(`[id^="sechead-${selectedCategory}__"]`).forEach(el => el.classList.add('ring-2', 'ring-inset', 'ring-blue-400'));
+            }
+        }
+
+        function fmtMoney(num) {
+            return `₱${(num || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Builds one line's label + price row — no per-row MAT/LAB/LS badge; lines are grouped
+        // under a single "Mat" / "Lab" / "Lump Sum" heading instead (see buildGroupedLinesHtml).
+        // title="" gives the full un-truncated text as a hover tooltip.
+        function buildBreakdownLineRow(line) {
+            const { total } = computeLineCost(line);
+            let label;
+            if (line.labId) {
+                const labName = LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : 'Labor';
+                label = `${labName} — ${line.headcount || 0} × ${line.days || 0} day(s)`;
+            } else if (line.matId) {
+                const matName = MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : 'Material';
+                label = `${matName} × ${line.qty || 0}`;
+            } else {
+                label = 'Lump sum item';
+            }
+            const lumpSum = parseFloat(line.lumpSum) || 0;
+            if (lumpSum > 0 && (line.matId || line.labId)) label += ` (+ ${fmtMoney(lumpSum)} lump sum)`;
+
+            const html = `<div class="px-2.5 py-2 bg-neutral-50 border border-neutral-100 rounded-lg text-xs flex items-center justify-between gap-2" title="${escapeHtml(label)}">
+                <span class="truncate text-neutral-600">${label}</span>
+                <span class="font-medium text-neutral-900 flex-shrink-0">${fmtMoney(total)}</span>
+            </div>`;
+            return { html, total };
+        }
+
+        // Splits a WBS item's priced lines into Mat / Lab / Lump Sum groups and renders each
+        // group under its own small heading — the shared building block for the item, category,
+        // and all-categories views.
+        function buildGroupedLinesHtml(lines) {
+            const priced = lines.filter(lineHasData);
+            const materials = priced.filter(l => l.matId);
+            const labor = priced.filter(l => l.labId);
+            const lumpOnly = priced.filter(l => !l.matId && !l.labId);
+
+            let html = '';
+            let subtotal = 0;
+
+            const renderGroup = (label, colorCls, groupLines) => {
+                if (groupLines.length === 0) return;
+                html += `<p class="text-[10px] font-bold ${colorCls} uppercase tracking-wide mt-2.5 mb-1 first:mt-0">${label}</p><div class="space-y-1.5">`;
+                groupLines.forEach(line => {
+                    const { html: rowHtml, total } = buildBreakdownLineRow(line);
+                    subtotal += total;
+                    html += rowHtml;
+                });
+                html += `</div>`;
+            };
+
+            renderGroup('Mat', 'text-amber-600', materials);
+            renderGroup('Lab', 'text-blue-600', labor);
+            renderGroup('Lump Sum', 'text-purple-600', lumpOnly);
+
+            return { html, subtotal };
+        }
+
+        // Builds one "WBS code — description" group (used inside the category and
+        // all-categories views) followed by its grouped Mat/Lab/Lump Sum lines. Returns ''
+        // if the item has no priced lines, so callers can skip it entirely.
+        function buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item) {
+            const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+            const grouped = buildGroupedLinesHtml(getLines(itemKey));
+            if (!grouped.html) return { html: '', subtotal: 0 };
+
+            const code = cat.isIndirect ? item.code : `${cIdx + 1}.${sIdx + 1}.${iIdx + 1}`;
+            const html = `<div class="mb-4">
+                <p class="text-[11px] font-bold text-neutral-900 uppercase tracking-wide mb-1">WBS ${code} — ${item.desc}</p>
+                ${grouped.html}
+            </div>`;
+            return { html, subtotal: grouped.subtotal };
+        }
+
+        // show=false hides the whole code/desc/close-button header — used for the all-categories
+        // view, where "OVERVIEW / All Categories" was redundant with the category headers below it.
+        function setBreakdownHeader(codeLabel, descLabel, show) {
+            document.getElementById('breakdown-header').classList.toggle('hidden', !show);
+            if (show) {
+                document.getElementById('breakdown-code').textContent = codeLabel;
+                document.getElementById('breakdown-desc').textContent = descLabel;
+            }
+        }
+
+        function setBreakdownSubtotal(label, amount) {
+            document.getElementById('breakdown-subtotal-label').textContent = label;
+            document.getElementById('breakdown-subtotal').textContent = fmtMoney(amount);
+        }
+
+        // Dispatches to whichever of the three BOQ views is currently active. Re-run after
+        // any edit anywhere in the grid so all three stay live.
+        function renderBreakdownPanel() {
+            if (selectedItem) { renderItemBreakdownPanel(); return; }
+            if (selectedCategory) { renderCategoryBreakdownPanel(); return; }
+            renderAllBreakdownPanel();
+        }
+
+        // View 1: a single scope item's material/labor/lump-sum lines (clicking a WBS number
+        // or scope description).
+        function renderItemBreakdownPanel() {
             const [catId, sIdx, iIdx] = selectedItem.split('__');
             const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
-            if (!cat) return;
+            if (!cat) { clearSelection(); return; }
             const sec = cat.sections[parseInt(sIdx)];
             const item = sec.items[parseInt(iIdx)];
             const cIdx = SCOPE_CATEGORIES.indexOf(cat);
             const code = cat.isIndirect ? item.code : `${cIdx+1}.${parseInt(sIdx)+1}.${parseInt(iIdx)+1}`;
 
-            document.getElementById('breakdown-empty').classList.add('hidden');
-            document.getElementById('breakdown-content').classList.remove('hidden');
-            document.getElementById('breakdown-code').textContent = `WBS ${code}`;
-            document.getElementById('breakdown-desc').textContent = item.desc;
+            setBreakdownHeader(`WBS ${code}`, item.desc, true);
 
-            const lines = getLines(selectedItem);
-            const fmt = (num) => `₱${num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            let subtotal = 0;
+            const grouped = buildGroupedLinesHtml(getLines(selectedItem));
+            document.getElementById('breakdown-lines').innerHTML = grouped.html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added to this item yet.</p>';
+            setBreakdownSubtotal('Item Subtotal', grouped.subtotal);
+        }
+
+        // View 2: every priced item across every section in one category (clicking the dark
+        // category header, or the light-blue section row underneath it).
+        function renderCategoryBreakdownPanel() {
+            const cat = SCOPE_CATEGORIES.find(c => c.id === selectedCategory);
+            if (!cat) { clearSelection(); return; }
+            const cIdx = SCOPE_CATEGORIES.indexOf(cat);
+
+            setBreakdownHeader('CATEGORY', cat.label, true);
+
             let html = '';
+            let subtotal = 0;
+            cat.sections.forEach((sec, sIdx) => {
+                sec.items.forEach((item, iIdx) => {
+                    const group = buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item);
+                    html += group.html;
+                    subtotal += group.subtotal;
+                });
+            });
 
-            lines.forEach((line) => {
-                if (!lineHasData(line)) return; // skip untouched placeholder lines
-                const { total } = computeLineCost(line);
-                subtotal += total;
+            document.getElementById('breakdown-lines').innerHTML = html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added under this category yet.</p>';
+            setBreakdownSubtotal('Category Subtotal', subtotal);
+        }
 
-                let label, tag;
-                if (line.labId) {
-                    const labName = LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : 'Labor';
-                    label = `${labName} — ${line.headcount || 0} × ${line.days || 0} day(s)`;
-                    tag = { text: 'LAB', cls: 'text-blue-600 bg-blue-50' };
-                } else if (line.matId) {
-                    const matName = MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : 'Material';
-                    label = `${matName} × ${line.qty || 0}`;
-                    tag = { text: 'MAT', cls: 'text-amber-600 bg-amber-50' };
-                } else {
-                    label = 'Lump sum item';
-                    tag = { text: 'LS', cls: 'text-purple-600 bg-purple-50' };
-                }
-                const lumpSum = parseFloat(line.lumpSum) || 0;
-                if (lumpSum > 0 && (line.matId || line.labId)) label += ` (+ ${fmt(lumpSum)} lump sum)`;
+        // View 3: the default view — every priced item across every category (clicking
+        // outside the grid, or the ✕ button on the item/category views). No header block —
+        // the category headings below already identify what's being shown.
+        function renderAllBreakdownPanel() {
+            setBreakdownHeader('', '', false);
 
-                html += `<div class="p-2.5 bg-neutral-50 border border-neutral-100 rounded-lg text-xs flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${tag.cls}">${tag.text}</span>
-                        <span class="truncate text-neutral-600">${label}</span>
+            let html = '';
+            let grand = 0;
+            let any = false;
+
+            SCOPE_CATEGORIES.forEach((cat, cIdx) => {
+                let catHtml = '';
+                let catSubtotal = 0;
+                let catAny = false;
+
+                cat.sections.forEach((sec, sIdx) => {
+                    sec.items.forEach((item, iIdx) => {
+                        const group = buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item);
+                        if (!group.html) return;
+                        catAny = true;
+                        catHtml += group.html;
+                        catSubtotal += group.subtotal;
+                    });
+                });
+
+                if (!catAny) return; // skip categories with nothing priced yet
+                any = true;
+                grand += catSubtotal;
+
+                html += `<div class="mb-4">
+                    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-700 rounded-lg mb-3">
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">${cat.label}</p>
+                        <span class="text-[10px] font-semibold text-neutral-300">${fmtMoney(catSubtotal)}</span>
                     </div>
-                    <span class="font-medium text-neutral-900 flex-shrink-0">${fmt(total)}</span>
+                    ${catHtml}
                 </div>`;
             });
 
-            document.getElementById('breakdown-lines').innerHTML = html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added to this item yet.</p>';
-            document.getElementById('breakdown-subtotal').textContent = fmt(subtotal);
+            document.getElementById('breakdown-lines').innerHTML = any ? html : '<p class="text-xs text-neutral-400 text-center py-4">No items have been priced yet. Click a scope item to get started.</p>';
+            setBreakdownSubtotal('Grand Total', grand);
         }
 
         // The full Financial Ledger (Undefined Allowances, Contingency, Escalation, Grand Total)

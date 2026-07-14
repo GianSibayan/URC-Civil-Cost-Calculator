@@ -30,7 +30,7 @@
         <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
             <div class="flex items-center gap-2.5">
                 <img src="urclogo.png" alt="URC" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
-                <h1 class="text-sm font-extrabold tracking-tight text-neutral-900 leading-[1.15]">UNIVERSAL<br>ROBINA</h1>
+                <h1 class="text-lg font-extrabold tracking-tight text-neutral-900 leading-[1.15]">UNIVERSAL<br>ROBINA</h1>
             </div>
             <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1.5">Civil Cost Calculator</p>
             <nav class="flex-1 mt-8 space-y-1">

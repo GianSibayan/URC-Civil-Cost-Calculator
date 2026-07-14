@@ -83,12 +83,20 @@
             width: 0;
             height: 0;
             border-radius: 50%;
-            background: #000;
+            background: radial-gradient(circle, #fff 0%, #fff 78%, rgba(255,255,255,0.6) 90%, rgba(255,255,255,0) 100%);
             opacity: 0;
             transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+            transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.65s ease;
             pointer-events: none;
             z-index: 9999;
+        }
+    </style>
+
+    <!-- Lets the browser natively cross-fade the actual page swap on top of the bloom above,
+         in browsers that support it (Chrome/Edge 126+, Safari 18.2+). No-op elsewhere. -->
+    <style>
+        @view-transition {
+            navigation: auto;
         }
     </style>
 </head>
@@ -183,7 +191,7 @@
         // Circle-reveal page transition, expanding from the click point
         function playTransition(x, y) {
             const circle = document.getElementById('page-transition-circle');
-            const size = Math.hypot(window.innerWidth, window.innerHeight) * 2.2;
+            const size = Math.hypot(window.innerWidth, window.innerHeight) * 2.7;
             circle.style.left = x + 'px';
             circle.style.top = y + 'px';
             circle.style.width = size + 'px';
@@ -201,7 +209,7 @@
             circle.style.transform = 'translate(-50%, -50%) scale(0)';
             circle.style.opacity = '0';
             void circle.offsetWidth;
-            circle.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease';
+            circle.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.65s ease';
         }
 
         // Play the transition, then navigate once it's had time to cover the screen
@@ -209,7 +217,7 @@
             const x = evt ? evt.clientX : window.innerWidth / 2;
             const y = evt ? evt.clientY : window.innerHeight / 2;
             playTransition(x, y);
-            setTimeout(() => { window.location.href = url; }, 420);
+            setTimeout(() => { window.location.href = url; }, 540);
         }
 
         // Decide which view to show based on current auth state

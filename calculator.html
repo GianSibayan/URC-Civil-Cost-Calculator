@@ -55,7 +55,9 @@
             transition: border-color 0.15s, box-shadow 0.15s;
         }
         .struct-select {
-            width: 190px;
+            width: 100%;
+            min-width: 0;
+            max-width: 190px;
             background: white;
             border: 1.5px solid rgba(0,0,0,0.08);
             border-radius: 8px;
@@ -74,8 +76,8 @@
             transition: border-color 0.15s, box-shadow 0.15s;
         }
         .dim-input:focus, .struct-select:focus {
-            border-color: rgba(0,0,0,0.25);
-            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
         }
         .dim-input::placeholder { color: #bbb; font-weight: 400; }
 
@@ -91,8 +93,8 @@
             transition: border-color 0.15s, box-shadow 0.15s;
         }
         .field-row:focus-within {
-            border-color: rgba(0,0,0,0.18);
-            box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
         }
         .field-label {
             font-size: 14px;
@@ -104,7 +106,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-shrink: 0;
+            flex-shrink: 1;
+            min-width: 0;
         }
         .field-unit {
             font-size: 11px;
@@ -177,7 +180,7 @@
                 <h2 id="header-title" class="text-2xl font-bold text-neutral-900">Building Summary</h2>
                 <div class="flex items-center gap-2">
                     <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
-                    <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button>
+                    <!-- <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button> -->
                 </div>
             </header>
 
@@ -197,7 +200,6 @@
                                     <button id="tab-dimension" onclick="switchSection('dimension')" class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension</button>
                                     <button id="tab-structure" onclick="switchSection('structure')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure</button>
                                     <button id="tab-capacity" onclick="switchSection('capacity')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity</button>
-                                    <button id="tab-currency" onclick="switchSection('currency')" class="text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Currency</button>
                                 </div>
                             </div>
 
@@ -271,29 +273,7 @@
                                 </div>
                             </div>
 
-                            <!-- CURRENCY CONVERSION SECTION -->
-                            <div id="section-currency" class="hidden flex flex-col gap-6">
-                                <h3 class="text-2xl font-bold text-neutral-900">Currency Conversion</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Base Currency</span><div class="field-control"><select id="select-currencyBase" class="struct-select" onchange="handleSelect('currencyBase', this.value)">
-                                            <option value="PHP">PHP - Philippine Peso</option>
-                                            <option value="USD">USD - US Dollar</option>
-                                            <option value="EUR">EUR - Euro</option>
-                                            <option value="JPY">JPY - Japanese Yen</option>
-                                            <option value="SGD">SGD - Singapore Dollar</option>
-                                        </select></div></div>
-                                    <div class="field-row"><span class="field-label">Target Currency</span><div class="field-control"><select id="select-currencyTarget" class="struct-select" onchange="handleSelect('currencyTarget', this.value)">
-                                            <option value="USD">USD - US Dollar</option>
-                                            <option value="PHP">PHP - Philippine Peso</option>
-                                            <option value="EUR">EUR - Euro</option>
-                                            <option value="JPY">JPY - Japanese Yen</option>
-                                            <option value="SGD">SGD - Singapore Dollar</option>
-                                        </select></div></div>
-                                    <div class="field-row"><span class="field-label">Exchange Rate</span><div class="field-control"><input id="input-exchangeRate" class="dim-input select-text" type="number" min="0" step="0.0001" placeholder="0" oninput="handleInput('exchangeRate', this.value)" /><span class="field-unit">Multiplier Rate</span></div></div>
-                                    <div class="field-row"><span class="field-label">Amount to Convert</span><div class="field-control"><input id="input-conversionAmount" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('conversionAmount', this.value)" /><span class="field-unit">In Base Currency</span></div></div>
-                                    <div class="field-row md:col-span-2 field-row-result"><span class="field-label">Converted Result</span><div class="field-result-value" id="result-converted">0.00 USD</div></div>
-                                </div>
-                            </div>
+                            <!-- CURRENCY moved to the Financial Ledger card (see right panel) -->
 
                             </div>
                             </div>
@@ -356,8 +336,8 @@
                     <div id="module-calculator-sidebar" class="xl:col-span-5 bg-[#f8f9fa] p-8 overflow-y-auto h-full border-t xl:border-t-0 border-neutral-200">
                         <div class="sticky top-0 space-y-6">
                             <div>
-                                <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3>
-                                <p class="text-lg font-bold text-neutral-800 mt-1">Estimation Line Ledger</p>
+                                <!-- <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Output Summary</h3> -->
+                                <p class="text-lg font-bold text-neutral-800 mt-1">Live Output Summary</p>
                             </div>
 
                             <div class="bg-white p-4 rounded-2xl border border-neutral-200/60 shadow-sm">
@@ -417,19 +397,73 @@
                             </div>
 
                             <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
-                                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill of Quantities</h4>
+                                <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Financial Ledger</h4>
+
+                                <!-- Material / Labor — sourced from Master Estimator (CES) -->
                                 <div class="space-y-2 text-sm text-neutral-600">
-                                    <div class="flex justify-between"><span>Material Costs</span><span class="cost-materials font-bold text-neutral-900">₱0.00</span></div>
-                                    <div class="flex justify-between"><span>Labor Costs</span><span class="cost-labor font-bold text-blue-600">₱0.00</span></div>
-                                    <div class="flex justify-between"><span>Equipment Costs</span><span class="cost-equipment font-bold text-neutral-900">₱0.00</span></div>
-                                    <div class="flex justify-between"><span>Overhead & Profit</span><span class="cost-profit font-bold text-neutral-900">₱0.00</span></div>
+                                    <div class="flex justify-between gap-3"><span class="truncate">Material Costs</span><span id="fl-material" class="font-bold text-amber-800 whitespace-nowrap shrink-0">₱0.00</span></div>
+                                    <div class="flex justify-between gap-3"><span class="truncate">Labor Costs</span><span id="fl-labor" class="font-bold text-blue-900 whitespace-nowrap shrink-0">₱0.00</span></div>
                                 </div>
-                                <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center">
-                                    <div>
-                                        <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Grand Total</h4>
-                                        <p class="text-[10px] text-neutral-400 leading-tight">Calculated Estimate</p>
+
+                                <!-- Raw Total subtotal -->
+                                <div class="border-t border-neutral-100 pt-3 flex justify-between items-center gap-3">
+                                    <span class="text-xs font-bold text-neutral-500 uppercase tracking-wide">Raw Total</span>
+                                    <span id="fl-defined" class="font-bold text-neutral-900 whitespace-nowrap shrink-0">₱0.00</span>
+                                </div>
+
+                                <!-- % adjustments — Undefined & Contingency from CES scorecards, Escalation is inputtable here.
+                                     Grid (not flex) so the value column never gets pushed off — label/badge/input
+                                     side is free to shrink or wrap, the peso value always stays put on the right. -->
+                                <div class="space-y-2.5 text-sm text-neutral-600 pt-1">
+                                    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                                        <span class="flex items-center gap-1.5 min-w-0">
+                                            <span class="truncate">Undefined Cost</span>
+                                            <span id="fl-undefined-pct" class="shrink-0 text-[10px] font-semibold text-neutral-500 bg-neutral-100 rounded px-1.5 py-0.5">0.0%</span>
+                                        </span>
+                                        <span id="fl-undefined" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
                                     </div>
-                                    <div class="text-2xl font-black text-neutral-900 cost-total">₱0.00</div>
+                                    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                                        <span class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                                            <span class="shrink-0">Escalation</span>
+                                            <input id="input-escalationPct" type="number" min="0" max="100" step="0.1" placeholder="0"
+                                                class="w-12 shrink-0 text-xs text-right border border-neutral-200 rounded-md px-1.5 py-0.5 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
+                                                oninput="handleInput('escalationPct', this.value)" />
+                                            <span class="shrink-0 text-[11px] text-neutral-400">%</span>
+                                        </span>
+                                        <span id="fl-escalation" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
+                                    </div>
+                                    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                                        <span class="flex items-center gap-1.5 min-w-0">
+                                            <span class="truncate">Contingency</span>
+                                            <span id="fl-contingency-pct" class="shrink-0 text-[10px] font-semibold text-neutral-500 bg-neutral-100 rounded px-1.5 py-0.5">0.0%</span>
+                                        </span>
+                                        <span id="fl-contingency" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center gap-3">
+                                    <div class="min-w-0">
+                                        <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Estimated Grand Total</h4>
+                                        <p class="text-[10px] text-neutral-400 leading-tight">Raw Total × (1 + Undefined% + Escalation% + Contingency%)</p>
+                                    </div>
+                                    <div id="fl-total" class="text-2xl font-black text-neutral-900 whitespace-nowrap shrink-0">₱0.00</div>
+                                </div>
+
+                                <!-- Live currency conversion — fetched from a public FX API, cached for offline use -->
+                                <div class="border-t border-neutral-100 pt-3 flex items-center justify-between gap-3">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="text-[11px] text-neutral-400 font-medium shrink-0">Convert to</span>
+                                        <select id="select-currencyTarget" class="text-xs font-semibold border border-neutral-200 rounded-md pl-2 pr-6 py-1 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white cursor-pointer" onchange="handleSelect('currencyTarget', this.value)">
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                            <option value="JPY">JPY</option>
+                                            <option value="SGD">SGD</option>
+                                        </select>
+                                    </div>
+                                    <div class="text-right min-w-0">
+                                        <div id="fl-total-converted" class="text-sm font-bold text-neutral-700 whitespace-nowrap">—</div>
+                                        <p id="fl-fx-asof" class="text-[10px] text-neutral-400 leading-tight">Rates unavailable</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -458,7 +492,8 @@
             rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0,
             formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850,
             globalEquipment: 0, globalProfit: 0,
-            currencyBase: 'PHP', currencyTarget: 'USD', exchangeRate: 0, conversionAmount: 0
+            currencyTarget: 'USD',
+            escalationPct: 0
         };
 
         // ============================================================
@@ -586,10 +621,9 @@
         }
 
         const SECTION_GROUPS = {
-            'dimension':          { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
-            'structure':          { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
-            'capacity':           { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
-            'currency':           { group: ['dimension','structure','capacity','currency'], wrapper: 'building-sections-wrap' },
+            'dimension':          { group: ['dimension','structure','capacity'], wrapper: 'building-sections-wrap' },
+            'structure':          { group: ['dimension','structure','capacity'], wrapper: 'building-sections-wrap' },
+            'capacity':           { group: ['dimension','structure','capacity'], wrapper: 'building-sections-wrap' },
             'footing-geometry':   { group: ['footing-geometry','footing-materials'], wrapper: 'footing-sections-wrap' },
             'footing-materials':  { group: ['footing-geometry','footing-materials'], wrapper: 'footing-sections-wrap' }
         };
@@ -643,19 +677,6 @@
             }, 130);
         }
 
-        function openSaveModal() {
-            const m = document.getElementById('save-modal');
-            m.classList.remove('hidden'); m.classList.add('flex');
-            document.getElementById('modal-project-name').focus();
-        }
-        function closeSaveModal() {
-            const m = document.getElementById('save-modal');
-            m.classList.add('hidden'); m.classList.remove('flex');
-            document.getElementById('modal-project-name').value = '';
-            document.getElementById('modal-engineer-name').value = '';
-            document.getElementById('modal-error').classList.add('hidden');
-        }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });   
         // ============================================================
         // INPUT HANDLERS
         // ============================================================
@@ -670,119 +691,139 @@
             saveToCache(); updateUI();
         }
 
+        // ============================================================
+        // SAVE ESTIMATE
+        // Lives in both calc.html and CES now — button only enables once
+        // BOTH urc_ccc_calc_ready and urc_ccc_ces_ready are true. Project
+        // details always come from CES's header (urc_ces_meta), never
+        // re-entered here. The record this builds must stay byte-identical
+        // to the one CES's own confirmSaveEstimate() builds — both read
+        // from urc_ces_cross_page so there's one source of truth for the
+        // CES-side numbers; if that cross-page shape ever changes, update
+        // BOTH copies together.
+        // ============================================================
         function checkSaveButton() {
             const btn = document.getElementById('btn-save-estimate');
             if (!btn) return;
-            const ready = localStorage.getItem('urc_ccc_calc_ready')  === 'true'
-                     && localStorage.getItem('urc_ccc_ces_ready')   === 'true'
-                     && localStorage.getItem('urc_ccc_labor_ready') === 'true';
+            let calcReady = false, cesReady = false;
+            try { calcReady = localStorage.getItem('urc_ccc_calc_ready') === 'true'; } catch(e) {}
+            try { cesReady = localStorage.getItem('urc_ccc_ces_ready') === 'true'; } catch(e) {}
+            const ready = calcReady && cesReady;
             btn.disabled = !ready;
             btn.classList.toggle('opacity-40', !ready);
             btn.classList.toggle('pointer-events-none', !ready);
         }
 
+        function getCesMeta() {
+            try { return JSON.parse(localStorage.getItem('urc_ces_meta') || '{}'); } catch(e) { return {}; }
+        }
+        function getCesSnapshot() {
+            try { return JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) { return {}; }
+        }
+
+        function openSaveModal() {
+            const meta = getCesMeta();
+            const ces = getCesSnapshot();
+            const undefinedPct = ces.scorecards?.undefinedCost?.subtotal || 0;
+            const contingencyPct = ces.scorecards?.contingency?.subtotal || 0;
+            const escalationPct = estimateState.escalationPct || 0;
+            const definedCost = ces.definedCost || 0;
+            const grandTotal = definedCost * (1 + (undefinedPct + escalationPct + contingencyPct) / 100);
+
+            document.getElementById('modal-preview-project').textContent = meta.project || '—';
+            document.getElementById('modal-preview-preparedby').textContent = meta.preparedBy || '—';
+            document.getElementById('modal-preview-defined').textContent = '₱' + definedCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modal-preview-contingency').textContent = contingencyPct + '%';
+            document.getElementById('modal-preview-undefined').textContent = undefinedPct + '%';
+            document.getElementById('modal-preview-escalation').textContent = escalationPct + '%';
+            document.getElementById('modal-preview-grandtotal').textContent = '₱' + grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modal-error').classList.add('hidden');
+
+            const m = document.getElementById('save-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+
+        function closeSaveModal() {
+            const m = document.getElementById('save-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSaveModal(); });
+
         function confirmSaveEstimate() {
-            const projectName  = document.getElementById('modal-project-name').value.trim();
-            const engineerName = document.getElementById('modal-engineer-name').value.trim();
-            if (!projectName || !engineerName) {
+            const meta = getCesMeta();
+            if (!meta.project || !meta.preparedBy) {
+                document.getElementById('modal-error').textContent = 'Project Title and Prepared By need to be filled in on Master Estimator\'s header bar first.';
                 document.getElementById('modal-error').classList.remove('hidden');
                 return;
             }
 
-            // ── Read all three caches ────────────────────────────────────────
-            let calcSnap  = {};
-            let cesSnap   = {};
-            let laborSnap = {};
-            try { calcSnap  = JSON.parse(localStorage.getItem('urc_ccc_state_v10')  || '{}'); } catch(e) {}
-            try { cesSnap   = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
-            try { laborSnap = JSON.parse(localStorage.getItem('urc_ccc_labor_2026') || '{}'); } catch(e) {}
-
-            // ── Calculator summary ───────────────────────────────────────────
-            const L = calcSnap.length||0, W = calcSnap.width||0, H = calcSnap.clearHeight||0;
-            const M = (calcSnap.mezzanine||0) / 100;
+            const L = estimateState.length || 0, W = estimateState.width || 0, H = estimateState.clearHeight || 0;
+            const M = (estimateState.mezzanine || 0) / 100;
             const floorArea = L * W, grossArea = floorArea * (1 + M);
-            const bsl = calcSnap.baySpacingL||0, bsw = calcSnap.baySpacingW||0;
-            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L/bsl + W/bsw) : 0;
-            const fl=calcSnap.footingLength||0, fw=calcSnap.footingWidth||0, fd=calcSnap.footingDepth||0;
-            const pl=calcSnap.pedestalLength||0, pw=calcSnap.pedestalWidth||0, ph=calcSnap.pedestalHeight||0;
-            const concreteVol = (fl*fw*fd + pl*pw*ph) * nodes;
-            const structMap = { steel_rigid:'Steel Rigid Frame', concrete:'Concrete', tilt_up:'Tilt-Up', hybrid:'Hybrid' };
-            const roofMap   = { standing_seam:'Standing Seam', corrugated:'Corrugated', flat:'Flat', skylight:'Skylight' };
-            const wallMap   = { metal_panel:'Metal Panel', masonry:'Masonry', glass:'Glass Curtain', none:'None' };
+            const bsl = estimateState.baySpacingL || 0, bsw = estimateState.baySpacingW || 0;
+            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L / bsl + W / bsw) : 0;
+            const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
+            const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
+            const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
 
-            // ── CES summary ──────────────────────────────────────────────────
-            const categoryTotals = cesSnap.categoryTotals || {};
-            const cesTotal    = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-            const pricedItems = Object.keys(cesSnap.itemPrices || {}).length;
+            const ces = getCesSnapshot();
+            const undefinedPct = ces.scorecards?.undefinedCost?.subtotal || 0;
+            const contingencyPct = ces.scorecards?.contingency?.subtotal || 0;
+            const escalationPct = estimateState.escalationPct || 0;
+            const definedCost = ces.definedCost || 0;
+            const grandTotal = definedCost * (1 + (undefinedPct + escalationPct + contingencyPct) / 100);
 
-            // ── Labor summary ────────────────────────────────────────────────
-            const laborStateRaw   = laborSnap.laborState      || {};
-            const globalEquipment = laborSnap.globalEquipment || 0;
-            const globalProfit    = laborSnap.globalProfit    || 0;
-            const roleLabels = {
-                ncr:'NCR (Unskilled)', visayas:'Visayas (Unskilled)', mindanao:'Mindanao (Unskilled)',
-                carpenter:'Carpenter', mason:'Mason', welder:'Welder', electrician:'Electrician',
-                plumber:'Plumber', pipeFitter:'Pipe Fitter', civilEng:'Civil Engineer',
-                electricalEng:'Electrical Engineer', mechanicalEng:'Mechanical Engineer',
-                generalEng:'General Engineer', itEng:'IT / Software Engineer', consultant:'Consultant'
-            };
-            let laborCost = 0, totalHeads = 0;
-            const roles = [];
-            Object.keys(laborStateRaw).forEach(role => {
-                const r = laborStateRaw[role], sub = r.rate * r.count * r.days;
-                laborCost += sub;
-                if (r.count > 0) { totalHeads += r.count; roles.push({ name:roleLabels[role]||role, rate:r.rate, count:r.count, days:r.days }); }
-            });
-            const execBase    = laborCost + globalEquipment;
-            const profitCost  = execBase * (globalProfit / 100);
-            const grandTotal  = cesTotal + execBase + profitCost;
-
-            // ── Build combined record ────────────────────────────────────────
             const record = {
                 id: 'ccc_hist_' + Date.now(),
                 savedAt: new Date().toISOString(),
-                projectName, engineerName,
+                projectName: meta.project,
+                engineerName: meta.preparedBy,
+                plant: meta.plant || '',
+                estimateType: meta.type || '',
+                estimateDate: meta.date || '',
+                meanSpendingDate: meta.meanSpendingDate || '',
+
                 calculator: {
                     snapshot: {
-                        length:L, width:W, clearHeight:H, stories:calcSnap.stories||1,
-                        mezzanine:calcSnap.mezzanine||0,
-                        structureType: structMap[calcSnap.structureType]||calcSnap.structureType,
-                        roofType:      roofMap[calcSnap.roofType]||calcSnap.roofType,
-                        wallCladding:  wallMap[calcSnap.wallCladding]||calcSnap.wallCladding,
-                        slabThickness: calcSnap.slabThickness,
-                        dockDoors:calcSnap.dockDoors||0, driveInDoors:calcSnap.driveInDoors||0,
-                        baySpacingL:bsl, baySpacingW:bsw,
-                        footingLength:fl, footingWidth:fw, footingDepth:fd,
-                        pedestalLength:pl, pedestalWidth:pw, pedestalHeight:ph,
-                        concretePriceM3:calcSnap.concretePriceM3||0, concreteClass:calcSnap.concreteClass
+                        length: L, width: W, clearHeight: H, stories: estimateState.stories || 1, mezzanine: estimateState.mezzanine || 0,
+                        structureType: estimateState.structureType, roofType: estimateState.roofType, wallCladding: estimateState.wallCladding,
+                        slabThickness: estimateState.slabThickness, dockDoors: estimateState.dockDoors || 0, driveInDoors: estimateState.driveInDoors || 0,
+                        baySpacingL: bsl, baySpacingW: bsw, footingLength: fl, footingWidth: fw, footingDepth: fd,
+                        pedestalLength: pl, pedestalWidth: pw, pedestalHeight: ph, concretePriceM3: estimateState.concretePriceM3 || 0, concreteClass: estimateState.concreteClass
                     },
-                    summary: {
-                        floorArea:+floorArea.toFixed(2), grossArea:+grossArea.toFixed(2),
-                        perimeter:+(2*(L+W)).toFixed(2), nodes, concreteVol:+concreteVol.toFixed(2)
-                    }
+                    summary: { floorArea: +floorArea.toFixed(2), grossArea: +grossArea.toFixed(2), perimeter: +(2 * (L + W)).toFixed(2), nodes, concreteVol: +concreteVol.toFixed(2) }
                 },
+
                 ces: {
-                    categoryTotals, pricedItems, grandTotal:+cesTotal.toFixed(2)
+                    categoryTotals: ces.categoryTotals || {},
+                    materialCost: +(ces.materialCost || 0).toFixed(2),
+                    laborCost: +(ces.laborCost || 0).toFixed(2),
+                    lumpSumCost: +(ces.lumpSumCost || 0).toFixed(2),
+                    definedCost: +definedCost.toFixed(2),
+                    pricedLines: ces.pricedLines || 0,
+                    laborBreakdown: ces.laborBreakdown || []
                 },
-                labor: {
-                    roles, globalEquipment, globalProfit,
-                    laborCost:+laborCost.toFixed(2), equipmentCost:globalEquipment,
-                    profitCost:+profitCost.toFixed(2), grandTotal:+grandTotal.toFixed(2), totalHeads
+
+                scorecards: {
+                    contingency: ces.scorecards?.contingency || { subtotal: 0, criteria: [] },
+                    undefinedCost: ces.scorecards?.undefinedCost || { subtotal: 0, criteria: [] }
                 },
+
+                escalationPct: escalationPct,
                 grandTotal: +grandTotal.toFixed(2)
             };
 
             try {
-                const h = JSON.parse(localStorage.getItem('urc_ccc_history')||'[]');
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history') || '[]');
                 h.unshift(record);
                 localStorage.setItem('urc_ccc_history', JSON.stringify(h));
                 closeSaveModal();
                 showToast('Estimate saved to history.', 'success');
-            } catch(e) { showToast('Could not save estimate.', 'error'); }
+            } catch(e) {
+                showToast('Could not save estimate.', 'error');
+            }
         }
-        // ============================================================
-        // COMPUTATION + DOM UPDATE
-        // ============================================================
+
         function updateUI() {
             const L = estimateState.length || 0, W = estimateState.width || 0, H = estimateState.clearHeight || 0;
             const M = (estimateState.mezzanine || 0) / 100;
@@ -803,15 +844,6 @@
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
 
-            // Currency Conversion Calculation
-            const convAmt = estimateState.conversionAmount || 0;
-            const exRate = estimateState.exchangeRate || 0;
-            const convRes = convAmt * exRate;
-            const elConv = document.getElementById('result-converted');
-            if (elConv) {
-                elConv.textContent = convRes.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (estimateState.currencyTarget || 'USD');
-            }
-
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
             set('side-grossArea',  grossArea.toFixed(2) + ' sqm');
@@ -822,12 +854,95 @@
             set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
             renderIsoBuilding();
 
-            const materialCost = concreteVol * (estimateState.concretePriceM3 || 0);
-            const equipCost = 0;
-            let   laborCost    = 0;
             const calcReady = (estimateState.length > 0) && (estimateState.width > 0) && (estimateState.clearHeight > 0);
-            localStorage.setItem('urc_ccc_calc_ready', String(calcReady));
+            try { localStorage.setItem('urc_ccc_calc_ready', String(calcReady)); } catch(e) {}
+
             checkSaveButton();
+            updateFinancialLedger();
+        }
+
+        // ============================================================
+        // FINANCIAL LEDGER
+        // Material/Labor Costs, Raw Total, and the Undefined/Contingency
+        // percentages are all sourced from Master Estimator (CES) via
+        // localStorage cross-page keys — this page never recomputes them.
+        // Escalation % is the one figure entered directly here.
+        // ============================================================
+        function updateFinancialLedger() {
+            let cesSnap = {}, contingencySnap = {}, undefinedSnap = {};
+            try { cesSnap = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
+            try { contingencySnap = JSON.parse(localStorage.getItem('urc_ces_contingency_subtotal') || '{}'); } catch(e) {}
+            try { undefinedSnap = JSON.parse(localStorage.getItem('urc_ces_undefinedCost_subtotal') || '{}'); } catch(e) {}
+
+            const materialCost = cesSnap.materialCost || 0;
+            const laborCost    = cesSnap.laborCost || 0;
+            const definedCost  = cesSnap.definedCost || 0;
+
+            // CES's scorecard subtotal is the raw sum of picked point values (e.g. 8, 11) —
+            // that number IS the percentage (8 = 8%), not a fraction to multiply by 100.
+            // Escalation's own input is entered the same way (e.g. "2" for 2%).
+            const undefinedPct   = undefinedSnap.subtotal || 0;
+            const contingencyPct = contingencySnap.subtotal || 0;
+            const escalationPct  = estimateState.escalationPct || 0;
+
+            const undefinedAmt   = definedCost * (undefinedPct / 100);
+            const escalationAmt  = definedCost * (escalationPct / 100);
+            const contingencyAmt = definedCost * (contingencyPct / 100);
+            const grandTotal     = definedCost + undefinedAmt + escalationAmt + contingencyAmt;
+
+            const fmt = v => '₱' + (v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const pct = v => (v || 0).toFixed(1) + '%';
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+            set('fl-material', fmt(materialCost));
+            set('fl-labor', fmt(laborCost));
+            set('fl-defined', fmt(definedCost));
+            set('fl-undefined', fmt(undefinedAmt));
+            set('fl-undefined-pct', pct(undefinedPct));
+            set('fl-escalation', fmt(escalationAmt));
+            set('fl-contingency', fmt(contingencyAmt));
+            set('fl-contingency-pct', pct(contingencyPct));
+            set('fl-total', fmt(grandTotal));
+
+            // Live currency conversion of the Grand Total — window.FX_RATES is populated by
+            // loadFxRates() (network-first, falls back to the last cached rate when offline).
+            const target = estimateState.currencyTarget || 'USD';
+            const elConverted = document.getElementById('fl-total-converted');
+            const elAsOf = document.getElementById('fl-fx-asof');
+            if (window.FX_RATES && window.FX_RATES.rates && window.FX_RATES.rates[target]) {
+                const converted = grandTotal * window.FX_RATES.rates[target];
+                if (elConverted) elConverted.textContent = converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + target;
+                if (elAsOf) elAsOf.textContent = 'Rate as of ' + window.FX_RATES.date;
+            } else {
+                if (elConverted) elConverted.textContent = '—';
+                if (elAsOf) elAsOf.textContent = 'Rates unavailable';
+            }
+        }
+
+        // ============================================================
+        // LIVE EXCHANGE RATES
+        // Base is always PHP (everything in the Ledger is computed in ₱).
+        // Network-first: fetch live rates from Frankfurter (keyless, CORS-
+        // enabled, ECB reference rates). On failure — offline or otherwise —
+        // fall back to the last successfully fetched rates cached in
+        // localStorage. sw.js's own network-first/cache-everything strategy
+        // should also transparently cache this GET like any other, so this
+        // localStorage fallback is a second, independent safety net.
+        // ============================================================
+        async function loadFxRates() {
+            try {
+                const res = await fetch('https://api.frankfurter.dev/v1/latest?base=PHP&symbols=USD,EUR,JPY,SGD');
+                if (!res.ok) throw new Error('fx fetch failed');
+                const data = await res.json();
+                window.FX_RATES = { base: data.base, rates: data.rates, date: data.date };
+                try { localStorage.setItem('urc_ccc_fx_rates', JSON.stringify(window.FX_RATES)); } catch(e) {}
+            } catch(_) {
+                try {
+                    const cached = localStorage.getItem('urc_ccc_fx_rates');
+                    if (cached) window.FX_RATES = JSON.parse(cached);
+                } catch(e) {}
+            }
+            updateFinancialLedger();
         }
 
         function syncInputs() {
@@ -840,12 +955,12 @@
                 'pedestalLength','pedestalWidth','pedestalHeight',
                 'excavationDepth','excavationCostM3','laborRateM3',
                 'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity',
-                'exchangeRate', 'conversionAmount'
+                'escalationPct'
             ].forEach(f => {
                 const el = document.getElementById('input-' + f);
                 if (el && estimateState[f] !== 0) el.value = estimateState[f];
             });
-            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass', 'currencyBase', 'currencyTarget'].forEach(f => {
+            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass', 'currencyTarget'].forEach(f => {
                 const el = document.getElementById('select-' + f);
                 if (el) el.value = estimateState[f];
             });
@@ -891,30 +1006,41 @@
             if (typeof Auth !== 'undefined') Auth.requireLogin();
             loadFromCache();
             loadPrices();
+            loadFxRates();
             checkSaveButton();
         };
 
         
     </script>
-    <!-- Save Estimate Modal -->
+    <!-- Save Estimate Modal — project details are read-only here, sourced from Master Estimator's header -->
     <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
             <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
-            <p class="text-sm text-neutral-400 mb-6">Add a label to this record before saving to history.</p>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Project Name <span class="text-red-400">*</span></label>
-                    <input id="modal-project-name" type="text" placeholder="e.g. Calamba Warehouse Phase 2"
-                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+            <p class="text-sm text-neutral-400 mb-6">This saves a snapshot of the current building calculator and Master Estimator worksheet to History.</p>
+
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Project Title</label>
+                        <p id="modal-preview-project" class="text-sm font-medium text-neutral-800">—</p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Prepared By</label>
+                        <p id="modal-preview-preparedby" class="text-sm font-medium text-neutral-800">—</p>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1.5">Engineer Name <span class="text-red-400">*</span></label>
-                    <input id="modal-engineer-name" type="text" placeholder="e.g. Juan dela Cruz"
-                        class="w-full border border-neutral-200 rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-800 outline-none focus:border-neutral-400 transition" />
+                <div class="border-t border-neutral-100 pt-3 space-y-1.5">
+                    <div class="flex justify-between text-sm"><span class="text-neutral-500">Defined Cost</span><span id="modal-preview-defined" class="font-semibold text-neutral-800">₱0.00</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-neutral-500">Contingency</span><span id="modal-preview-contingency" class="font-semibold text-neutral-800">0%</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-neutral-500">Undefined Cost</span><span id="modal-preview-undefined" class="font-semibold text-neutral-800">0%</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-neutral-500">Escalation</span><span id="modal-preview-escalation" class="font-semibold text-neutral-800">0%</span></div>
+                    <div class="flex justify-between text-sm pt-1.5 border-t border-neutral-100"><span class="text-neutral-700 font-semibold">Estimated Grand Total</span><span id="modal-preview-grandtotal" class="font-bold text-blue-600">₱0.00</span></div>
                 </div>
             </div>
-            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Both fields are required.</p>
+
+            <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Project Title and Prepared By need to be filled in on Master Estimator's header bar first.</p>
+
             <div class="flex gap-3 mt-6">
                 <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
                 <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>

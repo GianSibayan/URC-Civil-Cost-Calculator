@@ -116,6 +116,7 @@
                         <div class="flex justify-between text-sm"><span class="text-neutral-500">Defined Cost</span><span id="modal-preview-defined" class="font-semibold text-neutral-800">₱0.00</span></div>
                         <div class="flex justify-between text-sm"><span class="text-neutral-500">Contingency</span><span id="modal-preview-contingency" class="font-semibold text-neutral-800">0%</span></div>
                         <div class="flex justify-between text-sm"><span class="text-neutral-500">Undefined Cost</span><span id="modal-preview-undefined" class="font-semibold text-neutral-800">0%</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Escalation</span><span id="modal-preview-escalation" class="font-semibold text-neutral-800">0%</span></div>
                         <div class="flex justify-between text-sm pt-1.5 border-t border-neutral-100"><span class="text-neutral-700 font-semibold">Estimated Grand Total</span><span id="modal-preview-grandtotal" class="font-bold text-blue-600">₱0.00</span></div>
                     </div>
                 </div>
@@ -565,7 +566,7 @@
             // scorecard, written every time a selection changes so it's always current.
             const subtotal = scorecardSubtotal(criteria, selections);
             try { localStorage.setItem(`urc_ces_${scorecardType}_subtotal`, JSON.stringify({ subtotal, updatedAt: Date.now() })); } catch(e) {}
-            updateSaveButtonState();
+            updateTotals(); // also refreshes urc_ces_cross_page's scorecards section, not just the standalone subtotal keys
         }
 
         function saveScorecardState() {
@@ -658,18 +659,38 @@
             });
         }
 
+        // Escalation is entered on calc.html, but since Save Estimate can now fire from either
+        // page, CES needs to fold it in too — read the last-known value from calc's own cache.
+        function getEscalationPct() {
+            try {
+                const calcSnap = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}');
+                return calcSnap.escalationPct || 0;
+            } catch(e) { return 0; }
+        }
+
         function estimatedGrandTotal() {
             const { definedCost } = getCostBreakdown();
             const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
             const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
-            return definedCost * (1 + (contSubtotal + undefSubtotal) / 100);
+            const escalationPct = getEscalationPct();
+            return definedCost * (1 + (contSubtotal + undefSubtotal + escalationPct) / 100);
         }
 
+        // Save Estimate lives in both calc.html and CES now — the button only enables once
+        // BOTH pages are filled in. urc_ccc_ces_ready reflects CES's own portion only
+        // (Defined Cost + Project + Prepared By); calc.html combines it with its own
+        // urc_ccc_calc_ready flag the same way this function does.
         function updateSaveButtonState() {
+            const { definedCost } = getCostBreakdown();
+            const cesOwnReady = definedCost > 0 && !!estimateMeta.project && !!estimateMeta.preparedBy;
+            try { localStorage.setItem('urc_ccc_ces_ready', String(cesOwnReady)); } catch(e) {}
+
+            let calcReady = false;
+            try { calcReady = localStorage.getItem('urc_ccc_calc_ready') === 'true'; } catch(e) {}
+
             const btn = document.getElementById('btn-save-estimate');
             if (!btn) return;
-            const { definedCost } = getCostBreakdown();
-            const ready = definedCost > 0 && !!estimateMeta.project && !!estimateMeta.preparedBy;
+            const ready = cesOwnReady && calcReady;
             btn.disabled = !ready;
             btn.classList.toggle('opacity-40', !ready);
             btn.classList.toggle('pointer-events-none', !ready);
@@ -679,14 +700,18 @@
             const breakdown = getCostBreakdown();
             const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
             const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+            const escalationPct = getEscalationPct();
 
             document.getElementById('modal-preview-project').textContent = estimateMeta.project || '—';
             document.getElementById('modal-preview-preparedby').textContent = estimateMeta.preparedBy || '—';
             document.getElementById('modal-preview-defined').textContent = fmtPeso(breakdown.definedCost);
             document.getElementById('modal-preview-contingency').textContent = contSubtotal + '%';
             document.getElementById('modal-preview-undefined').textContent = undefSubtotal + '%';
+            document.getElementById('modal-preview-escalation').textContent = escalationPct + '%';
             document.getElementById('modal-preview-grandtotal').textContent = fmtPeso(estimatedGrandTotal());
-            document.getElementById('modal-error').classList.add('hidden');
+            const errEl = document.getElementById('modal-error');
+            errEl.textContent = 'Project Title and Prepared By need to be filled in the header bar above before saving.';
+            errEl.classList.add('hidden');
 
             document.getElementById('save-modal').classList.remove('hidden');
             document.getElementById('save-modal').classList.add('flex');
@@ -704,13 +729,19 @@
             }
 
             const breakdown = getCostBreakdown();
+            const escalationPct = getEscalationPct();
             const grandTotal = estimatedGrandTotal();
 
-            // Best-effort read of calculator.html's snapshot, if one exists yet — same shape as
-            // before so this stays forward-compatible once that page's ledger is finished.
+            // calc.html's own snapshot — required now, not best-effort, since Save Estimate is
+            // gated on both pages being filled in (see updateSaveButtonState).
             let calcSnap = {};
             try { calcSnap = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}'); } catch(e) {}
             const L = calcSnap.length || 0, W = calcSnap.width || 0, H = calcSnap.clearHeight || 0;
+            if (!L || !W || !H) {
+                document.getElementById('modal-error').textContent = 'Building Calculator (Length/Width/Clear Height) needs to be filled in first.';
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
             const M = (calcSnap.mezzanine || 0) / 100;
             const floorArea = L * W, grossArea = floorArea * (1 + M);
             const bsl = calcSnap.baySpacingL || 0, bsw = calcSnap.baySpacingW || 0;
@@ -729,7 +760,7 @@
                 estimateDate: estimateMeta.date || '',
                 meanSpendingDate: estimateMeta.meanSpendingDate || '',
 
-                calculator: (L || W) ? {
+                calculator: {
                     snapshot: {
                         length: L, width: W, clearHeight: H, stories: calcSnap.stories || 1, mezzanine: calcSnap.mezzanine || 0,
                         structureType: calcSnap.structureType, roofType: calcSnap.roofType, wallCladding: calcSnap.wallCladding,
@@ -738,7 +769,7 @@
                         pedestalLength: pl, pedestalWidth: pw, pedestalHeight: ph, concretePriceM3: calcSnap.concretePriceM3 || 0, concreteClass: calcSnap.concreteClass
                     },
                     summary: { floorArea: +floorArea.toFixed(2), grossArea: +grossArea.toFixed(2), perimeter: +(2 * (L + W)).toFixed(2), nodes, concreteVol: +concreteVol.toFixed(2) }
-                } : null,
+                },
 
                 ces: {
                     categoryTotals: getCategoryTotals(),
@@ -755,6 +786,7 @@
                     undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
                 },
 
+                escalationPct: escalationPct,
                 grandTotal: +grandTotal.toFixed(2)
             };
 
@@ -1320,20 +1352,30 @@
             document.getElementById('breakdown-subtotal').textContent = fmt(subtotal);
         }
 
-        // The full Financial Ledger (Undefined Allowances, Contingency, Grand Total) is moving
-        // to calculator.html per Sir Tony's direction. CES now only tracks its own Defined Cost
-        // subtotal quietly in the background and hands it off via cross-page storage.
+        // The full Financial Ledger (Undefined Allowances, Contingency, Escalation, Grand Total)
+        // now lives in calculator.html. Save Estimate lives in BOTH pages — per Sir Tony's
+        // direction, the button only enables once calc.html AND CES are both filled in — so
+        // urc_ces_cross_page has to carry everything a History record needs, not just
+        // Defined Cost: category totals, labor-by-role, and both scorecards in full detail.
+        // confirmSaveEstimate() below (and calc.html's copy) both read from this single object
+        // so a record looks identical no matter which page's Save button wrote it.
         function updateTotals() {
-            let definedCost = 0;
-            Object.keys(gridState).forEach(itemKey => {
-                (gridState[itemKey] || []).forEach((line) => {
-                    definedCost += computeLineCost(line).total;
-                });
-            });
-
-            localStorage.setItem('urc_ccc_ces_ready', String(definedCost > 0));
+            const breakdown = getCostBreakdown();
             try {
-                localStorage.setItem('urc_ces_cross_page', JSON.stringify({ definedCost, updatedAt: Date.now() }));
+                localStorage.setItem('urc_ces_cross_page', JSON.stringify({
+                    materialCost: breakdown.materialCost,
+                    laborCost: breakdown.laborCost,
+                    lumpSumCost: breakdown.lumpSumCost,
+                    definedCost: breakdown.definedCost,
+                    categoryTotals: getCategoryTotals(),
+                    pricedLines: countPricedLines(),
+                    laborBreakdown: getLaborBreakdown().map(r => ({ name: r.name, ratePerDay: +r.ratePerDay.toFixed(2), personDays: +r.personDays.toFixed(2), subtotal: +r.subtotal.toFixed(2) })),
+                    scorecards: {
+                        contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections), criteria: scorecardDetail(CONTINGENCY_CRITERIA, contingencySelections) },
+                        undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
+                    },
+                    updatedAt: Date.now()
+                }));
             } catch(e) {}
             updateSaveButtonState();
         }

@@ -617,7 +617,7 @@
                         const lab = LABOR_DB[line.labId];
                         const headcount = parseFloat(line.headcount) || 0;
                         const days = parseFloat(line.days) || 0;
-                        if (lab && headcount > 0 && days > 0) laborCost += headcount * days * lab.dailyRate * 8;
+                        if (lab && headcount > 0 && days > 0) laborCost += headcount * days * lab.dailyRate;
                     } else if (line.matId) {
                         const mat = MASTER_DB[line.matId];
                         const qty = parseFloat(line.qty) || 0;
@@ -640,7 +640,7 @@
                     const headcount = parseFloat(line.headcount) || 0;
                     const days = parseFloat(line.days) || 0;
                     if (!lab || headcount <= 0 || days <= 0) return;
-                    const ratePerDay = lab.dailyRate * 8;
+                    const ratePerDay = lab.dailyRate;
                     const personDays = headcount * days;
                     if (!byRole[line.labId]) byRole[line.labId] = { name: lab.name, ratePerDay, personDays: 0, subtotal: 0 };
                     byRole[line.labId].personDays += personDays;
@@ -971,7 +971,7 @@
                     any = true;
                     html += `<div class="px-2 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase sticky top-0 bg-white">Labor</div>`;
                     laborKeys.forEach(k => {
-                        html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('lab:${k}')">${LABOR_DB[k].name} (₱${LABOR_DB[k].dailyRate * 8}/day)</div>`;
+                        html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('lab:${k}')">${LABOR_DB[k].name} (₱${LABOR_DB[k].dailyRate}/day)</div>`;
                     });
                 }
             }

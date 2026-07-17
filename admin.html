@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
+    <link rel="icon" type="image/png" href="urclogo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Admin</title>
@@ -117,6 +118,10 @@
                 class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
                 Footing &amp; Pedestal rates
             </button>
+            <button onclick="switchCategory('labor_rates')" id="nav-labor_rates"
+                class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
+                Labor Rates
+            </button>
             <div class="pt-5">
                 <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Price list</span>
                 <button onclick="switchCategory('concreting_materials')" id="nav-concreting_materials"
@@ -148,11 +153,11 @@
                 <button onclick="switchCategory('pipes')" id="nav-pipes"
                     class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Pipes</button>
             </div>
-            <div class="pt-5">
+            <!-- <div class="pt-5">
                 <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Tools</span>
                 <button onclick="switchCategory('escalation')" id="nav-escalation"
                     class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Annual Escalation</button>
-            </div>
+            </div> -->
         </nav>
 
         <div class="p-4 border-t border-neutral-100 space-y-2">
@@ -257,6 +262,23 @@
                             <th style="width:10%"></th>
                         </tr></thead>
                         <tbody id="tbody-simple"></tbody>
+                    </table>
+                </div>
+                <button class="add-row-btn" onclick="addRow()">+ Add Row</button>
+            </div>
+
+            <!-- Labor Rates view -->
+            <div id="view-labor_rates" class="hidden max-w-3xl">
+                <!-- <p class="text-xs text-neutral-400 mb-3">Rate is stored per hour — Master Estimator multiplies by 8 for the real daily labor cost. IDs are referenced directly by labor lines in Master Estimator, so avoid changing an existing ID once it's in use.</p> -->
+                <div class="rounded-2xl border border-neutral-200 overflow-hidden">
+                    <table class="price-table">
+                        <thead><tr>
+                            <th style="width:20%">ID</th>
+                            <th style="width:48%">Role / Region</th>
+                            <th style="width:22%" class="text-right">Rate (₱/Day)</th>
+                            <th style="width:10%"></th>
+                        </tr></thead>
+                        <tbody id="tbody-labor_rates"></tbody>
                     </table>
                 </div>
                 <button class="add-row-btn" onclick="addRow()">+ Add Row</button>
@@ -519,7 +541,8 @@ function switchCategory(key) {
     dirtyRows.clear();
 
     const titles = {
-        core: 'Footing & Pedestal rates', concreting_materials: 'Concreting Materials',
+        core: 'Footing & Pedestal rates', labor_rates: 'Labor Rates',
+        concreting_materials: 'Concreting Materials',
         timber_formworks: 'Timber Formworks', roofing: 'Roofing', steel_truss: 'Steel Truss',
         painting_works: 'Painting Works', electrical: 'Electrical', masonry: 'Masonry',
         fencing: 'Fencing', ceiling: 'Ceiling', plumbing: 'Plumbing', rebars: 'Rebars',
@@ -548,6 +571,7 @@ async function loadAndRender(key) {
         if (!data) return;
         categoryData[key] = data;
         document.getElementById('view-loading').classList.add('hidden');
+        if (key === 'labor_rates')  { renderLaborRates(data);  return; }
         if (key === 'masonry')      { renderMasonry(data);     return; }
         if (key === 'rebars')       { renderRebars(data);      return; }
         if (key === 'concrete_mix') { renderConcreteMix(data); return; }
@@ -647,6 +671,32 @@ async function saveSimpleRow(btn, key, index) {
     const baseVal = unscalePrice(displayVal);
     btn.textContent = 'saving...'; btn.classList.add('saving');
     const ok = await Parser.updateSimpleItem(key, index, 'price_php', baseVal);
+    btn.classList.remove('saving');
+    if (ok) flashSaved(btn, row);
+}
+
+// ============================================================
+// LABOR RATES
+// ============================================================
+function renderLaborRates(data) {
+    const arr = Array.isArray(data) ? data : [];
+    document.getElementById('page-badge').textContent = `${arr.length} items`;
+    document.getElementById('view-labor_rates').classList.remove('hidden');
+    document.getElementById('tbody-labor_rates').innerHTML = arr.map((item, i) => `
+        <tr data-index="${i}">
+            <td class="readonly-cell">${item.id}</td>
+            <td>${item.name}</td>
+            <td class="text-right"><input class="price-input" value="${item.rate}" oninput="markDirty(this, 'labor_rates')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveLaborRateRow(this, ${i})">save</button></td>
+        </tr>`).join('');
+}
+
+async function saveLaborRateRow(btn, index) {
+    const row = btn.closest('tr');
+    const val = parseFloat(row.querySelector('.price-input').value);
+    if (isNaN(val)) { showToast('Invalid value.', 'error'); return; }
+    btn.textContent = 'saving...'; btn.classList.add('saving');
+    const ok = await Parser.updateSimpleItem('labor_rates', index, 'rate', val);
     btn.classList.remove('saving');
     if (ok) flashSaved(btn, row);
 }
@@ -853,6 +903,27 @@ function addRow(subtype) {
         tbody.appendChild(tr);
         tr.querySelector('input').focus();
 
+    // ---- LABOR RATES ----
+    } else if (key === 'labor_rates') {
+        const arr = categoryData[key];
+        const newItem = { id: '', name: '', rate: 0 };
+        arr.push(newItem);
+        const idx = arr.length - 1;
+        const tbody = document.getElementById('tbody-labor_rates');
+        const tr = document.createElement('tr');
+        tr.dataset.index = idx;
+        tr.classList.add('dirty');
+        tr.innerHTML = `
+            <td><input class="price-input left" placeholder="id (e.g. foreman)" value=""
+                oninput="categoryData['labor_rates'][${idx}].id = this.value"></td>
+            <td><input class="price-input left" placeholder="Role / Region name" value=""
+                oninput="categoryData['labor_rates'][${idx}].name = this.value"></td>
+            <td class="text-right"><input class="price-input" value="0"
+                oninput="categoryData['labor_rates'][${idx}].rate = parseFloat(this.value)||0; markDirty(this,'labor_rates')"></td>
+            <td class="text-right"><button class="save-btn" onclick="saveNewRow(this,'labor_rates',${idx},'labor_rates')">save</button></td>`;
+        tbody.appendChild(tr);
+        tr.querySelector('input').focus();
+
     // ---- MASONRY ----
     } else if (key === 'masonry') {
         const arr = categoryData[key].prices;
@@ -1004,6 +1075,13 @@ async function saveNewRow(btn, key, index, schema) {
         if (!arr[index].name) { showToast('Item name is required.', 'error'); btn.textContent = 'save'; btn.classList.remove('saving'); return; }
         ok = await Parser.saveBulk(key, arr);
 
+    } else if (schema === 'labor_rates') {
+        const arr = categoryData[key];
+        const item = arr[index];
+        if (!item.id || !item.name) { showToast('ID and Role/Region name are required.', 'error'); btn.textContent = 'save'; btn.classList.remove('saving'); return; }
+        if (arr.some((r, i) => i !== index && r.id === item.id)) { showToast(`ID "${item.id}" is already in use.`, 'error'); btn.textContent = 'save'; btn.classList.remove('saving'); return; }
+        ok = await Parser.saveBulk(key, arr);
+
     } else if (schema === 'masonry') {
         if (!categoryData[key].prices[index].name) { showToast('Item name is required.', 'error'); btn.textContent = 'save'; btn.classList.remove('saving'); return; }
         ok = await Parser.saveBulk(key, categoryData[key]);
@@ -1124,6 +1202,16 @@ async function importFile(input) {
         const ok = await Parser.saveBulk(key, categoryData[key]);
         if (ok) { showToast(`Import done: ${updated} updated, ${added} added.`, 'success'); switchCategory(key); }
 
+    } else if (key === 'labor_rates') {
+        rows.forEach(row => {
+            const ex = categoryData[key].find(i => i.id && row.id && i.id.toLowerCase() === row.id.toLowerCase())
+                    || categoryData[key].find(i => i.name && row.name && i.name.toLowerCase() === row.name.toLowerCase());
+            if (ex) { ex.rate = row.rate; updated++; }
+            else if (row.id && row.name) { categoryData[key].push({ id: row.id, name: row.name, rate: row.rate }); added++; }
+        });
+        const ok = await Parser.saveBulk(key, categoryData[key]);
+        if (ok) { showToast(`Import done: ${updated} updated, ${added} added.`, 'success'); switchCategory(key); }
+
     } else {
         showToast('Import not supported for this category.', 'info');
     }
@@ -1176,6 +1264,8 @@ async function parseImportFile(file, categoryKey) {
                         return { product: get(r,'product'), curing_time: get(r,'curingtime','curing_time','curingtime'), price_php: parseFloat(get(r,'pricephp','price(php)','price')) || 0 };
                     } else if (categoryKey === 'equipment') {
                         return { category: get(r,'category') || 'main', item_no: get(r,'itemno','item_no') || '', name: get(r,'equipment','name'), unit: get(r,'unit') || '', rate_min_php: parseFloat(get(r,'minratephp','rate_min_php','minrate')) || 0, rate_max_php: parseFloat(get(r,'maxratephp','rate_max_php','maxrate')) || 0 };
+                    } else if (categoryKey === 'labor_rates') {
+                        return { id: get(r,'id'), name: get(r,'name','role','rolename'), rate: parseFloat(get(r,'rate','dailyrate','rate(php)','rate_php')) || 0 };
                     }
                     return null;
                 }).filter(r => r && (r.name || r.spec || r.product || r.equipment));
@@ -1223,8 +1313,11 @@ function markDirty(input, key) {
             const arr = Array.isArray(categoryData[key]) ? categoryData[key] : categoryData[key].prices;
             if (arr && arr[index]) {
                 const inputs = row.querySelectorAll('.price-input');
-                if (inputs.length === 1) arr[index].price_php = parseFloat(inputs[0].value) || 0;
-                if (inputs.length === 2) {
+                if (key === 'labor_rates') {
+                    arr[index].rate = parseFloat(inputs[0].value) || 0;
+                } else if (inputs.length === 1) {
+                    arr[index].price_php = parseFloat(inputs[0].value) || 0;
+                } else if (inputs.length === 2) {
                     arr[index].rate_min_php = parseFloat(inputs[0].value) || 0;
                     arr[index].rate_max_php = parseFloat(inputs[1].value) || 0;
                 }
@@ -1552,6 +1645,15 @@ function showToast(message, type = 'success') {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Offline Engine Active: ', reg.scope))
+                .catch(err => console.error('Offline Engine Failed: ', err));
+        });
+    }
 </script>
 </body>
 </html>

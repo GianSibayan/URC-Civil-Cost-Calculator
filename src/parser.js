@@ -1,20 +1,82 @@
 // src/parser.js
 // SheetJS Excel/CSV parsing logic for admin price uploads
 // Also handles loading and saving all 14 category JSON files
-//
-// Depends on SheetJS loaded via CDN in admin.html:
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+// Includes Offline Outbox Sync Engine for saving edits without internet
+
+// ============================================================
+// OFFLINE SYNC ENGINE
+// ============================================================
+const OfflineSync = {
+  queueRequest(endpoint, payload) {
+    let outbox = JSON.parse(localStorage.getItem('ccc_offline_outbox') || '[]');
+    // Add the new request to the queue
+    outbox.push({ endpoint, payload, timestamp: Date.now() });
+    localStorage.setItem('ccc_offline_outbox', JSON.stringify(outbox));
+  },
+
+  async flushOutbox() {
+    let outbox = JSON.parse(localStorage.getItem('ccc_offline_outbox') || '[]');
+    if (outbox.length === 0) return;
+
+    // Optional: Only show toast if window.showToast exists
+    if (typeof showToast === 'function') {
+      showToast(`Connection restored. Syncing ${outbox.length} offline edits...`, 'info');
+    }
+
+    let pending = [];
+    const token = typeof Auth !== 'undefined' ? Auth.getToken() : null;
+
+    for (let item of outbox) {
+      try {
+        const res = await fetch(item.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(item.payload),
+        });
+
+        if (!res.ok) {
+          // Server rejected it (e.g. 500 error), keep in queue
+          pending.push(item);
+        }
+      } catch (e) {
+        // Network failed again while syncing, keep in queue
+        pending.push(item);
+      }
+    }
+
+    localStorage.setItem('ccc_offline_outbox', JSON.stringify(pending));
+
+    if (typeof showToast === 'function') {
+      if (pending.length === 0) {
+        showToast('All offline data synced successfully!', 'success');
+      } else {
+        showToast(`Sync partial. ${pending.length} items remain in outbox.`, 'error');
+      }
+    }
+  }
+};
+
+// Automatically flush outbox when the browser detects connection restored
+window.addEventListener('online', OfflineSync.flushOutbox);
+
 
 // ============================================================
 // CATEGORY JSON CONFIG
-// Defines all 14 data files, their schema type, and which
-// fields are editable vs read-only in the admin panel
 // ============================================================
 const CATEGORY_FILES = {
+  labor_rates: {
+    file: 'data/labor_rates.json',
+    label: 'Labor & Resources',
+    schema: 'labor_rates',
+    editableFields: ['rate'],
+  },
   concreting_materials: {
     file: 'data/concreting_materials.json',
     label: 'Concreting Materials',
-    schema: 'simple',         // { name, unit, price_php }
+    schema: 'simple',         
     editableFields: ['price_php'],
   },
   timber_formworks: {
@@ -50,7 +112,7 @@ const CATEGORY_FILES = {
   masonry: {
     file: 'data/masonry.json',
     label: 'Masonry',
-    schema: 'masonry',        // { prices: [...], concrete_proportion_table: [...] }
+    schema: 'masonry',        
     editableFields: ['price_php'],
   },
   fencing: {
@@ -74,25 +136,25 @@ const CATEGORY_FILES = {
   rebars: {
     file: 'data/rebars.json',
     label: 'Rebars',
-    schema: 'rebars',         // { spec, size, length, price_php }
+    schema: 'rebars',         
     editableFields: ['price_php'],
   },
   concrete_mix: {
     file: 'data/concrete_mix.json',
     label: 'Concrete Mix',
-    schema: 'concrete_mix',   // { product, curing_time, price_php }
+    schema: 'concrete_mix',   
     editableFields: ['price_php'],
   },
   equipment: {
     file: 'data/equipment.json',
     label: 'Equipment',
-    schema: 'equipment',      // { item_no, name, category, rate_min_php, rate_max_php, unit }
+    schema: 'equipment',      
     editableFields: ['rate_min_php', 'rate_max_php'],
   },
   pipes: {
     file: 'data/pipes.json',
     label: 'Pipes',
-    schema: 'pipes',          // object with 3 sub-tables
+    schema: 'pipes',          
     editableFields: ['price_per_6m_php', 'price_per_length_php'],
   },
 };
@@ -101,7 +163,6 @@ const Parser = {
 
   // ============================================================
   // LOAD A CATEGORY JSON FROM GITHUB RAW
-  // Returns parsed data or null on error
   // ============================================================
   async loadCategory(categoryKey) {
     const config = CATEGORY_FILES[categoryKey];
@@ -110,8 +171,6 @@ const Parser = {
       return null;
     }
 
-    // Try relative path first (Vercel serves files from root),
-    // fall back to raw GitHub in case relative fetch fails.
     const urls = [
       `/${config.file}`,
       `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`,
@@ -121,31 +180,41 @@ const Parser = {
       try {
         const res = await fetch(url);
         if (res.ok) return await res.json();
-      } catch (_) {
-        // try next URL
-      }
+      } catch (_) { }
     }
 
     console.error(`Failed to load ${config.file} from all sources`);
-    showToast(`Failed to load ${config.label} prices.`, 'error');
+    if (typeof showToast === 'function') showToast(`Failed to load ${config.label} prices.`, 'error');
     return null;
   },
 
   // ============================================================
   // SAVE A CATEGORY JSON VIA UPDATE-PRICES API
-  // data = the full updated JSON for that category
+  // Includes Offline Queueing
   // ============================================================
   async saveCategory(categoryKey, data) {
     const config = CATEGORY_FILES[categoryKey];
     if (!config) {
-      showToast(`Unknown category: ${categoryKey}`, 'error');
+      if (typeof showToast === 'function') showToast(`Unknown category: ${categoryKey}`, 'error');
       return false;
     }
 
-    const token = Auth.getToken();
+    const token = typeof Auth !== 'undefined' ? Auth.getToken() : null;
     if (!token) {
-      showToast('Not logged in.', 'error');
+      if (typeof showToast === 'function') showToast('Not logged in.', 'error');
       return false;
+    }
+
+    const payload = {
+      filename: config.file,
+      prices: data,
+    };
+
+    // If device is offline, intercept and queue
+    if (!navigator.onLine) {
+      OfflineSync.queueRequest('/api/update-prices', payload);
+      if (typeof showToast === 'function') showToast(`Offline: ${config.label} queued for sync.`, 'info');
+      return true; // Return true so the UI updates locally
     }
 
     try {
@@ -155,55 +224,42 @@ const Parser = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          filename: config.file,
-          prices: data,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        showToast(result.error || 'Failed to save.', 'error');
+        if (typeof showToast === 'function') showToast(result.error || 'Failed to save.', 'error');
         return false;
       }
 
-      showToast(`${config.label} updated successfully.`, 'success');
+      if (typeof showToast === 'function') showToast(`${config.label} updated successfully.`, 'success');
       return true;
 
     } catch (e) {
-      console.error(`Failed to save ${config.file}:`, e);
-      showToast('Server error while saving. Try again.', 'error');
-      return false;
+      // If network suddenly drops during fetch, catch it and queue
+      OfflineSync.queueRequest('/api/update-prices', payload);
+      if (typeof showToast === 'function') showToast(`Network error: ${config.label} queued for sync.`, 'info');
+      return true;
     }
   },
 
-  // ============================================================
-  // UPDATE A SINGLE ITEM IN A SIMPLE ARRAY CATEGORY
-  // Used for direct in-table edits on simple schema categories
-  // index = array index of the item being edited
-  // field = field name being changed (e.g. 'price_php')
-  // value = new numeric value
-  // ============================================================
   async updateSimpleItem(categoryKey, index, field, value) {
     const data = await this.loadCategory(categoryKey);
     if (!data) return false;
 
     const arr = Array.isArray(data) ? data : data.prices;
     if (!arr || arr[index] === undefined) {
-      showToast('Item not found.', 'error');
+      if (typeof showToast === 'function') showToast('Item not found.', 'error');
       return false;
     }
 
     arr[index][field] = parseFloat(value);
-
     const updated = Array.isArray(data) ? arr : { ...data, prices: arr };
     return await this.saveCategory(categoryKey, updated);
   },
 
-  // ============================================================
-  // UPDATE A SINGLE ITEM IN EQUIPMENT (rate_min + rate_max)
-  // ============================================================
   async updateEquipmentItem(index, rateMin, rateMax) {
     const data = await this.loadCategory('equipment');
     if (!data || !data[index]) return false;
@@ -214,36 +270,38 @@ const Parser = {
     return await this.saveCategory('equipment', data);
   },
 
-  // ============================================================
-  // UPDATE A SINGLE ITEM IN PIPES
-  // tableKey = 'nominal_size_unit_price' | 'seamless_galvanized_steel' | 'erw_welded_galvanized_steel'
-  // ============================================================
   async updatePipesItem(tableKey, index, field, value) {
     const data = await this.loadCategory('pipes');
     if (!data || !data[tableKey] || !data[tableKey][index]) return false;
 
     data[tableKey][index][field] = parseFloat(value);
-
     return await this.saveCategory('pipes', data);
   },
 
-  // ============================================================
-  // SAVE ENTIRE CATEGORY AT ONCE (bulk save after editing)
-  // Used when admin edits multiple rows then hits "Save All"
-  // ============================================================
   async saveBulk(categoryKey, data) {
     return await this.saveCategory(categoryKey, data);
   },
 
   // ============================================================
   // ALSO SAVE prices.json (Tab 1 & Tab 2 rates)
-  // Kept for backward compatibility with existing admin flow
+  // Includes Offline Queueing
   // ============================================================
   async savePricesJson(prices) {
-    const token = Auth.getToken();
+    const token = typeof Auth !== 'undefined' ? Auth.getToken() : null;
     if (!token) {
-      showToast('Not logged in.', 'error');
+      if (typeof showToast === 'function') showToast('Not logged in.', 'error');
       return false;
+    }
+
+    const payload = {
+      filename: 'prices.json',
+      prices,
+    };
+
+    if (!navigator.onLine) {
+      OfflineSync.queueRequest('/api/update-prices', payload);
+      if (typeof showToast === 'function') showToast(`Offline: Core prices queued for sync.`, 'info');
+      return true;
     }
 
     try {
@@ -253,36 +311,31 @@ const Parser = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          filename: 'prices.json',
-          prices,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        showToast(result.error || 'Failed to save prices.json.', 'error');
+        if (typeof showToast === 'function') showToast(result.error || 'Failed to save prices.json.', 'error');
         return false;
       }
 
-      showToast('Prices updated successfully.', 'success');
+      if (typeof showToast === 'function') showToast('Prices updated successfully.', 'success');
       return true;
 
     } catch (e) {
-      console.error('Failed to save prices.json:', e);
-      showToast('Server error while saving. Try again.', 'error');
-      return false;
+      OfflineSync.queueRequest('/api/update-prices', payload);
+      if (typeof showToast === 'function') showToast(`Network error: Core prices queued for sync.`, 'info');
+      return true;
     }
   },
 
   // ============================================================
-  // PARSE FILE UPLOAD (excel or csv → prices.json update)
-  // Kept for the prices.json upload flow
+  // PARSE FILE UPLOAD
   // ============================================================
   async parseFile(file) {
     if (!file) return null;
-
     const extension = file.name.split('.').pop().toLowerCase();
 
     if (extension === 'csv') {
@@ -290,7 +343,7 @@ const Parser = {
     } else if (extension === 'xlsx' || extension === 'xls') {
       return await this.parseExcel(file);
     } else {
-      showToast('Unsupported file type. Please upload .xlsx or .csv only.', 'error');
+      if (typeof showToast === 'function') showToast('Unsupported file type. Please upload .xlsx or .csv only.', 'error');
       return null;
     }
   },
@@ -298,7 +351,6 @@ const Parser = {
   async parseCSV(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
-
       reader.onload = (e) => {
         try {
           const text = e.target.result;
@@ -318,12 +370,11 @@ const Parser = {
           resolve(prices);
         } catch (e) {
           console.error('CSV parse error:', e);
-          showToast('Failed to parse CSV file.', 'error');
+          if (typeof showToast === 'function') showToast('Failed to parse CSV file.', 'error');
           resolve(null);
         }
       };
-
-      reader.onerror = () => { showToast('Failed to read file.', 'error'); resolve(null); };
+      reader.onerror = () => { if (typeof showToast === 'function') showToast('Failed to read file.', 'error'); resolve(null); };
       reader.readAsText(file);
     });
   },
@@ -331,11 +382,10 @@ const Parser = {
   async parseExcel(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
-
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = window.XLSX.read(data, { type: 'array' });
 
           let sheetName = workbook.SheetNames.find(
             name => name.toLowerCase() === 'prices'
@@ -343,7 +393,7 @@ const Parser = {
           if (!sheetName) sheetName = workbook.SheetNames[0];
 
           const sheet = workbook.Sheets[sheetName];
-          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          const rows = window.XLSX.utils.sheet_to_json(sheet, { header: 1 });
           const extracted = {};
 
           rows.forEach((row, index) => {
@@ -358,55 +408,44 @@ const Parser = {
           resolve(prices);
         } catch (e) {
           console.error('Excel parse error:', e);
-          showToast('Failed to parse Excel file.', 'error');
+          if (typeof showToast === 'function') showToast('Failed to parse Excel file.', 'error');
           resolve(null);
         }
       };
-
-      reader.onerror = () => { showToast('Failed to read file.', 'error'); resolve(null); };
+      reader.onerror = () => { if (typeof showToast === 'function') showToast('Failed to read file.', 'error'); resolve(null); };
       reader.readAsArrayBuffer(file);
     });
   },
 
   mapToPricesJson(extracted) {
     if (!window.PRICES) {
-      showToast('Price data not loaded. Please refresh and try again.', 'error');
+      if (typeof showToast === 'function') showToast('Price data not loaded. Please refresh and try again.', 'error');
       return null;
     }
 
     const updated = JSON.parse(JSON.stringify(window.PRICES));
     updated.meta.last_updated = new Date().toISOString().split('T')[0];
-    updated.meta.updated_by = Auth.getEmail() || 'admin';
+    updated.meta.updated_by = typeof Auth !== 'undefined' ? Auth.getEmail() : 'admin';
 
     const t = updated.tab1_tab2;
 
-    if (extracted['rebar_price_per_kg'] !== undefined)
-      t.rebar_price_per_kg = extracted['rebar_price_per_kg'];
-    if (extracted['steel_density_kg_per_m3'] !== undefined)
-      t.steel_density_kg_per_m3 = extracted['steel_density_kg_per_m3'];
-    if (extracted['excavation_cost_per_m3'] !== undefined)
-      t.excavation_cost_per_m3 = extracted['excavation_cost_per_m3'];
-    if (extracted['forms_price_per_m2'] !== undefined)
-      t.forms_price_per_m2 = extracted['forms_price_per_m2'];
-    if (extracted['labor_cost_per_day'] !== undefined)
-      t.labor_cost_per_day = extracted['labor_cost_per_day'];
-    if (extracted['overhead_profit_rate'] !== undefined)
-      t.overhead_profit_rate = extracted['overhead_profit_rate'];
-    if (extracted['escalation_factor'] !== undefined)
-      t.escalation_factor = extracted['escalation_factor'];
-    if (extracted['place_factor'] !== undefined)
-      t.place_factor = extracted['place_factor'];
+    if (extracted['rebar_price_per_kg'] !== undefined) t.rebar_price_per_kg = extracted['rebar_price_per_kg'];
+    if (extracted['steel_density_kg_per_m3'] !== undefined) t.steel_density_kg_per_m3 = extracted['steel_density_kg_per_m3'];
+    if (extracted['excavation_cost_per_m3'] !== undefined) t.excavation_cost_per_m3 = extracted['excavation_cost_per_m3'];
+    if (extracted['forms_price_per_m2'] !== undefined) t.forms_price_per_m2 = extracted['forms_price_per_m2'];
+    if (extracted['labor_cost_per_day'] !== undefined) t.labor_cost_per_day = extracted['labor_cost_per_day'];
+    if (extracted['overhead_profit_rate'] !== undefined) t.overhead_profit_rate = extracted['overhead_profit_rate'];
+    if (extracted['escalation_factor'] !== undefined) t.escalation_factor = extracted['escalation_factor'];
+    if (extracted['place_factor'] !== undefined) t.place_factor = extracted['place_factor'];
 
     Object.keys(t.concrete_classes).forEach((cls) => {
       const key = `concrete_${cls}`;
-      if (extracted[key] !== undefined)
-        t.concrete_classes[cls].price_per_m3 = extracted[key];
+      if (extracted[key] !== undefined) t.concrete_classes[cls].price_per_m3 = extracted[key];
     });
 
     Object.keys(t.rebar_weights_per_meter).forEach((size) => {
       const key = `rebar_${size}`;
-      if (extracted[key] !== undefined)
-        t.rebar_weights_per_meter[size] = extracted[key];
+      if (extracted[key] !== undefined) t.rebar_weights_per_meter[size] = extracted[key];
     });
 
     const tab3 = updated.tab3;
@@ -422,7 +461,7 @@ const Parser = {
 
   downloadTemplate() {
     if (!window.PRICES) {
-      showToast('Price data not loaded. Please refresh.', 'error');
+      if (typeof showToast === 'function') showToast('Price data not loaded. Please refresh.', 'error');
       return;
     }
 
@@ -453,102 +492,100 @@ const Parser = {
       });
     });
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Prices');
+    const ws = window.XLSX.utils.aoa_to_sheet(rows);
+    const wb = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(wb, ws, 'Prices');
     ws['!cols'] = [{ wch: 45 }, { wch: 15 }, { wch: 50 }];
-    XLSX.writeFile(wb, 'URC_CCC_Prices_Template.xlsx');
-    showToast('Template downloaded.', 'success');
+    window.XLSX.writeFile(wb, 'URC_CCC_Prices_Template.xlsx');
+    if (typeof showToast === 'function') showToast('Template downloaded.', 'success');
   },
 
-  // ============================================================
-  // DOWNLOAD CURRENT CATEGORY AS EXCEL
-  // Called from admin.html export button
-  // categoryKey = current open category, data = in-memory data for it
-  // ============================================================
   downloadCategory(categoryKey, data) {
     if (!data) {
-      showToast('No data loaded to export.', 'error');
+      if (typeof showToast === 'function') showToast('No data loaded to export.', 'error');
       return;
     }
 
     const config = CATEGORY_FILES[categoryKey];
     const label = config ? config.label : categoryKey;
-    const wb = XLSX.utils.book_new();
+    const wb = window.XLSX.utils.book_new();
 
     if (categoryKey === 'masonry') {
       const priceRows = [['Name', 'Unit', 'Price (PHP)']];
       data.prices.forEach(i => priceRows.push([i.name, i.unit, i.price_php]));
-      const wsPrices = XLSX.utils.aoa_to_sheet(priceRows);
+      const wsPrices = window.XLSX.utils.aoa_to_sheet(priceRows);
       wsPrices['!cols'] = [{ wch: 40 }, { wch: 12 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, wsPrices, 'Prices');
+      window.XLSX.utils.book_append_sheet(wb, wsPrices, 'Prices');
 
       const propRows = [['Mixture Class', 'Cement', 'Sand', 'Gravel', '40kg Bags', '50kg Bags', 'Sand cu.m', 'Gravel cu.m']];
       data.concrete_proportion_table.forEach(r => propRows.push([
         r.mixture_class, r.proportion.cement, r.proportion.sand, r.proportion.gravel,
         r.cement_in_bag['40kg'], r.cement_in_bag['50kg'], r.sand_cu_m, r.gravel_cu_m,
       ]));
-      const wsProp = XLSX.utils.aoa_to_sheet(propRows);
+      const wsProp = window.XLSX.utils.aoa_to_sheet(propRows);
       wsProp['!cols'] = [{ wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, wsProp, 'Proportion Table');
+      window.XLSX.utils.book_append_sheet(wb, wsProp, 'Proportion Table');
 
     } else if (categoryKey === 'rebars') {
       const rows = [['Spec', 'Size', 'Length', 'Price (PHP)']];
       data.forEach(i => rows.push([i.spec, i.size, i.length, i.price_php]));
-      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const ws = window.XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = [{ wch: 12 }, { wch: 16 }, { wch: 14 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, ws, label);
+      window.XLSX.utils.book_append_sheet(wb, ws, label);
 
     } else if (categoryKey === 'concrete_mix') {
       const rows = [['Product', 'Curing Time', 'Price (PHP)']];
       data.forEach(i => rows.push([i.product, i.curing_time, i.price_php]));
-      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const ws = window.XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, ws, label);
+      window.XLSX.utils.book_append_sheet(wb, ws, label);
 
     } else if (categoryKey === 'equipment') {
       const rows = [['Category', 'Item No.', 'Equipment', 'Unit', 'Min Rate (PHP)', 'Max Rate (PHP)']];
       data.forEach(i => rows.push([i.category, i.item_no, i.name, i.unit, i.rate_min_php, i.rate_max_php]));
-      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const ws = window.XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = [{ wch: 10 }, { wch: 10 }, { wch: 48 }, { wch: 8 }, { wch: 16 }, { wch: 16 }];
-      XLSX.utils.book_append_sheet(wb, ws, label);
+      window.XLSX.utils.book_append_sheet(wb, ws, label);
+
+    } else if (categoryKey === 'labor_rates') {
+      const rows = [['ID', 'Role Name', 'Daily Rate (PHP)']];
+      data.forEach(i => rows.push([i.id, i.name, i.rate]));
+      const ws = window.XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 16 }];
+      window.XLSX.utils.book_append_sheet(wb, ws, label);
 
     } else if (categoryKey === 'pipes') {
       const nomRows = [['English', 'Metric (mm)', 'Price per 6m (PHP)']];
       data.nominal_size_unit_price.forEach(i => nomRows.push([i.english, i.metric_mm, i.price_per_6m_php]));
-      const wsNom = XLSX.utils.aoa_to_sheet(nomRows);
+      const wsNom = window.XLSX.utils.aoa_to_sheet(nomRows);
       wsNom['!cols'] = [{ wch: 10 }, { wch: 14 }, { wch: 20 }];
-      XLSX.utils.book_append_sheet(wb, wsNom, 'Nominal Size');
+      window.XLSX.utils.book_append_sheet(wb, wsNom, 'Nominal Size');
 
       const seamRows = [['Item No.', 'Description', 'Price per Length (PHP)', 'Remarks']];
       data.seamless_galvanized_steel.forEach(i => seamRows.push([i.item_no, i.description, i.price_per_length_php, i.remarks]));
-      const wsSea = XLSX.utils.aoa_to_sheet(seamRows);
+      const wsSea = window.XLSX.utils.aoa_to_sheet(seamRows);
       wsSea['!cols'] = [{ wch: 10 }, { wch: 36 }, { wch: 22 }, { wch: 20 }];
-      XLSX.utils.book_append_sheet(wb, wsSea, 'Seamless');
+      window.XLSX.utils.book_append_sheet(wb, wsSea, 'Seamless');
 
       const erwRows = [['Item No.', 'Description', 'Price per Length (PHP)', 'Remarks']];
       data.erw_welded_galvanized_steel.forEach(i => erwRows.push([i.item_no, i.description, i.price_per_length_php, i.remarks]));
-      const wsErw = XLSX.utils.aoa_to_sheet(erwRows);
+      const wsErw = window.XLSX.utils.aoa_to_sheet(erwRows);
       wsErw['!cols'] = [{ wch: 10 }, { wch: 36 }, { wch: 22 }, { wch: 20 }];
-      XLSX.utils.book_append_sheet(wb, wsErw, 'ERW Welded');
+      window.XLSX.utils.book_append_sheet(wb, wsErw, 'ERW Welded');
 
     } else {
-      // Simple schema
       const arr = Array.isArray(data) ? data : [];
       const rows = [['Name', 'Unit', 'Price (PHP)']];
       arr.forEach(i => rows.push([i.name, i.unit, i.price_php]));
-      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const ws = window.XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = [{ wch: 48 }, { wch: 12 }, { wch: 14 }];
-      XLSX.utils.book_append_sheet(wb, ws, label);
+      window.XLSX.utils.book_append_sheet(wb, ws, label);
     }
 
-    XLSX.writeFile(wb, `URC_CCC_${label.replace(/\s+/g, '_')}.xlsx`);
-    showToast(`${label} exported.`, 'success');
+    window.XLSX.writeFile(wb, `URC_CCC_${label.replace(/\s+/g, '_')}.xlsx`);
+    if (typeof showToast === 'function') showToast(`${label} exported.`, 'success');
   },
 
-  // ============================================================
-  // EXPOSE CATEGORY CONFIG for admin.html to iterate
-  // ============================================================
   getCategoryFiles() {
     return CATEGORY_FILES;
   },

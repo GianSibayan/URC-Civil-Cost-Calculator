@@ -27,140 +27,214 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+        
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-        .dim-input { width: 100%; background: white; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600; color: #111; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
-        .dim-input:focus { border-color: rgba(0,0,0,0.25); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+
+        /* Excel-Style Cell CSS */
+        .excel-cell {
+            border: 1px solid #e5e7eb; /* neutral-200 */
+            padding: 0;
+            position: relative;
+        }
+        .readonly-cell {
+            padding: 6px 10px;
+            background-color: #fbfbfc;
+            color: #6b7280;
+        }
+        .excel-input, .excel-select {
+            width: 100%;
+            height: 100%;
+            padding: 6px 10px;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: #111827;
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.1s;
+        }
+        .excel-input:focus, .excel-select:focus {
+            background-color: #eff6ff; /* blue-50 */
+            box-shadow: inset 0 0 0 2px #3b82f6; /* blue-500 */
+            z-index: 10;
+        }
+        .excel-select {
+            cursor: pointer;
+            text-overflow: ellipsis;
+        }
+        
         .ledger-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
     </style>
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
 
-    <aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6">
-        <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
-        <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Civil Cost Calculator</p>
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-        <nav class="flex-1 mt-8 space-y-1">
-            <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                Quantities Takeoff
-            </button>
-            <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">
-                Master Estimator
-            </button>
-            <button onclick="window.location.href='labor_resources.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">
-                Labor Database Ref.
-            </button>  
-            <div class="pt-6">
-                <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-                <button onclick="window.location.href='history.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">History</button>
-            </div>          
-        </nav>
-        <div class="pt-4 border-t border-neutral-100 mt-auto">
-            <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
-                Main Page
-            </button>
-        </div>        
-    </aside>
+    <div id="selection-popover" class="hidden fixed z-50 bg-white border border-neutral-300 rounded-lg shadow-xl flex flex-col" style="max-height: 380px;">
+        <div class="p-2 border-b border-neutral-100 flex-shrink-0">
+            <input type="text" id="popover-search-input" placeholder="Search materials or labor..." class="w-full text-xs px-2 py-1.5 border border-neutral-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="onPopoverSearchInput(this.value)">
+        </div>
+        <div id="popover-filters" class="grid grid-cols-3 gap-x-2 gap-y-1.5 px-2 py-2 border-b border-neutral-100 bg-neutral-50 max-h-28 overflow-y-auto custom-scrollbar flex-shrink-0"></div>
+        <div id="popover-options" class="flex-1 overflow-y-auto custom-scrollbar"></div>
+    </div>
 
-    <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
-        <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
+    <div id="nav-placeholder"></div>
+    <script src="/src/nav.js"></script>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-[#f4f5f8] relative">
+        <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white flex-shrink-0">
             <h2 class="text-2xl font-bold text-neutral-900">Master Estimator</h2>
             <div class="flex items-center gap-3">
-                <button id="btn-view-boq" onclick="openBOQView()" class="px-4 py-2 text-sm font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    View BOQ Summary
+                <button onclick="exportToExcelBOQ()" class="px-4 py-2 text-sm font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export to Excel
                 </button>
-                <button id="btn-save-estimate" class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm transition-opacity cursor-pointer">Save Estimate</button>
+                <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-bold bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
             </div>
         </header>
 
-        <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 overflow-hidden h-full">
-            
-            <div class="xl:col-span-7 flex flex-col overflow-hidden border-r border-neutral-100">
-                <div class="p-6 pb-2 border-b border-neutral-100 bg-[#fbfbfc]">
-                    <div id="tab-nav-container" class="flex space-x-2 overflow-x-auto pb-3 custom-scrollbar"></div>
+        <!-- Save Estimate Modal -->
+        <div id="save-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeSaveModal()"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-7">
+                <h3 class="text-base font-bold text-neutral-900 mb-0.5">Save Estimate</h3>
+                <p class="text-sm text-neutral-400 mb-6">This saves a snapshot of the current worksheet and scorecards to History.</p>
+
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Project Title</label>
+                            <p id="modal-preview-project" class="text-sm font-medium text-neutral-800">—</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Prepared By</label>
+                            <p id="modal-preview-preparedby" class="text-sm font-medium text-neutral-800">—</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-neutral-100 pt-3 space-y-1.5">
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Defined Cost</span><span id="modal-preview-defined" class="font-semibold text-neutral-800">₱0.00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Contingency</span><span id="modal-preview-contingency" class="font-semibold text-neutral-800">0%</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Undefined Cost</span><span id="modal-preview-undefined" class="font-semibold text-neutral-800">0%</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-neutral-500">Escalation</span><span id="modal-preview-escalation" class="font-semibold text-neutral-800">0%</span></div>
+                        <div class="flex justify-between text-sm pt-1.5 border-t border-neutral-100"><span class="text-neutral-700 font-semibold">Estimated Grand Total</span><span id="modal-preview-grandtotal" class="font-bold text-blue-600">₱0.00</span></div>
+                    </div>
                 </div>
-                <div id="dynamic-content-area" class="flex-1 overflow-y-auto p-6 pb-32 bg-white"></div>
+
+                <p id="modal-error" class="text-xs text-red-500 mt-3 hidden">Project Title and Prepared By need to be filled in the header bar above before saving.</p>
+
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeSaveModal()" class="flex-1 py-2.5 text-sm font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition cursor-pointer">Cancel</button>
+                    <button onclick="confirmSaveEstimate()" class="flex-1 py-2.5 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition cursor-pointer">Save to History</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-8 py-3 border-b border-neutral-200 bg-white flex-shrink-0 flex flex-wrap items-end gap-x-6 gap-y-2">
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Project Title</label>
+                <input type="text" id="meta-project" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-48 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="e.g. Additional Cooling Tower" oninput="updateMeta('project', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Plant</label>
+                <input type="text" id="meta-plant" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="e.g. Batangas" oninput="updateMeta('plant', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Estimate Type</label>
+                <input type="text" id="meta-type" list="meta-type-list" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-32 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Feasibility" oninput="updateMeta('type', this.value)">
+                <datalist id="meta-type-list">
+                    <option value="Feasibility"></option>
+                    <option value="Budgetary"></option>
+                    <option value="Definitive"></option>
+                </datalist>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Prepared By</label>
+                <input type="text" id="meta-preparedby" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Your name" oninput="updateMeta('preparedBy', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Date</label>
+                <input type="date" id="meta-date" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="updateMeta('date', this.value)">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Mean Spending Date</label>
+                <input type="date" id="meta-meanspend" class="text-xs px-2 py-1.5 border border-neutral-200 rounded-md w-36 focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="updateMeta('meanSpendingDate', this.value)">
+            </div>
+        </div>
+
+        <div id="ces-workspace" class="flex-1 flex overflow-hidden p-4 gap-4">
+            
+            <div class="flex-1 bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
+                <div class="p-3 border-b border-neutral-200 bg-neutral-50 flex justify-between items-center flex-shrink-0 gap-3">
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button id="tab-btn-grid" onclick="switchTab('grid')" class="px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition">Scope Items Grid</button>
+                        <button id="tab-btn-contingency" onclick="switchTab('contingency')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Contingency Scorecard</button>
+                        <button id="tab-btn-undefined" onclick="switchTab('undefinedCost')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Undefined Costs Scorecard</button>
+                    </div>
+                    <div id="grid-toolbar-extras" class="flex-1 flex justify-end items-center gap-3">
+                        <div class="relative w-64">
+                            <input type="text" id="grid-search-input" placeholder="Search categories or scope items..." class="w-full text-xs pl-8 pr-3 py-1.5 border border-neutral-200 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="onGridSearchInput(this.value)">
+                            <svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"></path></svg>
+                        </div>
+                        <button onclick="clearWorksheet()" title="Clear Worksheet" class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 bg-white border border-neutral-200 rounded-lg transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="tab-panel-grid" class="flex-1 overflow-auto custom-scrollbar relative">
+                    <table class="w-full text-left border-collapse table-fixed min-w-[1080px]">
+                        <thead class="bg-neutral-100 text-neutral-500 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <th class="border border-neutral-200 p-2 w-16 text-center">WBS</th>
+                                <th class="border border-neutral-200 p-2 w-52">Scope Description</th>
+                                <th class="border border-neutral-200 p-2 w-52">Selection</th>
+                                <th class="border border-neutral-200 p-2 w-24 text-center">Qty</th>
+                                <th class="border border-neutral-200 p-2 w-16 text-center">Unit</th>
+                                <th class="border border-neutral-200 p-2 w-24 text-right">Unit Cost (₱)</th>
+                                <th class="border border-neutral-200 p-2 w-24 text-right">Lump Sum (₱)</th>
+                                <th class="border border-neutral-200 p-2 w-28 text-right text-blue-700">Total Cost (₱)</th>
+                                <th class="border border-neutral-200 p-2 w-16 text-center">Add Row</th>
+                            </tr>
+                        </thead>
+                        <tbody id="excel-grid-body" class="text-xs text-neutral-800">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div id="tab-panel-contingency" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
+                <div id="tab-panel-undefined" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
             </div>
 
-            <div id="builder-container" class="xl:col-span-5 bg-[#f8f9fa] flex flex-col h-full border-t xl:border-t-0 border-neutral-200 overflow-hidden">
-                <div class="flex-1 p-6 overflow-y-auto border-b border-neutral-200 flex flex-col">
-                    <div class="mb-4">
-                        <h3 class="text-lg font-bold text-neutral-900">Scope Item Builder</h3>
-                        <p id="active-target-name" class="text-sm font-semibold text-blue-600 mt-1 truncate">← Select a scope item from the left</p>
-                    </div>
+            <div id="boq-panel" class="w-80 flex-shrink-0 flex flex-col gap-4">
+                <div class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 border-b border-neutral-100 pb-3">Bill Of Quantities</h3>
 
-                    <div id="builder-controls" class="opacity-50 pointer-events-none transition-opacity flex-1">
-                        
-                        <div class="mb-5 bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
-                            <label class="text-xs font-bold text-neutral-800 uppercase border-b border-neutral-100 pb-2 block mb-3">Add Line Item Details</label>
-                            
-                            <div class="space-y-4">
+                    <div id="breakdown-content" class="flex-1 flex flex-col overflow-hidden">
+                        <div id="breakdown-header" class="mb-1">
+                            <div id="breakdown-category-badge" style="display:none;" class="flex items-center justify-between gap-2 mb-2 px-3 py-2 bg-slate-700 rounded-lg">
+                                <p class="text-xs font-bold text-white uppercase tracking-wide" id="breakdown-category-label">—</p>
+                                <button id="breakdown-category-close-btn" style="display:none;" onclick="clearSelection()" class="text-white/60 hover:text-white transition text-lg leading-none flex-shrink-0" title="Back to all categories">✕</button>
+                            </div>
+                            <div id="breakdown-item-row" style="display:none;" class="flex items-start justify-between gap-2 border-b border-neutral-100 pb-3">
                                 <div>
-                                    <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Material Details (Optional)</label>
-                                    <div class="flex flex-col gap-2">
-                                        <select id="material-category-selector" onchange="updateMaterialDropdown()" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"></select>
-                                        <select id="material-selector" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" onchange="validateCartInputs()"></select>
-                                        <input type="number" id="material-qty" placeholder="Quantity" class="dim-input w-full" oninput="validateCartInputs()" min="0" step="any" onkeydown="return ['e','E','+','-'].includes(event.key) ? false : true" />
-                                    </div>
+                                    <p class="text-[10px] font-bold text-neutral-900 uppercase tracking-widest" id="breakdown-code">—</p>
+                                    <h3 class="text-sm font-bold text-neutral-900 leading-snug" id="breakdown-desc">—</h3>
                                 </div>
-
-                                <div>
-                                    <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Associated Labor (Optional)</label>
-                                    <div class="flex flex-col gap-2">
-                                        <select id="labor-selector" class="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500" onchange="validateCartInputs()"></select>
-                                        <input type="number" id="labor-hours" placeholder="Effort (Man Hours)" class="dim-input w-full" oninput="validateCartInputs()" min="0" step="any" onkeydown="return ['e','E','+','-'].includes(event.key) ? false : true" />
-                                    </div>
-                                </div>
-
-                                <button id="btn-add-item" onclick="addCombinedItemToScope()" disabled class="w-full mt-2 px-4 py-2.5 bg-neutral-900 text-white rounded-lg text-sm font-semibold hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed transition">
-                                    Add Line Item to Scope
-                                </button>
+                                <button id="breakdown-close-btn" onclick="clearSelection()" class="text-neutral-300 hover:text-neutral-600 transition text-lg leading-none flex-shrink-0" title="Back to all categories">✕</button>
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm min-h-[150px]">
-                            <label class="text-xs font-bold text-neutral-800 uppercase border-b border-neutral-100 pb-2 block mb-2">Item Breakdown</label>
-                            <div id="current-item-breakdown" class="space-y-2 text-sm">
-                                <div class="text-neutral-400 italic text-center py-4">No data added yet.</div>
+                        <div id="breakdown-lines" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 py-3"></div>
+
+                        <div class="border-t border-neutral-200 pt-4 mt-auto">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-xs font-bold text-neutral-500 uppercase tracking-wide" id="breakdown-subtotal-label">Item Subtotal</span>
+                                <span class="text-xl font-black text-blue-600" id="breakdown-subtotal">₱0.00</span>
                             </div>
-                            <div class="border-t border-neutral-100 mt-3 pt-3 flex justify-between font-bold text-neutral-900">
-                                <span>Item Subtotal:</span>
-                                <span id="current-item-subtotal">₱0.00</span>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="p-6 bg-white flex-shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Financial Ledger</h3>
-                    
-                    <div class="space-y-2 text-sm text-neutral-600 mb-4">
-                        <div class="ledger-row font-bold text-neutral-900"><span>Defined Cost Subtotal</span><span id="ledger-defined">₱0.00</span></div>
-                        
-                        <div class="ledger-row text-xs text-neutral-500 mt-2"><span>Undefined Allowances (5%)</span><span id="ledger-undefined">₱0.00</span></div>
-                        <div class="pl-4 text-[10px] text-neutral-400 space-y-0.5">
-                            <div class="flex justify-between"><span>Field Instructions (2%)</span><span id="ledger-uf-field">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Unlisted Items (2%)</span><span id="ledger-uf-unlisted">₱0.00</span></div>
-                            <div class="flex justify-between"><span>Post Start-up (1%)</span><span id="ledger-uf-post">₱0.00</span></div>
-                        </div>
-
-                        <div class="ledger-row text-xs text-neutral-500 mt-2"><span>Risk Management Funds</span><span id="ledger-risk">₱0.00</span></div>
-                        <div class="pl-4 text-[10px] text-neutral-400">
-                            <div class="flex justify-between"><span>Contingency (5%)</span><span id="ledger-contingency">₱0.00</span></div>
                         </div>
                     </div>
 
-                    <div class="border-t border-neutral-200 pt-3">
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <h4 class="text-sm font-bold text-neutral-900 uppercase">Estimated Total Cost</h4>
-                                <p class="text-[10px] text-neutral-400">Raw Data: <span id="ledger-raw">₱0.00</span></p>
-                            </div>
-                            <div class="text-2xl font-black text-blue-600" id="ledger-rounded">₱0.00</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -171,16 +245,23 @@
         // 1. DATABASE & INITIALIZATION
         // ============================================================
         let MASTER_DB = {}; 
-        
-        const LABOR_DB = {
-            'carpenter': { name: 'Carpenter', dailyRate: 700 },
-            'mason': { name: 'Mason', dailyRate: 700 },
-            'welder': { name: 'Welder', dailyRate: 815 },
-            'electrician': { name: 'Electrician', dailyRate: 875 },
-            'plumber': { name: 'Plumber', dailyRate: 700 },
-            'ncr_unskilled': { name: 'Unskilled (NCR)', dailyRate: 695 },
-            'civil_eng': { name: 'Civil Engineer', dailyRate: 2700 }
-        };
+        let LABOR_DB = {}; 
+        // gridState['yard-underground__0__1'] = [ { matId: '', matQty: '', labId: '', labHrs: '' }, ... ]
+        // Each scope item can hold MULTIPLE lines (multiple material/labor combos), not just one.
+        let gridState = {};
+        let selectedItem = null; // itemKey currently shown in the right-panel breakdown
+        let selectedCategory = null; // catId currently shown in the right-panel breakdown (category-wide view)
+        // Right panel shows exactly one of: an item breakdown (selectedItem set), a category
+        // roll-up (selectedCategory set), or — when neither is set — the all-categories overview.
+        let estimateMeta = { project: '', plant: '', type: '', preparedBy: '', date: '', meanSpendingDate: '' };
+        // Categories collapsed by default keep hundreds of unused rows out of the DOM entirely
+        // (not just CSS-hidden) — populated properly once SCOPE_CATEGORIES is defined below.
+        let collapsedCategories = new Set();
+        let searchQuery = ''; // grid-level search (categories + scope descriptions)
+        let searchDebounceTimer = null;
+        let popoverTarget = null; // { itemKey, idx } — which line the shared Selection popover is currently editing
+        let popoverSearchQuery = '';
+        let popoverActiveFilter = 'all'; // single radio choice: 'all' | 'labor' | a DB_CONFIG id — only one narrows the list at a time
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -198,10 +279,6 @@
             { id: 'equipment', file: 'data/equipment.json', schema: 'equipment', label: 'Equipment' },
             { id: 'pipes', file: 'data/pipes.json', schema: 'pipes', label: 'Pipes' }
         ];
-
-        let scopeItemData = {}; 
-        let activeItemKey  = null;
-        let activeItemDesc = null;
 
         const commonShell = [
             { code: "105", desc: "Excavation & Fill" }, { code: "110", desc: "Foundations" }, { code: "115", desc: "Superstructure Slabs" },
@@ -235,7 +312,7 @@
             {
                 id: "yard-underground", label: "Yard & Underground", isIndirect: false,
                 sections: [{
-                    title: "Yard & Underground", color: "bg-blue-50 text-blue-800",
+                    title: "Yard & Underground",
                     items: [
                         { code: "1", desc: "Site grading & drainage" }, { code: "2", desc: "Landscaping" }, { code: "3", desc: "Retention Basins / Storm water" },
                         { code: "4", desc: "Fire Loop and hydrants" }, { code: "5", desc: "Fire Water Tank, pumps" }, { code: "6", desc: "Paving - Roadway" },
@@ -248,74 +325,74 @@
             {
                 id: "yard-utilities", label: "Yard Utilities", isIndirect: false,
                 sections: [{
-                    title: "Yard Utilities", color: "bg-blue-50 text-blue-800",
+                    title: "Yard Utilities",
                     items: [{ code: "1", desc: "Potable Water" }, { code: "2", desc: "City Water" }, { code: "3", desc: "Sanitary Sewer" }, { code: "4", desc: "Gas - Natural" }]
                 }]
             },
             {
                 id: "plant-utilities", label: "Plant Utilities", isIndirect: false,
                 sections: [{
-                    title: "Plant Utilities", color: "bg-blue-50 text-blue-800",
+                    title: "Plant Utilities",
                     items: [{ code: "1", desc: "Hot Water" }, { code: "2", desc: "Steam" }, { code: "3", desc: "Process Sewer" }, { code: "4", desc: "Gas - LPG" }, { code: "5", desc: "Fuel Oil" }]
                 }]
             },
             {
                 id: "substation", label: "Substation & Power", isIndirect: false,
                 sections: [{
-                    title: "Substation and Primary Power Distribution", color: "bg-blue-50 text-blue-800",
+                    title: "Substation and Primary Power Distribution",
                     items: [{ code: "1", desc: "Power - High Voltage" }, { code: "2", desc: "Substation/PDP/LV Powerfeed" }, { code: "3", desc: "Backup Generator" }]
                 }]
             },
             {
                 id: "rm-warehouse", label: "RM Warehouse", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: "", items: commonShell },
-                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: "", items: commonInterior },
-                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " RMW", items: commonMechanical },
-                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " RMW", items: commonElectrical }
+                    { title: "Building Shell", items: commonShell },
+                    { title: "Interior Finishing", items: commonInterior },
+                    { title: "Building Mechanical", items: commonMechanical },
+                    { title: "Building Electrical", items: commonElectrical }
                 ]
             },
             {
                 id: "making", label: "Making", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " MAK", items: commonShell },
-                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " MAK", items: commonInterior },
-                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " MAK", items: commonMechanical },
-                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " MAK", items: commonElectrical }
+                    { title: "Building Shell", items: commonShell },
+                    { title: "Interior Finishing", items: commonInterior },
+                    { title: "Building Mechanical", items: commonMechanical },
+                    { title: "Building Electrical", items: commonElectrical }
                 ]
             },
             {
                 id: "converting", label: "Converting", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " Conv", items: commonShell },
-                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " Conv", items: commonInterior },
-                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " Conv", items: commonMechanical },
-                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " Conv", items: commonElectrical }
+                    { title: "Building Shell", items: commonShell },
+                    { title: "Interior Finishing", items: commonInterior },
+                    { title: "Building Mechanical", items: commonMechanical },
+                    { title: "Building Electrical", items: commonElectrical }
                 ]
             },
             {
                 id: "pub", label: "PUB", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " PUB", items: commonShell },
-                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " PUB", items: commonInterior },
-                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " PUB", items: commonMechanical },
-                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " PUB", items: commonElectrical }
+                    { title: "Building Shell", items: commonShell },
+                    { title: "Interior Finishing", items: commonInterior },
+                    { title: "Building Mechanical", items: commonMechanical },
+                    { title: "Building Electrical", items: commonElectrical }
                 ]
             },
             {
                 id: "admin", label: "Admin Building", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", color: "bg-emerald-50 text-emerald-800", prefix: " Admin", items: commonShell },
-                    { title: "Interior Finishing", color: "bg-purple-50 text-purple-800", prefix: " Admin", items: commonInterior },
-                    { title: "Building Mechanical", color: "bg-orange-50 text-orange-800", prefix: " Admin", items: commonMechanical },
-                    { title: "Building Electrical", color: "bg-sky-50 text-sky-800", prefix: " Admin", items: commonElectrical }
+                    { title: "Building Shell", items: commonShell },
+                    { title: "Interior Finishing", items: commonInterior },
+                    { title: "Building Mechanical", items: commonMechanical },
+                    { title: "Building Electrical", items: commonElectrical }
                 ]
             },
             {
                 id: "indirect-costs", label: "Indirect Costs", isIndirect: true,
                 sections: [
                     {
-                        title: "Construction Indirects", color: "bg-amber-50 text-amber-800", prefix: "",
+                        title: "Construction Indirects",
                         items: [
                             { code: "H", desc: "Construction Equipment" },
                             { code: "I", desc: "Construction Tools" },
@@ -332,26 +409,458 @@
             }
         ];
 
-        let activeTabId = SCOPE_CATEGORIES[0].id;
+        // Default: only the first category expanded on first visit. Cuts initial DOM from ~300+
+        // rows to whatever the first category holds. loadCollapsedState() below may override this
+        // with the person's own last-used state.
+        collapsedCategories = new Set(SCOPE_CATEGORIES.slice(1).map(c => c.id));
+
+        // ============================================================
+        // SCORECARDS (Contingency + Undefined Cost)
+        // Data pulled directly from Sample_TEMPLATE_1.xlsx's CONTINGENCY / UNDEFINED COST sheets.
+        // Mechanism verified against the sheet's real formulas: pick the ONE description per
+        // criterion that matches the project, and SUM the picked values across criteria
+        // (confirmed via D9=SUM(D4:D8) and C8=SUM(C5:C7) — not an average of everything).
+        // ============================================================
+
+        const CONTINGENCY_CRITERIA = [
+            { id: 'site', label: 'Site', choices: [
+                { value: 0, desc: 'Site visit has been made. Visible conditions and interferences have been observed. Major site conditions, scope and issues are known.' },
+                { value: 2, desc: 'All needed site information is included in estimate. Soil conditions, underground & above ground obstructions and site conditions are known and included in scope/estimate. No uncertainties exist.' },
+                { value: 2, desc: 'Site scope options are known but may not be final. Major site conditions are assumed.' },
+                { value: 3, desc: 'URC has not completed any significant construction at this site. Site conditions are unknown or site has not been chosen.' }
+            ]},
+            { id: 'resources', label: 'Resources (Construction, Engineering, & Business)', choices: [
+                { value: 2, desc: 'All required construction, engineering, and business resources are available and experienced with URC, the site, and the process. Construction and sourcing plans exist.' },
+                { value: 2, desc: 'Most project team resources are available. Construction method is known. Wages and productivity based on published data. Availability of skilled construction labor is assumed. Sourcing plan is mostly defined.' },
+                { value: 3, desc: 'Some gap(s) exist in project team resources. Construction method is assumed. Wage rates, productivity and availability of skilled construction labor are assumed. Sourcing plan is not defined.' },
+                { value: 4, desc: 'Significant gap(s) exist in key project team resources. Majority of construction, engineering, and business resources available have little experience with either URC, the site, or the process.' }
+            ]},
+            { id: 'schedule', label: 'Schedule (excludes Cost of Project Acceleration, assessed separately)', choices: [
+                { value: 1, desc: 'Minor time constraints exist along with some doubt about capability to achieve schedule.' },
+                { value: 2, desc: 'Timing is not an issue.' },
+                { value: 2, desc: 'Potential delays, changes in schedule requirements, or team\'s ability to meet existing schedule could result in schedule change of more than 10% but less than 20%.' },
+                { value: 3, desc: 'Potential change in schedule requirements or team\'s ability to meet existing schedule could result in schedule change of 20% or more.' }
+            ]},
+            { id: 'pricing', label: 'Pricing', choices: [
+                { value: 2, desc: 'Based on quotes, purchase orders and recent experience. Escalation and currency fluctuation impact is negligible. No import duties or taxes.' },
+                { value: 2, desc: 'Based on details with some allowances. Pricing is from URC experience or database. Escalation and currency fluctuation may be a factor. Import duties/taxes are well known.' },
+                { value: 3, desc: 'Based on allowances and/or escalation. Variation in escalation, currency, import duties/taxes may affect the project cost by 10% or more. Project includes re-use & modification of more than 50% of equipment.' },
+                { value: 4, desc: 'Based on allowances and factored cost data. Variation in escalation, currency, import duties/taxes may be a factor. Project includes re-use and modification of 30% to 50% of equipment.' }
+            ]}
+        ];
+
+        const UNDEFINED_CRITERIA = [
+            { id: 'complexity', label: 'Project Complexity', choices: [
+                { value: 1, desc: 'Single site; reapplication of current process at same site or new simple system; minor change in capacity, size, location, details, etc. No impact on facilities, utilities, or other systems.' },
+                { value: 2, desc: 'Single site; reapplication of current process at same site; minor change in capacity, size, location, details, etc. Some impact on facilities, utilities, or other systems.' },
+                { value: 3, desc: 'Expansion of existing product line or process within category and region. May be multi-site. Significant change in capacity, size, location, details, etc. Significant impact on facilities, utilities, or other systems.' },
+                { value: 4, desc: 'Multi-category or multi-region project; first phase of a national or global program; grassroots plant; new brand initiative.' }
+            ]},
+            { id: 'technology', label: 'Technology', choices: [
+                { value: 0, desc: 'Reapplication of technology that exists in URC; standard equipment modules. Most equipment is vendor standard (same concepts apply to non-process scope).' },
+                { value: 1, desc: 'Some standard equipment modules, some customization of vendor equipment; application of existing technology not previously used at URC (same concepts apply to non-process scope).' },
+                { value: 2, desc: 'Scaleup or rollout of prototyped processes, custom designed equipment or modified vendor equipment (same concepts apply to non-process scope).' },
+                { value: 3, desc: 'New process or unique equipment; application of technology that is new to URC and industry in general (same concepts apply to non-process scope).' }
+            ]},
+            { id: 'completeness', label: 'Completeness of Definition (Project, Schedule, & Estimate)', choices: [
+                { value: 1, desc: 'All needed project definition is complete. All significant option studies are completed. Preliminary flowsheets exist. All engineering and plant input has been received and understood.' },
+                { value: 2, desc: 'All needed design and review is complete. Design Bases & P&ID\'s are complete. PS Management, Engineering, Plant & Product Development have sufficiently reviewed and agreed to the scope and estimate.' },
+                { value: 3, desc: 'Definition is incomplete. Several option studies are still underway. Early flowsheets and layout sketches may exist. Not all engineering and plant input has been received or understood.' },
+                { value: 4, desc: 'Conference grade or very conceptual scope. Flowsheet or layout ideas developed informally with input from only one product engineering resource.' }
+            ]}
+        ];
+
+        let contingencySelections = {}; // criterionId -> choice index
+        let undefinedSelections = {};
+        let activeTab = 'grid';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            try { localStorage.setItem('urc_ces_active_tab', tab); } catch(e) {}
+
+            document.getElementById('tab-panel-grid').classList.toggle('hidden', tab !== 'grid');
+            document.getElementById('tab-panel-contingency').classList.toggle('hidden', tab !== 'contingency');
+            document.getElementById('tab-panel-undefined').classList.toggle('hidden', tab !== 'undefinedCost');
+            // The BOQ breakdown panel and the search/clear controls only make sense for the grid —
+            // a scorecard has no rows to search or a per-row cost breakdown to show.
+            document.getElementById('boq-panel').classList.toggle('hidden', tab !== 'grid');
+            document.getElementById('grid-toolbar-extras').classList.toggle('hidden', tab !== 'grid');
+
+            const tabs = { grid: 'tab-btn-grid', contingency: 'tab-btn-contingency', undefinedCost: 'tab-btn-undefined' };
+            Object.keys(tabs).forEach(key => {
+                const btn = document.getElementById(tabs[key]);
+                if (key === tab) {
+                    btn.className = 'px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition';
+                } else {
+                    btn.className = 'px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer';
+                }
+            });
+
+            if (tab === 'contingency') renderScorecard('tab-panel-contingency', CONTINGENCY_CRITERIA, contingencySelections, 'contingency');
+            if (tab === 'undefinedCost') renderScorecard('tab-panel-undefined', UNDEFINED_CRITERIA, undefinedSelections, 'undefinedCost');
+        }
+
+        function renderScorecard(containerId, criteria, selections, scorecardType) {
+            const container = document.getElementById(containerId);
+            const subtitle = scorecardType === 'contingency'
+                ? 'For each criterion below, select the description that best matches this project. The percentages are summed, not averaged.'
+                : 'For each criterion below, select the description that best matches this project\u2019s current state of definition. The percentages are summed, not averaged.';
+
+            let subtotal = 0;
+            let html = `
+                <div class="max-w-4xl mx-auto">
+                    <p class="text-xs text-neutral-500 mb-6">${subtitle}</p>
+                    <div class="space-y-4">`;
+
+            criteria.forEach(crit => {
+                const selectedIdx = selections[crit.id];
+                if (selectedIdx !== undefined) subtotal += crit.choices[selectedIdx].value;
+
+                html += `
+                    <div class="border border-neutral-200 rounded-xl overflow-hidden">
+                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wide">${crit.label}</h3>
+                            <span class="text-xs font-bold ${selectedIdx !== undefined ? 'text-blue-600' : 'text-neutral-300'}">${selectedIdx !== undefined ? crit.choices[selectedIdx].value + '%' : 'Not selected'}</span>
+                        </div>
+                        <div class="divide-y divide-neutral-100">`;
+
+                crit.choices.forEach((choice, idx) => {
+                    const isSelected = selectedIdx === idx;
+                    html += `
+                            <div onclick="selectScoreChoice('${scorecardType}', '${crit.id}', ${idx})" class="flex items-start gap-3 px-4 py-2.5 cursor-pointer transition hover:bg-blue-50/60 ${isSelected ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''}">
+                                <span class="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold mt-0.5 ${isSelected ? 'bg-blue-600 text-white' : 'bg-neutral-100 text-neutral-500'}">${choice.value}%</span>
+                                <p class="text-xs text-neutral-600 leading-relaxed">${choice.desc}</p>
+                            </div>`;
+                });
+
+                html += `
+                        </div>
+                    </div>`;
+            });
+
+            const allSelected = criteria.every(c => selections[c.id] !== undefined);
+            html += `
+                    </div>
+                    <div class="mt-6 p-4 rounded-xl border border-neutral-200 bg-neutral-50 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wide">${scorecardType === 'contingency' ? 'Base Contingency Subtotal' : 'Undefined Cost Subtotal'}</h4>
+                            ${!allSelected ? `<p class="text-[11px] text-amber-600 mt-0.5">${criteria.filter(c => selections[c.id] === undefined).length} criteria still need a selection</p>` : ''}
+                        </div>
+                        <span class="text-2xl font-black text-blue-600">${subtotal}%</span>
+                    </div>
+                </div>`;
+
+            container.innerHTML = html;
+        }
+
+        function scorecardSubtotal(criteria, selections) {
+            return criteria.reduce((sum, c) => sum + (selections[c.id] !== undefined ? c.choices[selections[c.id]].value : 0), 0);
+        }
+
+        function selectScoreChoice(scorecardType, criterionId, idx) {
+            const selections = scorecardType === 'contingency' ? contingencySelections : undefinedSelections;
+            selections[criterionId] = idx;
+            saveScorecardState();
+
+            const criteria = scorecardType === 'contingency' ? CONTINGENCY_CRITERIA : UNDEFINED_CRITERIA;
+            const containerId = scorecardType === 'contingency' ? 'tab-panel-contingency' : 'tab-panel-undefined';
+            renderScorecard(containerId, criteria, selections, scorecardType);
+
+            // Hand off the final subtotal for calculator.html to pick up later — separate keys per
+            // scorecard, written every time a selection changes so it's always current.
+            const subtotal = scorecardSubtotal(criteria, selections);
+            try { localStorage.setItem(`urc_ces_${scorecardType}_subtotal`, JSON.stringify({ subtotal, updatedAt: Date.now() })); } catch(e) {}
+            updateTotals(); // also refreshes urc_ces_cross_page's scorecards section, not just the standalone subtotal keys
+        }
+
+        function saveScorecardState() {
+            try {
+                localStorage.setItem('urc_ces_contingency_selections', JSON.stringify(contingencySelections));
+                localStorage.setItem('urc_ces_undefined_selections', JSON.stringify(undefinedSelections));
+            } catch(e) {}
+        }
+
+        function loadScorecardState() {
+            try {
+                const c = localStorage.getItem('urc_ces_contingency_selections');
+                if (c) contingencySelections = JSON.parse(c);
+                const u = localStorage.getItem('urc_ces_undefined_selections');
+                if (u) undefinedSelections = JSON.parse(u);
+            } catch(e) {}
+        }
+
+        // ============================================================
+        // SAVE ESTIMATE → History
+        // Labor now lives inside CES itself (no more separate labor.html),
+        // so this record combines: CES's own grid breakdown (material/labor/
+        // lump sum, aggregated by category and by labor role), both
+        // scorecards, and a best-effort read of calculator.html's snapshot
+        // if one exists yet.
+        // ============================================================
+
+        function fmtPeso(n) {
+            return `₱${(n||0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        function getCategoryTotals() {
+            const totals = {};
+            SCOPE_CATEGORIES.forEach(cat => { totals[cat.label] = categoryTotal(cat); });
+            return totals;
+        }
+
+        function getCostBreakdown() {
+            let materialCost = 0, laborCost = 0, lumpSumCost = 0;
+            Object.keys(gridState).forEach(itemKey => {
+                (gridState[itemKey] || []).forEach(line => {
+                    lumpSumCost += parseFloat(line.lumpSum) || 0;
+                    if (line.labId) {
+                        const lab = LABOR_DB[line.labId];
+                        const headcount = parseFloat(line.headcount) || 0;
+                        const days = parseFloat(line.days) || 0;
+                        if (lab && headcount > 0 && days > 0) laborCost += headcount * days * lab.dailyRate;
+                    } else if (line.matId) {
+                        const mat = MASTER_DB[line.matId];
+                        const qty = parseFloat(line.qty) || 0;
+                        if (mat && qty > 0) materialCost += mat.price * qty;
+                    }
+                });
+            });
+            return { materialCost, laborCost, lumpSumCost, definedCost: materialCost + laborCost + lumpSumCost };
+        }
+
+        function getLaborBreakdown() {
+            // Aggregated by role across every scope item that used it. personDays (headcount × days,
+            // summed) is the honest additive unit here — a plain summed "headcount" isn't meaningful
+            // once the same role is used across many unrelated lines with different crew sizes.
+            const byRole = {};
+            Object.keys(gridState).forEach(itemKey => {
+                (gridState[itemKey] || []).forEach(line => {
+                    if (!line.labId) return;
+                    const lab = LABOR_DB[line.labId];
+                    const headcount = parseFloat(line.headcount) || 0;
+                    const days = parseFloat(line.days) || 0;
+                    if (!lab || headcount <= 0 || days <= 0) return;
+                    const ratePerDay = lab.dailyRate;
+                    const personDays = headcount * days;
+                    if (!byRole[line.labId]) byRole[line.labId] = { name: lab.name, ratePerDay, personDays: 0, subtotal: 0 };
+                    byRole[line.labId].personDays += personDays;
+                    byRole[line.labId].subtotal += personDays * ratePerDay;
+                });
+            });
+            return Object.values(byRole);
+        }
+
+        function countPricedLines() {
+            let n = 0;
+            Object.keys(gridState).forEach(itemKey => { (gridState[itemKey] || []).forEach(line => { if (lineHasData(line)) n++; }); });
+            return n;
+        }
+
+        function scorecardDetail(criteria, selections) {
+            return criteria.map(c => {
+                const idx = selections[c.id];
+                return { label: c.label, value: idx !== undefined ? c.choices[idx].value : null, desc: idx !== undefined ? c.choices[idx].desc : null };
+            });
+        }
+
+        // Escalation is entered on calc.html, but since Save Estimate can now fire from either
+        // page, CES needs to fold it in too — read the last-known value from calc's own cache.
+        function getEscalationPct() {
+            try {
+                const calcSnap = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}');
+                return calcSnap.escalationPct || 0;
+            } catch(e) { return 0; }
+        }
+
+        function estimatedGrandTotal() {
+            const { definedCost } = getCostBreakdown();
+            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
+            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+            const escalationPct = getEscalationPct();
+            return definedCost * (1 + (contSubtotal + undefSubtotal + escalationPct) / 100);
+        }
+
+        // Save Estimate lives in both calc.html and CES now — the button only enables once
+        // BOTH pages are filled in. urc_ccc_ces_ready reflects CES's own portion only
+        // (Defined Cost + Project + Prepared By); calc.html combines it with its own
+        // urc_ccc_calc_ready flag the same way this function does.
+        function updateSaveButtonState() {
+            const { definedCost } = getCostBreakdown();
+            const cesOwnReady = definedCost > 0 && !!estimateMeta.project && !!estimateMeta.preparedBy;
+            try { localStorage.setItem('urc_ccc_ces_ready', String(cesOwnReady)); } catch(e) {}
+
+            let calcReady = false;
+            try { calcReady = localStorage.getItem('urc_ccc_calc_ready') === 'true'; } catch(e) {}
+
+            const btn = document.getElementById('btn-save-estimate');
+            if (!btn) return;
+            const ready = cesOwnReady && calcReady;
+            btn.disabled = !ready;
+            btn.classList.toggle('opacity-40', !ready);
+            btn.classList.toggle('pointer-events-none', !ready);
+        }
+
+        function openSaveModal() {
+            const breakdown = getCostBreakdown();
+            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
+            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+            const escalationPct = getEscalationPct();
+
+            document.getElementById('modal-preview-project').textContent = estimateMeta.project || '—';
+            document.getElementById('modal-preview-preparedby').textContent = estimateMeta.preparedBy || '—';
+            document.getElementById('modal-preview-defined').textContent = fmtPeso(breakdown.definedCost);
+            document.getElementById('modal-preview-contingency').textContent = contSubtotal + '%';
+            document.getElementById('modal-preview-undefined').textContent = undefSubtotal + '%';
+            document.getElementById('modal-preview-escalation').textContent = escalationPct + '%';
+            document.getElementById('modal-preview-grandtotal').textContent = fmtPeso(estimatedGrandTotal());
+            const errEl = document.getElementById('modal-error');
+            errEl.textContent = 'Project Title and Prepared By need to be filled in the header bar above before saving.';
+            errEl.classList.add('hidden');
+
+            document.getElementById('save-modal').classList.remove('hidden');
+            document.getElementById('save-modal').classList.add('flex');
+        }
+
+        function closeSaveModal() {
+            document.getElementById('save-modal').classList.add('hidden');
+            document.getElementById('save-modal').classList.remove('flex');
+        }
+
+        function confirmSaveEstimate() {
+            if (!estimateMeta.project || !estimateMeta.preparedBy) {
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
+
+            const breakdown = getCostBreakdown();
+            const escalationPct = getEscalationPct();
+            const grandTotal = estimatedGrandTotal();
+
+            // calc.html's own snapshot — required now, not best-effort, since Save Estimate is
+            // gated on both pages being filled in (see updateSaveButtonState).
+            let calcSnap = {};
+            try { calcSnap = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}'); } catch(e) {}
+            const L = calcSnap.length || 0, W = calcSnap.width || 0, H = calcSnap.clearHeight || 0;
+            if (!L || !W || !H) {
+                document.getElementById('modal-error').textContent = 'Building Calculator (Length/Width/Clear Height) needs to be filled in first.';
+                document.getElementById('modal-error').classList.remove('hidden');
+                return;
+            }
+            const M = (calcSnap.mezzanine || 0) / 100;
+            const floorArea = L * W, grossArea = floorArea * (1 + M);
+            const bsl = calcSnap.baySpacingL || 0, bsw = calcSnap.baySpacingW || 0;
+            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L / bsl + W / bsw) : 0;
+            const fl = calcSnap.footingLength || 0, fw = calcSnap.footingWidth || 0, fd = calcSnap.footingDepth || 0;
+            const pl = calcSnap.pedestalLength || 0, pw = calcSnap.pedestalWidth || 0, ph = calcSnap.pedestalHeight || 0;
+            const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
+
+            const record = {
+                id: 'ccc_hist_' + Date.now(),
+                savedAt: new Date().toISOString(),
+                projectName: estimateMeta.project,
+                engineerName: estimateMeta.preparedBy,
+                plant: estimateMeta.plant || '',
+                estimateType: estimateMeta.type || '',
+                estimateDate: estimateMeta.date || '',
+                meanSpendingDate: estimateMeta.meanSpendingDate || '',
+
+                calculator: {
+                    snapshot: {
+                        length: L, width: W, clearHeight: H, stories: calcSnap.stories || 1, mezzanine: calcSnap.mezzanine || 0,
+                        structureType: calcSnap.structureType, roofType: calcSnap.roofType, wallCladding: calcSnap.wallCladding,
+                        slabThickness: calcSnap.slabThickness, dockDoors: calcSnap.dockDoors || 0, driveInDoors: calcSnap.driveInDoors || 0,
+                        baySpacingL: bsl, baySpacingW: bsw, footingLength: fl, footingWidth: fw, footingDepth: fd,
+                        pedestalLength: pl, pedestalWidth: pw, pedestalHeight: ph, concretePriceM3: calcSnap.concretePriceM3 || 0, concreteClass: calcSnap.concreteClass
+                    },
+                    summary: { floorArea: +floorArea.toFixed(2), grossArea: +grossArea.toFixed(2), perimeter: +(2 * (L + W)).toFixed(2), nodes, concreteVol: +concreteVol.toFixed(2) }
+                },
+
+                ces: {
+                    categoryTotals: getCategoryTotals(),
+                    materialCost: +breakdown.materialCost.toFixed(2),
+                    laborCost: +breakdown.laborCost.toFixed(2),
+                    lumpSumCost: +breakdown.lumpSumCost.toFixed(2),
+                    definedCost: +breakdown.definedCost.toFixed(2),
+                    pricedLines: countPricedLines(),
+                    laborBreakdown: getLaborBreakdown().map(r => ({ name: r.name, ratePerDay: +r.ratePerDay.toFixed(2), personDays: +r.personDays.toFixed(2), subtotal: +r.subtotal.toFixed(2) }))
+                },
+
+                scorecards: {
+                    contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections), criteria: scorecardDetail(CONTINGENCY_CRITERIA, contingencySelections) },
+                    undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
+                },
+
+                escalationPct: escalationPct,
+                grandTotal: +grandTotal.toFixed(2)
+            };
+
+            try {
+                const h = JSON.parse(localStorage.getItem('urc_ccc_history') || '[]');
+                h.unshift(record);
+                localStorage.setItem('urc_ccc_history', JSON.stringify(h));
+                closeSaveModal();
+                showToast('Estimate saved to history.', 'success');
+            } catch(e) {
+                showToast('Could not save estimate.', 'error');
+            }
+        }
 
         document.addEventListener("DOMContentLoaded", async () => {
-            await fetchAllDatabases();
-            populateCategoryDropdown();
-            populateLaborDropdown();
-            renderNavigation();
-            renderContent();
-            updateLedger();
+            loadFromCache();
+            loadMeta();
+            loadCollapsedState();
+            loadScorecardState();
+            await fetchLaborRates(); 
+            await fetchAllDatabases(); 
+            renderGrid();
+            renderBreakdownPanel(); // default view: all-categories overview
+
+            let savedTab = 'grid';
+            try { savedTab = localStorage.getItem('urc_ces_active_tab') || 'grid'; } catch(e) {}
+            switchTab(savedTab);
+            updateSaveButtonState();
         });
 
-        // ============================================================
-        // 2. DATA LOADING & DROPDOWNS edit
-        // ============================================================
+        async function fetchLaborRates() {
+            const urls = [
+                '/data/labor_rates.json',
+                'https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/data/labor_rates.json'
+            ];
+            
+            let loaded = false;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        const rawData = await res.json();
+                        if (Array.isArray(rawData)) {
+                            rawData.forEach(item => { LABOR_DB[item.id] = { name: item.name, dailyRate: item.rate || item.dailyRate }; });
+                        } else {
+                            Object.keys(rawData).forEach(key => { LABOR_DB[key] = { name: rawData[key].name || key, dailyRate: rawData[key].rate || rawData[key].dailyRate }; });
+                        }
+                        loaded = true;
+                        break;
+                    }
+                } catch (e) { }
+            }
+
+            if (!loaded) {
+                LABOR_DB = {
+                    ncr: { name: 'NCR Region', dailyRate: 695 }, visayas: { name: 'Visayas Region', dailyRate: 500 },
+                    mindanao: { name: 'Mindanao Region', dailyRate: 500 }, carpenter: { name: 'Carpenter', dailyRate: 700 },
+                    mason: { name: 'Mason', dailyRate: 700 }, welder: { name: 'Welder', dailyRate: 815 },
+                    electrician: { name: 'Electrician', dailyRate: 875 }, plumber: { name: 'Plumber', dailyRate: 700 },
+                    pipeFitter: { name: 'Pipe Fitter', dailyRate: 700 }, civilEng: { name: 'Civil Engineer', dailyRate: 2700 },
+                    electricalEng:{ name: 'Electrical Engineer', dailyRate: 2100 }, mechanicalEng:{ name: 'Mechanical Engineer', dailyRate: 2500 },
+                    generalEng: { name: 'General Engineer', dailyRate: 1700 }, itEng: { name: 'IT / Software Engineer', dailyRate: 2500 },
+                    consultant: { name: 'Consultant', dailyRate: 5000 }
+                };
+            }
+        }
+
         async function fetchAllDatabases() {
             await Promise.all(DB_CONFIG.map(async (config) => {
-                const urls = [
-                    `/${config.file}`,
-                    `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}`
-                ];
+                const urls = [ `/${config.file}`, `https://raw.githubusercontent.com/GianSibayan/URC-Civil-Cost-Calculator/main/${config.file}` ];
                 for (const url of urls) {
                     try {
                         const res = await fetch(url);
@@ -380,427 +889,751 @@
             }
         }
 
-        function populateCategoryDropdown() {
-            const select = document.getElementById('material-category-selector');
-            select.innerHTML = '<option value="">-- Select Category --</option>';
-            DB_CONFIG.forEach(config => {
-                const option = document.createElement('option');
-                option.value = config.id;
-                option.textContent = config.label;
-                select.appendChild(option);
-            });
-        }
-
-        function updateMaterialDropdown() {
-            const catId = document.getElementById('material-category-selector').value;
-            const select = document.getElementById('material-selector');
-            select.innerHTML = '<option value="">-- Select Specific Material --</option>';
-            for (const [key, mat] of Object.entries(MASTER_DB)) {
-                if (mat.category === catId) {
-                    const option = document.createElement('option');
-                    option.value = key;
-                    option.textContent = `${mat.name} (₱${mat.price}/${mat.unit})`;
-                    select.appendChild(option);
-                }
-            }
-            validateCartInputs();
-        }
-
-        function populateLaborDropdown() {
-            const select = document.getElementById('labor-selector');
-            select.innerHTML = '<option value="">-- Select Labor Role --</option>';
-            for (const [key, lab] of Object.entries(LABOR_DB)) {
-                const hourlyRate = (lab.dailyRate / 8).toFixed(2);
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = `${lab.name} (₱${hourlyRate}/hr)`;
-                select.appendChild(option);
-            }
-        }
-
         // ============================================================
-        // 3. UI RENDERING, NAVIGATION & BUILDER LOGIC
+        // 2. EXCEL GRID RENDERING & LOGIC
         // ============================================================
         
-        function openBOQView() {
-            activeTabId = 'BOQ'; 
-            activeItemKey = null; 
-            renderNavigation(); 
-            renderContent(); 
+        function openSelectionPopover(itemKey, idx, triggerEl) {
+            popoverTarget = { itemKey, idx };
+            popoverSearchQuery = '';
+            const rect = triggerEl.getBoundingClientRect();
+            const pop = document.getElementById('selection-popover');
+            const width = Math.max(rect.width, 280);
+            pop.style.width = `${width}px`;
+            // Fixed positioning is intentional — it's what keeps this panel from closing when the
+            // grid's own scroll container scrolls (fixed is relative to the viewport, not the grid).
+            let top = rect.bottom + 4;
+            let left = rect.left;
+            if (left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
+            if (top + 380 > window.innerHeight - 8) top = Math.max(8, rect.top - 384); // flip above if no room below
+            pop.style.top = `${top}px`;
+            pop.style.left = `${left}px`;
+            pop.classList.remove('hidden');
+
+            const searchInput = document.getElementById('popover-search-input');
+            searchInput.value = '';
+            renderPopoverFilters();
+            renderPopoverOptions();
+            searchInput.focus();
         }
 
-        function calculateCategoryTotal(catId) {
-            let total = 0;
-            Object.keys(scopeItemData).forEach(key => {
-                if (key.startsWith(catId + '__')) {
-                    scopeItemData[key].forEach(row => total += row.total);
-                }
+        function closeSelectionPopover() {
+            popoverTarget = null;
+            document.getElementById('selection-popover').classList.add('hidden');
+        }
+
+        function renderPopoverFilters() {
+            const container = document.getElementById('popover-filters');
+            const options = [{ id: 'all', label: 'All' }, { id: 'labor', label: 'Labor' }, ...DB_CONFIG.map(cfg => ({ id: cfg.id, label: cfg.label }))];
+            let html = '';
+            options.forEach(opt => {
+                const checked = popoverActiveFilter === opt.id ? 'checked' : '';
+                html += `<label class="flex items-center gap-1.5 text-[11px] text-neutral-700 cursor-pointer truncate"><input type="radio" name="popover-cat-filter" ${checked} onchange="setPopoverFilter('${opt.id}')"> ${opt.label}</label>`;
             });
-            return total;
+            container.innerHTML = html;
         }
 
-        function formatCompact(num) {
-            if (num === 0) return "0.00";
-            return num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        function setPopoverFilter(id) {
+            popoverActiveFilter = id;
+            renderPopoverOptions();
         }
 
-        function renderNavigation() {
-            const navContainer = document.getElementById('tab-nav-container');
-            navContainer.innerHTML = '';
-            
-            const boqBtn = document.getElementById('btn-view-boq');
-            if (activeTabId === 'BOQ') {
-                boqBtn.className = "px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-2";
-            } else {
-                boqBtn.className = "px-4 py-2 text-sm font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer flex items-center gap-2";
+        function onPopoverSearchInput(value) {
+            popoverSearchQuery = value.trim().toLowerCase();
+            renderPopoverOptions();
+        }
+
+        function renderPopoverOptions() {
+            const container = document.getElementById('popover-options');
+            let html = '';
+            let any = false;
+            // While actively searching, search across everything regardless of the selected radio filter —
+            // the radio is for browsing one category at a time; search is a deliberate global lookup.
+            const searching = !!popoverSearchQuery;
+
+            DB_CONFIG.forEach(cfg => {
+                const categoryVisible = searching || popoverActiveFilter === 'all' || popoverActiveFilter === cfg.id;
+                if (!categoryVisible) return;
+                const items = Object.keys(MASTER_DB).filter(k => MASTER_DB[k].category === cfg.id);
+                const filtered = items.filter(k => !popoverSearchQuery || MASTER_DB[k].name.toLowerCase().includes(popoverSearchQuery));
+                if (filtered.length === 0) return;
+                any = true;
+                html += `<div class="px-2 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase sticky top-0 bg-white">${cfg.label}</div>`;
+                filtered.forEach(k => {
+                    html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('mat:${k}')">${MASTER_DB[k].name} (₱${MASTER_DB[k].price}/${MASTER_DB[k].unit})</div>`;
+                });
+            });
+
+            const laborVisible = searching || popoverActiveFilter === 'all' || popoverActiveFilter === 'labor';
+            if (laborVisible) {
+                const laborKeys = Object.keys(LABOR_DB).filter(k => !popoverSearchQuery || LABOR_DB[k].name.toLowerCase().includes(popoverSearchQuery));
+                if (laborKeys.length > 0) {
+                    any = true;
+                    html += `<div class="px-2 pt-2 pb-1 text-[10px] font-bold text-neutral-400 uppercase sticky top-0 bg-white">Labor</div>`;
+                    laborKeys.forEach(k => {
+                        html += `<div class="px-2 py-1.5 text-xs hover:bg-blue-50 cursor-pointer text-neutral-800" onclick="pickFromPopover('lab:${k}')">${LABOR_DB[k].name} (₱${LABOR_DB[k].dailyRate}/day)</div>`;
+                    });
+                }
             }
 
-            SCOPE_CATEGORIES.forEach(cat => {
-                const catTotal = calculateCategoryTotal(cat.id);
-                const isActive = cat.id === activeTabId;
-                
-                const btn = document.createElement('button');
-                btn.className = `cat-nav-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex flex-col items-center justify-center min-w-[140px] ${isActive ? 'bg-black text-white shadow-sm' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'}`;
-                btn.onclick = () => { activeTabId = cat.id; renderNavigation(); renderContent(); };
-                
-                const badgeBg = isActive ? 'bg-blue-900/60 text-blue-200' : 'bg-blue-50 text-blue-600';
-                const badge = document.createElement('span');
-                badge.className = `text-[10px] mt-1 px-2 py-0.5 rounded-md font-bold transition-colors ${badgeBg}`;
-                badge.textContent = `₱${formatCompact(catTotal || 0)}`;
-
-                btn.appendChild(document.createTextNode(cat.label));
-                btn.appendChild(badge);
-                navContainer.appendChild(btn);
-            });
+            container.innerHTML = any ? html : '<div class="px-2 py-6 text-xs text-neutral-400 text-center">No matches</div>';
         }
 
-        function renderContent() {
-            const contentArea = document.getElementById('dynamic-content-area');
-            contentArea.innerHTML = '';
+        function pickFromPopover(rawValue) {
+            if (!popoverTarget) return;
+            updateSelection(popoverTarget.itemKey, popoverTarget.idx, rawValue);
+            closeSelectionPopover();
+        }
+
+        // Close on outside click / Escape — but never on a click that originated from a trigger
+        // button, since that click is what opens (or re-targets) the popover in the first place.
+        document.addEventListener('click', (e) => {
+            const pop = document.getElementById('selection-popover');
+            if (!pop || pop.classList.contains('hidden')) return;
+            if (pop.contains(e.target)) return;
+            if (e.target.closest && e.target.closest('[data-selection-trigger]')) return;
+            closeSelectionPopover();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSelectionPopover();
+        });
+
+        // Clicking outside the grid/BOQ workspace entirely (header bar, metadata fields,
+        // sidebar nav, etc.) clears the current item/category selection and falls back to the
+        // all-categories overview — same as clicking the ✕ button.
+        document.addEventListener('click', (e) => {
+            if (activeTab !== 'grid') return;
+            if (!selectedItem && !selectedCategory) return; // already on the overview, nothing to do
+            // Category/section clicks re-render the grid (replacing the clicked row's DOM node),
+            // which detaches it — e.target.closest() would fail on a detached node. composedPath()
+            // is captured at dispatch time, before that mutation happens, so it stays reliable.
+            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+            const insideWorkspace = path.some(node => node && node.id && (node.id === 'ces-workspace' || node.id === 'selection-popover'));
+            if (insideWorkspace) return;
+            clearSelection();
+        });
+
+        function computeLineCost(line) {
+            if (!line) return { total: 0, unitCost: 0, unitStr: '-' };
+            const lumpSum = parseFloat(line.lumpSum) || 0;
+
+            if (line.labId) {
+                const lab = LABOR_DB[line.labId];
+                const unitCost = lab ? lab.dailyRate : 0; // dailyRate field is actually PER HOUR in the database — ×8 for the real daily cost used by the "# of Days" input
+                const headcount = parseFloat(line.headcount) || 0;
+                const days = parseFloat(line.days) || 0;
+                return { total: (unitCost * headcount * days) + lumpSum, unitCost, unitStr: 'Days' };
+            }
+            if (line.matId) {
+                const mat = MASTER_DB[line.matId];
+                const unitCost = mat ? mat.price : 0;
+                const qty = parseFloat(line.qty) || 0;
+                return { total: (unitCost * qty) + lumpSum, unitCost, unitStr: mat ? mat.unit : '-' };
+            }
+            // Nothing selected yet — a pure Lump Sum line is still valid on its own.
+            return { total: lumpSum, unitCost: 0, unitStr: '-' };
+        }
+
+        function defaultLine() {
+            return { matId: '', qty: '', labId: '', headcount: '', days: '', lumpSum: '' };
+        }
+
+        function lineHasData(line) {
+            if (!line) return false;
+            return !!(line.matId || line.labId || (line.lumpSum && parseFloat(line.lumpSum) > 0));
+        }
+
+        function getLines(itemKey) {
+            const lines = gridState[itemKey];
+            return (lines && lines.length > 0) ? lines : [defaultLine()];
+        }
+
+        function itemTotal(itemKey) {
+            return getLines(itemKey).reduce((sum, l) => sum + computeLineCost(l).total, 0);
+        }
+
+        function sectionTotal(sectionKey) {
+            const [catId, sIdx] = sectionKey.split('__');
+            const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
+            if (!cat) return 0;
+            const sec = cat.sections[parseInt(sIdx)];
+            if (!sec) return 0;
+            let sum = 0;
+            sec.items.forEach((item, iIdx) => { sum += itemTotal(`${catId}__${sIdx}__${iIdx}`); });
+            return sum;
+        }
+
+        function categoryTotal(cat) {
+            let sum = 0;
+            cat.sections.forEach((sec, sIdx) => { sum += sectionTotal(`${cat.id}__${sIdx}`); });
+            return sum;
+        }
+
+        function toggleCategory(catId) {
+            if (collapsedCategories.has(catId)) collapsedCategories.delete(catId);
+            else collapsedCategories.add(catId);
+            saveCollapsedState();
+            renderGrid();
+            // Clicking the category header (whether it's opening or closing) shows that
+            // category's full BOQ roll-up on the right, same as clicking the light-blue section row.
+            selectCategoryBreakdown(catId);
+        }
+
+        function saveCollapsedState() {
+            try { localStorage.setItem('urc_ces_collapsed_categories', JSON.stringify([...collapsedCategories])); } catch(e) {}
+        }
+
+        function loadCollapsedState() {
+            try {
+                const raw = localStorage.getItem('urc_ces_collapsed_categories');
+                if (raw) collapsedCategories = new Set(JSON.parse(raw));
+            } catch(e) {}
+        }
+
+        function renderGrid() {
+            const tbody = document.getElementById('excel-grid-body');
+            let html = '';
+            const fmt = (num) => num > 0 ? num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
+
+            SCOPE_CATEGORIES.forEach((cat, cIdx) => {
+                const catLabelMatches = matchesSearch(cat.label);
+                const catHasAnyMatch = !searchQuery || catLabelMatches || cat.sections.some(sec => matchesSearch(sec.title) || sec.items.some(item => matchesSearch(item.desc)));
+                if (searchQuery && !catHasAnyMatch) return; // hide the whole category while it has zero matches
+
+                const isCollapsed = searchQuery ? false : collapsedCategories.has(cat.id); // auto-expand while searching so matches are visible
+                html += `
+                <tr id="cathead-${cat.id}" data-boq-trigger="1" class="bg-slate-700 text-white shadow-sm border-b-2 border-white cursor-pointer select-none" onclick="toggleCategory('${cat.id}')">
+                    <td colspan="9" class="p-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="flex items-center gap-2 font-bold text-xs uppercase tracking-widest pl-2">
+                                <span class="inline-block transition-transform duration-150 text-[10px] ${isCollapsed ? '' : 'rotate-90'}">▸</span>
+                                ${cat.label}
+                            </span>
+                            ${isCollapsed ? `<span class="text-[10px] font-semibold normal-case text-neutral-300 pr-2">${fmt(categoryTotal(cat))}</span>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+
+                if (isCollapsed) return; // don't build this category's sections/items into the DOM at all
+                
+                cat.sections.forEach((sec, sIdx) => {
+                    const sectionKey = `${cat.id}__${sIdx}`;
+                    const secTitleMatches = catLabelMatches || matchesSearch(sec.title);
+                    const secHasAnyMatch = !searchQuery || secTitleMatches || sec.items.some(item => matchesSearch(item.desc));
+                    if (searchQuery && !secHasAnyMatch) return; // hide whole section while it has zero matches
+
+                    html += `
+                    <tr id="sechead-${cat.id}__${sIdx}" data-boq-trigger="1" onclick="selectCategoryBreakdown('${cat.id}')" class="bg-blue-100 text-blue-900 border-b border-blue-200 cursor-pointer select-none hover:bg-blue-200/70 transition-colors">
+                        <td colspan="9" class="p-2 pl-4 font-bold text-[11px] uppercase tracking-wide">${sec.title}</td>
+                    </tr>`;
+                    
+                    sec.items.forEach((item, iIdx) => {
+                        if (searchQuery && !secTitleMatches && !matchesSearch(item.desc)) return; // hide non-matching individual items
+
+                        const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+                        const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+                        const lines = getLines(itemKey);
+
+                        lines.forEach((line, lIdx) => {
+                            const lineKey = `${itemKey}__${lIdx}`;
+                            const { total, unitCost, unitStr } = computeLineCost(line);
+
+                            html += `<tr class="hover:bg-neutral-50 transition-colors border-b border-neutral-200 ${total > 0 ? 'bg-blue-50/40' : ''}" id="row-${lineKey}">`;
+
+                            if (lIdx === 0) {
+                                html += `
+                                <td class="excel-cell readonly-cell text-center font-bold cursor-pointer" rowspan="${lines.length}" data-boq-trigger="1" onclick="selectItem('${itemKey}')">${code}</td>
+                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" data-boq-trigger="1" onclick="selectItem('${itemKey}')"><div class="truncate w-52">${item.desc}</div></td>`;
+                            }
+
+                            // Quantity cell splits into Headcount / Days only when a laborer is selected — kept tight and centered so short numbers don't float apart.
+                            let qtyInner;
+                            if (line.labId) {
+                                qtyInner = `<div class="flex h-full divide-x divide-neutral-200">
+                                    <input type="number" id="inp-headcount-${lineKey}" class="excel-input text-right text-blue-900 font-medium" style="width:50%" min="0" step="1" placeholder="Head" value="${line.headcount || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'headcount', this.value)">
+                                    <input type="number" id="inp-days-${lineKey}" class="excel-input text-right text-blue-900 font-medium" style="width:50%" min="0" step="any" placeholder="Days" value="${line.days || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'days', this.value)">
+                                </div>`;
+                            } else {
+                                qtyInner = `<input type="number" id="inp-qty-${lineKey}" class="excel-input text-right text-amber-900 font-medium" min="0" step="any" placeholder="-" value="${line.qty || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'qty', this.value)">`;
+                            }
+
+                            // Button opens the shared popover instead of a native <select> — a native select can't
+                            // support the filter checkboxes / in-dropdown search / stay-open-while-scrolling behavior.
+                            html += `
+                                <td class="excel-cell"><button type="button" data-selection-trigger="1" onclick="openSelectionPopover('${itemKey}', ${lIdx}, this)" title="${escapeHtml(selectionLabelFor(line))}" class="excel-select text-left truncate ${(line.labId || line.matId) ? 'text-neutral-800' : 'text-neutral-400'}">${selectionLabelFor(line)}</button></td>
+                                <td class="excel-cell">${qtyInner}</td>
+                                <td class="excel-cell readonly-cell text-center text-xs" id="txt-unit-${lineKey}">${unitStr}</td>
+                                <td class="excel-cell readonly-cell text-right font-mono text-xs" id="txt-unitcost-${lineKey}">${unitCost > 0 ? fmt(unitCost) : '-'}</td>
+                                <td class="excel-cell"><input type="number" id="inp-lumpsum-${lineKey}" class="excel-input text-right text-purple-800 font-medium" min="0" step="any" placeholder="-" value="${line.lumpSum || ''}" oninput="updateLine('${itemKey}', ${lIdx}, 'lumpSum', this.value)"></td>
+                                <td class="excel-cell readonly-cell text-right font-bold text-blue-700 bg-blue-50/50" id="txt-totalcost-${lineKey}">${fmt(total)}</td>
+                                <td class="excel-cell readonly-cell text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button onclick="removeLine('${itemKey}', ${lIdx})" class="text-neutral-300 hover:text-red-500 transition text-xs font-bold" title="Remove this row">✕</button>
+                                        <button onclick="addLineAfter('${itemKey}', ${lIdx})" class="text-neutral-300 hover:text-blue-600 transition text-xs font-bold" title="Add a row below this one">+</button>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
+                    });
+
+                    // One TOTAL row per section (e.g. after the last item of "Yard & Underground"),
+                    // not one per WBS item. Value lands under the Total Cost column. Always reflects
+                    // the section's real total regardless of any active search filter.
+                    html += `
+                    <tr class="bg-neutral-50 border-b-2 border-neutral-300" id="totalrow-${sectionKey}">
+                        <td colspan="7" class="excel-cell readonly-cell text-right text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Total</td>
+                        <td class="excel-cell readonly-cell text-right font-bold text-neutral-700" id="txt-sectiontotal-${sectionKey}">${fmt(sectionTotal(sectionKey))}</td>
+                        <td class="excel-cell readonly-cell"></td>
+                    </tr>`;
+                });
+            });
             
-            if (activeTabId === 'BOQ') {
-                renderBOQ(contentArea);
-                document.getElementById('active-target-name').textContent = "← Select a scope item from a category tab to edit";
-                document.getElementById('active-target-name').classList.replace('text-blue-600', 'text-neutral-500');
-                document.getElementById('builder-controls').classList.add('opacity-50', 'pointer-events-none');
-                document.getElementById('current-item-breakdown').innerHTML = '<div class="text-neutral-400 italic text-center py-4">No item selected.</div>';
-                document.getElementById('current-item-subtotal').textContent = '₱0.00';
+            tbody.innerHTML = html;
+            updateTotals();
+        }
+
+        function matchesSearch(text) {
+            if (!searchQuery) return true;
+            return (text || '').toLowerCase().includes(searchQuery);
+        }
+
+        function onGridSearchInput(value) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                searchQuery = value.trim().toLowerCase();
+                renderGrid();
+            }, 150);
+        }
+
+        function selectionLabelFor(line) {
+            if (line.labId && LABOR_DB[line.labId]) return `${LABOR_DB[line.labId].name} (₱${LABOR_DB[line.labId].dailyRate}/day)`;
+            if (line.matId && MASTER_DB[line.matId]) return `${MASTER_DB[line.matId].name} (₱${MASTER_DB[line.matId].price}/${MASTER_DB[line.matId].unit})`;
+            return '- Select Material or Labor -';
+        }
+
+        function updateSelection(itemKey, idx, rawValue) {
+            if (!gridState[itemKey]) gridState[itemKey] = [defaultLine()];
+            if (!gridState[itemKey][idx]) gridState[itemKey][idx] = defaultLine();
+            const line = gridState[itemKey][idx];
+
+            if (!rawValue) {
+                line.matId = ''; line.labId = '';
+            } else if (rawValue.startsWith('mat:')) {
+                line.matId = rawValue.slice(4);
+                line.labId = ''; line.headcount = ''; line.days = ''; // clear labor-only fields
+            } else if (rawValue.startsWith('lab:')) {
+                line.labId = rawValue.slice(4);
+                line.matId = ''; line.qty = ''; // clear material-only field
+            }
+            saveToCache();
+            renderGrid(); // structural: Quantity cell shape changes between single input and Headcount/Days split
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
+
+        function updateLine(itemKey, idx, field, value) {
+            if (!gridState[itemKey]) gridState[itemKey] = [defaultLine()];
+            if (!gridState[itemKey][idx]) gridState[itemKey][idx] = defaultLine();
+            gridState[itemKey][idx][field] = value;
+            calculateLine(itemKey, idx);
+            updateTotals();
+            saveToCache();
+            renderBreakdownPanel();
+        }
+
+        function calculateLine(itemKey, idx) {
+            const line = gridState[itemKey] && gridState[itemKey][idx];
+            if (!line) return { total: 0 };
+
+            const { total, unitCost, unitStr } = computeLineCost(line);
+            const lineKey = `${itemKey}__${idx}`;
+            const fmt = (num) => num > 0 ? num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '-';
+
+            const elUnit = document.getElementById(`txt-unit-${lineKey}`);
+            const elUnitCost = document.getElementById(`txt-unitcost-${lineKey}`);
+            const elTotalCost = document.getElementById(`txt-totalcost-${lineKey}`);
+            if (elUnit) elUnit.textContent = unitStr;
+            if (elUnitCost) elUnitCost.textContent = unitCost > 0 ? fmt(unitCost) : '-';
+            if (elTotalCost) elTotalCost.textContent = fmt(total);
+
+            const tr = document.getElementById(`row-${lineKey}`);
+            if (tr) {
+                if (total > 0) tr.classList.add('bg-blue-50/40');
+                else tr.classList.remove('bg-blue-50/40');
+            }
+
+            // Keep the section's inline TOTAL row live without a full grid re-render.
+            const sectionKey = itemKey.split('__').slice(0, 2).join('__');
+            const elSectionTotal = document.getElementById(`txt-sectiontotal-${sectionKey}`);
+            if (elSectionTotal) elSectionTotal.textContent = fmt(sectionTotal(sectionKey));
+
+            return { total };
+        }
+
+        function addLineAfter(itemKey, afterIdx) {
+            if (!gridState[itemKey]) gridState[itemKey] = [defaultLine()];
+            gridState[itemKey].splice(afterIdx + 1, 0, defaultLine());
+            saveToCache();
+            renderGrid();
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
+
+        function removeLine(itemKey, idx) {
+            const lines = gridState[itemKey];
+            if (!lines) return;
+            if (lines.length <= 1) {
+                delete gridState[itemKey]; // collapses back to a single blank placeholder line
+            } else {
+                lines.splice(idx, 1);
+            }
+            saveToCache();
+            renderGrid();
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
+
+        function clearWorksheet() {
+            if(confirm('Are you sure you want to clear the entire worksheet?')) {
+                gridState = {};
+                saveToCache();
+                renderGrid();
+                clearSelection();
+                showToast('Worksheet cleared.', 'info');
+            }
+        }
+
+        // ============================================================
+        // 3. ITEM SELECTION, BREAKDOWN PANEL, TOTALS & CACHING
+        // ============================================================
+
+        function selectItem(itemKey) {
+            selectedItem = itemKey;
+            selectedCategory = null;
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
+
+        function selectCategoryBreakdown(catId) {
+            selectedCategory = catId;
+            selectedItem = null;
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
+
+        // Clears any item/category selection and falls back to the all-categories overview.
+        // Bound to the panel's ✕ button, and to clicking outside the grid/BOQ workspace.
+        function clearSelection() {
+            selectedItem = null;
+            selectedCategory = null;
+            applyBoqHighlight();
+            renderBreakdownPanel();
+        }
+
+        // Keeps the blue selection ring in sync with whichever row/header is the current
+        // selection source — a WBS/description cell, a category header, or a section row.
+        // Called after every renderGrid() (which wipes these classes when it rebuilds the tbody).
+        function applyBoqHighlight() {
+            document.querySelectorAll('[id^="row-"], [id^="cathead-"], [id^="sechead-"]').forEach(el => el.classList.remove('ring-2', 'ring-inset', 'ring-blue-400'));
+            if (selectedItem) {
+                document.querySelectorAll(`[id^="row-${selectedItem}__"]`).forEach(el => el.classList.add('ring-2', 'ring-inset', 'ring-blue-400'));
+            } else if (selectedCategory) {
+                const cathead = document.getElementById(`cathead-${selectedCategory}`);
+                if (cathead) cathead.classList.add('ring-2', 'ring-inset', 'ring-blue-400');
+                document.querySelectorAll(`[id^="sechead-${selectedCategory}__"]`).forEach(el => el.classList.add('ring-2', 'ring-inset', 'ring-blue-400'));
+            }
+        }
+
+        function fmtMoney(num) {
+            return `₱${(num || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Builds one line's label + price row — no per-row MAT/LAB/LS badge; lines are grouped
+        // under a single "Mat" / "Lab" / "Lump Sum" heading instead (see buildGroupedLinesHtml).
+        // title="" gives the full un-truncated text as a hover tooltip.
+        function buildBreakdownLineRow(line) {
+            const { total } = computeLineCost(line);
+            let label;
+            if (line.labId) {
+                const labName = LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : 'Labor';
+                label = `${labName} — ${line.headcount || 0} × ${line.days || 0} day(s)`;
+            } else if (line.matId) {
+                const matName = MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : 'Material';
+                label = `${matName} × ${line.qty || 0}`;
+            } else {
+                label = 'Lump sum item';
+            }
+            const lumpSum = parseFloat(line.lumpSum) || 0;
+            if (lumpSum > 0 && (line.matId || line.labId)) label += ` (+ ${fmtMoney(lumpSum)} lump sum)`;
+
+            const html = `<div class="px-2.5 py-2 bg-neutral-50 border border-neutral-100 rounded-lg text-xs flex items-center justify-between gap-2" title="${escapeHtml(label)}">
+                <span class="truncate text-neutral-600">${label}</span>
+                <span class="font-medium text-neutral-900 flex-shrink-0">${fmtMoney(total)}</span>
+            </div>`;
+            return { html, total };
+        }
+
+        // Splits a WBS item's priced lines into Mat / Lab / Lump Sum groups and renders each
+        // group under its own small heading — the shared building block for the item, category,
+        // and all-categories views.
+        function buildGroupedLinesHtml(lines) {
+            const priced = lines.filter(lineHasData);
+            const materials = priced.filter(l => l.matId);
+            const labor = priced.filter(l => l.labId);
+            const lumpOnly = priced.filter(l => !l.matId && !l.labId);
+
+            let html = '';
+            let subtotal = 0;
+
+            const renderGroup = (label, colorCls, groupLines) => {
+                if (groupLines.length === 0) return;
+                html += `<p class="text-[10px] font-bold ${colorCls} uppercase tracking-wide mt-2.5 mb-1 first:mt-0">${label}</p><div class="space-y-1.5">`;
+                groupLines.forEach(line => {
+                    const { html: rowHtml, total } = buildBreakdownLineRow(line);
+                    subtotal += total;
+                    html += rowHtml;
+                });
+                html += `</div>`;
+            };
+
+            renderGroup('Mat', 'text-amber-600', materials);
+            renderGroup('Lab', 'text-blue-600', labor);
+            renderGroup('Lump Sum', 'text-purple-600', lumpOnly);
+
+            return { html, subtotal };
+        }
+
+        // Builds one "WBS code — description" group (used inside the category and
+        // all-categories views) followed by its grouped Mat/Lab/Lump Sum lines. Returns ''
+        // if the item has no priced lines, so callers can skip it entirely.
+        function buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item) {
+            const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+            const grouped = buildGroupedLinesHtml(getLines(itemKey));
+            if (!grouped.html) return { html: '', subtotal: 0 };
+
+            const code = cat.isIndirect ? item.code : `${cIdx + 1}.${sIdx + 1}.${iIdx + 1}`;
+            const html = `<div class="mb-4">
+                <p class="text-[11px] font-bold text-neutral-900 uppercase tracking-wide mb-1">WBS ${code} — ${item.desc}</p>
+                ${grouped.html}
+            </div>`;
+            return { html, subtotal: grouped.subtotal };
+        }
+
+        // mode: 'none' (all-categories view — nothing shown, redundant with the cards below it),
+        // 'category' (dark-navy category badge only, own close button), or 'item' (the same
+        // dark-navy category badge — so it's always clear which category a selected WBS item
+        // belongs to — plus the plain WBS code/description row underneath, with its own close
+        // button, unchanged from the original design).
+        function setBreakdownHeader(mode, categoryLabel, codeLabel, descLabel) {
+            const badge = document.getElementById('breakdown-category-badge');
+            const badgeLabel = document.getElementById('breakdown-category-label');
+            const badgeCloseBtn = document.getElementById('breakdown-category-close-btn');
+            const itemRow = document.getElementById('breakdown-item-row');
+            const codeEl = document.getElementById('breakdown-code');
+            const descEl = document.getElementById('breakdown-desc');
+
+            if (mode === 'none') {
+                badge.style.display = 'none';
+                itemRow.style.display = 'none';
                 return;
             }
 
-            const activeCategory = SCOPE_CATEGORIES.find(c => c.id === activeTabId);
-            const catTotal = calculateCategoryTotal(activeCategory.id);
+            badgeLabel.textContent = categoryLabel;
+            badge.style.display = 'flex';
+            badgeCloseBtn.style.display = (mode === 'category') ? '' : 'none';
+            itemRow.style.display = (mode === 'item') ? 'flex' : 'none';
 
-            const headerDiv = document.createElement('div');
-            headerDiv.className = "mb-6 flex justify-between items-end px-2";
-            headerDiv.innerHTML = `
-                <div>
-                    <h3 class="text-2xl font-bold text-neutral-900">${activeCategory.label}</h3>
-                    <p class="text-sm text-neutral-500 mt-1">Select an item below to build its cost.</p>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">Category Total</div>
-                    <div class="text-2xl font-black text-blue-600">₱${catTotal.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
-                </div>
-            `;
-            contentArea.appendChild(headerDiv);
+            if (mode === 'item') {
+                codeEl.textContent = codeLabel;
+                descEl.textContent = descLabel;
+            }
+        }
 
-            activeCategory.sections.forEach((section, secIdx) => {
-                const sectionWrapper = document.createElement('div');
-                sectionWrapper.className = "mb-8 bg-white border border-neutral-200/80 rounded-xl overflow-hidden shadow-sm";
-                
-                let tbodyHTML = section.items.map((item, i) => {
-                    const displayCode = item.code + (section.prefix || '');
-                    const iKey = `${activeCategory.id}__${secIdx}__${i}`;
-                    const isActiveTarget = iKey === activeItemKey;
-                    const itemData = scopeItemData[iKey] || [];
-                    const subtotal = itemData.reduce((sum, row) => sum + row.total, 0);
-                    const hasPrice = subtotal > 0;
-                    const escapedDesc = item.desc.replace(/'/g, "\\'");
-                    
-                    let rowClasses = "border-b border-neutral-100 cursor-pointer transition-colors duration-200";
-                    if (isActiveTarget) {
-                        rowClasses += " bg-blue-50"; 
-                    } else if (hasPrice) {
-                        rowClasses += " bg-[#f8f9fa] hover:bg-neutral-50"; 
-                    } else {
-                        rowClasses += " hover:bg-neutral-50";
-                    }
+        function setBreakdownSubtotal(label, amount) {
+            document.getElementById('breakdown-subtotal-label').textContent = label;
+            document.getElementById('breakdown-subtotal').textContent = fmtMoney(amount);
+        }
 
-                    const leftBorder = hasPrice ? "border-l-4 border-blue-500" : "border-l-4 border-transparent";
-                    const priceColor = hasPrice ? "text-blue-700 font-bold" : "text-neutral-400 font-semibold";
-                    const priceDisplay = hasPrice ? `₱${subtotal.toLocaleString(undefined, {minimumFractionDigits:2})}` : '—';
-                    
-                    const checkIcon = hasPrice 
-                        ? `<svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>` 
-                        : `<div class="w-4 h-4 flex-shrink-0"></div>`; 
+        // Dispatches to whichever of the three BOQ views is currently active. Re-run after
+        // any edit anywhere in the grid so all three stay live.
+        function renderBreakdownPanel() {
+            if (selectedItem) { renderItemBreakdownPanel(); return; }
+            if (selectedCategory) { renderCategoryBreakdownPanel(); return; }
+            renderAllBreakdownPanel();
+        }
 
-                    return `
-                        <tr class="${rowClasses}" onclick="selectScopeItem('${iKey}', '${escapedDesc}')">
-                            <td class="py-3 px-4 text-xs font-semibold text-neutral-400 transition-all ${leftBorder}">${displayCode}</td>
-                            <td class="py-3 px-4 text-sm text-neutral-800 font-medium truncate" title="${escapedDesc}">${item.desc}</td>
-                            <td class="py-3 px-4 text-right text-sm">
-                                <div class="flex items-center justify-end gap-3">
-                                    <span class="${priceColor} truncate">${priceDisplay}</span>
-                                    ${checkIcon}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+        // View 1: a single scope item's material/labor/lump-sum lines (clicking a WBS number
+        // or scope description).
+        function renderItemBreakdownPanel() {
+            const [catId, sIdx, iIdx] = selectedItem.split('__');
+            const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
+            if (!cat) { clearSelection(); return; }
+            const sec = cat.sections[parseInt(sIdx)];
+            const item = sec.items[parseInt(iIdx)];
+            const cIdx = SCOPE_CATEGORIES.indexOf(cat);
+            const code = cat.isIndirect ? item.code : `${cIdx+1}.${parseInt(sIdx)+1}.${parseInt(iIdx)+1}`;
 
-                sectionWrapper.innerHTML = `
-                    <div class="px-4 py-3 ${section.color} border-b border-neutral-200/50 flex justify-between items-center">
-                        <h4 class="font-bold text-sm tracking-wide uppercase">${section.title}</h4>
-                    </div>
-                    <table class="w-full text-left border-collapse table-fixed">
-                        <colgroup>
-                            <col class="w-20">
-                            <col class="w-auto">
-                            <col class="w-36">
-                        </colgroup>
-                        <tbody class="bg-white">${tbodyHTML}</tbody>
-                    </table>
-                `;
-                contentArea.appendChild(sectionWrapper);
+            setBreakdownHeader('item', cat.label, `WBS ${code}`, item.desc);
+
+            const grouped = buildGroupedLinesHtml(getLines(selectedItem));
+            document.getElementById('breakdown-lines').innerHTML = grouped.html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added to this item yet.</p>';
+            setBreakdownSubtotal('Item Subtotal', grouped.subtotal);
+        }
+
+        // View 2: every priced item across every section in one category (clicking the dark
+        // category header, or the light-blue section row underneath it).
+        function renderCategoryBreakdownPanel() {
+            const cat = SCOPE_CATEGORIES.find(c => c.id === selectedCategory);
+            if (!cat) { clearSelection(); return; }
+            const cIdx = SCOPE_CATEGORIES.indexOf(cat);
+
+            setBreakdownHeader('category', cat.label, '', '');
+
+            let html = '';
+            let subtotal = 0;
+            cat.sections.forEach((sec, sIdx) => {
+                sec.items.forEach((item, iIdx) => {
+                    const group = buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item);
+                    html += group.html;
+                    subtotal += group.subtotal;
+                });
             });
+
+            document.getElementById('breakdown-lines').innerHTML = html || '<p class="text-xs text-neutral-400 text-center py-4">No material or labor added under this category yet.</p>';
+            setBreakdownSubtotal('Category Subtotal', subtotal);
         }
 
-        // ============================================================
-        // 4. EXCEL-STYLE BOQ RENDERER
-        // ============================================================
-        
-        function exNum(val) {
-            if (!val || val === 0) return '-';
-            return val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-        }
+        // View 3: the default view — every priced item across every category (clicking
+        // outside the grid, or the ✕ button on the item/category views). No header block —
+        // the category headings below already identify what's being shown.
+        function renderAllBreakdownPanel() {
+            setBreakdownHeader('none', '', '', '');
 
-        function renderBOQ(container) {
-            let hasItems = false;
-            let directRowsHtml = '';
-            let indirectRowsHtml = '';
-            
-            let grandDirectTotal = 0, grandDirectManHours = 0, grandDirectLabor = 0, grandDirectMat = 0;
-            let grandIndirectTotal = 0, grandIndirectManHours = 0, grandIndirectLabor = 0, grandIndirectMat = 0;
+            let html = '';
+            let grand = 0;
+            let any = false;
 
-            SCOPE_CATEGORIES.forEach((cat, catIndex) => {
-                let catTotal = 0, catManHours = 0, catLabor = 0, catMat = 0;
-                let catRows = '';
-                const catLetter = String.fromCharCode(65 + catIndex); 
-                let itemCounter = 1;
-                
-                cat.sections.forEach((sec, secIdx) => {
-                    sec.items.forEach((item, i) => {
-                        const iKey = `${cat.id}__${secIdx}__${i}`;
-                        const itemData = scopeItemData[iKey] || [];
-                        
-                        if (itemData.length > 0) {
-                            hasItems = true;
-                            let parentManHours = 0, parentLaborCost = 0, parentMatCost = 0;
-                            
-                            itemData.forEach(row => {
-                                parentManHours += row.manHours; 
-                                parentLaborCost += row.labTotal; 
-                                parentMatCost += row.matTotal;
-                            });
-                            
-                            const parentTotal = parentLaborCost + parentMatCost;
-                            catTotal += parentTotal;
-                            catManHours += parentManHours;
-                            catLabor += parentLaborCost;
-                            catMat += parentMatCost;
-                            
-                            const displayNo = cat.isIndirect ? item.code : itemCounter;
+            SCOPE_CATEGORIES.forEach((cat, cIdx) => {
+                let catHtml = '';
+                let catSubtotal = 0;
+                let catAny = false;
 
-                            catRows += `
-                                <tr class="bg-[#fff2cc]">
-                                    <td class="border border-black p-1.5 text-center font-bold truncate">${displayNo}</td>
-                                    <td class="border border-black p-1.5 font-bold text-neutral-900 truncate" title="${item.desc}">${item.desc}</td>
-                                    <td class="border border-black p-1.5 text-center font-bold">1</td>
-                                    <td class="border border-black p-1.5 text-center font-bold">lot</td>
-                                    <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(parentManHours)}</td>
-                                    <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(parentLaborCost)}</td>
-                                    <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(parentMatCost)}</td>
-                                    <td class="border border-black p-1.5 text-right font-black text-blue-800 truncate">${exNum(parentTotal)}</td>
-                                </tr>
-                            `;
-
-                            itemData.forEach((row, childIdx) => {
-                                const childNo = `${displayNo}.${childIdx + 1}`;
-                                catRows += `
-                                    <tr class="bg-white">
-                                        <td class="border border-black p-1.5 text-center text-neutral-600 truncate">${childNo}</td>
-                                        <td class="border border-black p-1.5 pl-6 text-neutral-800 truncate" title="${row.name}">- ${row.name}</td>
-                                        <td class="border border-black p-1.5 text-center text-neutral-600 truncate">${row.matQty || '-'}</td>
-                                        <td class="border border-black p-1.5 text-center text-neutral-600 truncate">${row.matUnit || '-'}</td>
-                                        <td class="border border-black p-1.5 text-right text-neutral-600 truncate">${exNum(row.manHours)}</td>
-                                        <td class="border border-black p-1.5 text-right text-neutral-600 truncate">${exNum(row.labTotal)}</td>
-                                        <td class="border border-black p-1.5 text-right text-neutral-600 truncate">${exNum(row.matTotal)}</td>
-                                        <td class="border border-black p-1.5 text-right font-medium text-neutral-700 truncate">${exNum(row.total)}</td>
-                                    </tr>
-                                `;
-                            });
-
-                            itemCounter++;
-                        }
+                cat.sections.forEach((sec, sIdx) => {
+                    sec.items.forEach((item, iIdx) => {
+                        const group = buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item);
+                        if (!group.html) return;
+                        catAny = true;
+                        catHtml += group.html;
+                        catSubtotal += group.subtotal;
                     });
                 });
-                
-                if (catTotal > 0) {
-                    const blockHtml = `
-                        ${!cat.isIndirect ? `
-                        <tr class="bg-[#e7e6e6]">
-                            <td class="border border-black p-1.5 text-center font-bold truncate">${catLetter}</td>
-                            <td class="border border-black p-1.5 font-bold uppercase truncate" colspan="7">${cat.label}</td>
-                        </tr>` : ''}
-                        ${catRows}
-                        ${!cat.isIndirect ? `
-                        <tr class="bg-[#d9e1f2]">
-                            <td class="border border-black p-1.5 text-center font-bold truncate" colspan="4">SUB TOTAL</td>
-                            <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(catManHours)}</td>
-                            <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(catLabor)}</td>
-                            <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(catMat)}</td>
-                            <td class="border border-black p-1.5 text-right font-bold truncate">₱${exNum(catTotal)}</td>
-                        </tr>` : ''}
-                    `;
 
-                    if (cat.isIndirect) {
-                        indirectRowsHtml += blockHtml;
-                        grandIndirectTotal += catTotal;
-                        grandIndirectManHours += catManHours;
-                        grandIndirectLabor += catLabor;
-                        grandIndirectMat += catMat;
-                    } else {
-                        directRowsHtml += blockHtml;
-                        grandDirectTotal += catTotal;
-                        grandDirectManHours += catManHours;
-                        grandDirectLabor += catLabor;
-                        grandDirectMat += catMat;
-                    }
-                }
+                if (!catAny) return; // skip categories with nothing priced yet
+                any = true;
+                grand += catSubtotal;
+
+                html += `<div class="mb-4">
+                    <div class="flex items-center justify-between gap-2 px-3 py-2 bg-slate-700 rounded-lg mb-3">
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">${cat.label}</p>
+                        <span class="text-[10px] font-semibold text-neutral-300">${fmtMoney(catSubtotal)}</span>
+                    </div>
+                    ${catHtml}
+                </div>`;
             });
 
-            if (!hasItems) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-64 text-neutral-400">
-                        <p class="font-medium text-lg text-neutral-500">No items added to the estimate yet.</p>
-                        <p class="text-sm mt-1">Select a category tab to start building your scope cart.</p>
-                    </div>
-                `;
-                return;
-            }
+            document.getElementById('breakdown-lines').innerHTML = any ? html : '<p class="text-xs text-neutral-400 text-center py-4">No items have been priced yet. Click a scope item to get started.</p>';
+            setBreakdownSubtotal('Grand Total', grand);
+        }
 
-            let finalTableHtml = directRowsHtml;
+        // The full Financial Ledger (Undefined Allowances, Contingency, Escalation, Grand Total)
+        // now lives in calculator.html. Save Estimate lives in BOTH pages — per Sir Tony's
+        // direction, the button only enables once calc.html AND CES are both filled in — so
+        // urc_ces_cross_page has to carry everything a History record needs, not just
+        // Defined Cost: category totals, labor-by-role, and both scorecards in full detail.
+        // confirmSaveEstimate() below (and calc.html's copy) both read from this single object
+        // so a record looks identical no matter which page's Save button wrote it.
+        function updateTotals() {
+            const breakdown = getCostBreakdown();
+            try {
+                localStorage.setItem('urc_ces_cross_page', JSON.stringify({
+                    materialCost: breakdown.materialCost,
+                    laborCost: breakdown.laborCost,
+                    lumpSumCost: breakdown.lumpSumCost,
+                    definedCost: breakdown.definedCost,
+                    categoryTotals: getCategoryTotals(),
+                    pricedLines: countPricedLines(),
+                    laborBreakdown: getLaborBreakdown().map(r => ({ name: r.name, ratePerDay: +r.ratePerDay.toFixed(2), personDays: +r.personDays.toFixed(2), subtotal: +r.subtotal.toFixed(2) })),
+                    scorecards: {
+                        contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections), criteria: scorecardDetail(CONTINGENCY_CRITERIA, contingencySelections) },
+                        undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
+                    },
+                    updatedAt: Date.now()
+                }));
+            } catch(e) {}
+            updateSaveButtonState();
+        }
 
-            if (grandDirectTotal > 0) {
-                finalTableHtml += `
-                    <tr class="bg-[#e2efda]">
-                        <td class="border border-black p-1.5 text-center font-bold uppercase truncate" colspan="4">TOTAL DIRECT COST</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandDirectManHours)}</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandDirectLabor)}</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandDirectMat)}</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">₱${exNum(grandDirectTotal)}</td>
-                    </tr>
-                `;
-            }
+        function saveToCache() {
+            try { localStorage.setItem('urc_ces_grid_state', JSON.stringify(gridState)); } catch(e) {}
+        }
 
-            if (grandIndirectTotal > 0) {
-                finalTableHtml += indirectRowsHtml;
-                finalTableHtml += `
-                    <tr class="bg-[#e2efda]">
-                        <td class="border border-black p-1.5 text-center font-bold uppercase truncate" colspan="4">TOTAL INDIRECT COST</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandIndirectManHours)}</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandIndirectLabor)}</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">${exNum(grandIndirectMat)}</td>
-                        <td class="border border-black p-1.5 text-right font-bold truncate">₱${exNum(grandIndirectTotal)}</td>
-                    </tr>
-                `;
-            }
+        function loadFromCache() {
+            try {
+                const raw = localStorage.getItem('urc_ces_grid_state');
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                // Defensive: only accept entries already in the new array-per-item shape.
+                // Old single-object-per-row caches (pre multi-line) are dropped instead of crashing the page.
+                Object.keys(parsed).forEach(key => {
+                    if (Array.isArray(parsed[key])) gridState[key] = parsed[key];
+                });
+            } catch(e) {}
+        }
 
-            const lumpsumTotal = grandDirectTotal + grandIndirectTotal;
-            const lumpsumManHours = grandDirectManHours + grandIndirectManHours;
-            const lumpsumLabor = grandDirectLabor + grandIndirectLabor;
-            const lumpsumMat = grandDirectMat + grandIndirectMat;
+        function updateMeta(field, value) {
+            estimateMeta[field] = value;
+            try { localStorage.setItem('urc_ces_meta', JSON.stringify(estimateMeta)); } catch(e) {}
+            updateSaveButtonState();
+        }
 
-            finalTableHtml += `
-                <tr class="bg-[#b4c6e7]">
-                    <td class="border border-black p-2 text-center font-bold uppercase truncate" colspan="4">TOTAL LUMPSUM COST</td>
-                    <td class="border border-black p-2 text-right font-bold truncate">${exNum(lumpsumManHours)}</td>
-                    <td class="border border-black p-2 text-right font-bold truncate">${exNum(lumpsumLabor)}</td>
-                    <td class="border border-black p-2 text-right font-bold truncate">${exNum(lumpsumMat)}</td>
-                    <td class="border border-black p-2 text-right font-black truncate">₱${exNum(lumpsumTotal)}</td>
-                </tr>
-            `;
+        function loadMeta() {
+            try {
+                const raw = localStorage.getItem('urc_ces_meta');
+                if (raw) estimateMeta = { ...estimateMeta, ...JSON.parse(raw) };
+            } catch(e) {}
+            const map = { project: 'meta-project', plant: 'meta-plant', type: 'meta-type', preparedBy: 'meta-preparedby', date: 'meta-date', meanSpendingDate: 'meta-meanspend' };
+            Object.keys(map).forEach(field => {
+                const el = document.getElementById(map[field]);
+                if (el && estimateMeta[field]) el.value = estimateMeta[field];
+            });
+        }
 
-            const todayDate = new Date().toISOString().split('T')[0];
-
-            container.innerHTML = `
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-neutral-900">Field Cost Estimate (BOQ)</h3>
-                        <p class="text-sm text-neutral-500 mt-1">Formatted to match Official Bidding Template.</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="exportToExcelBOQ()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm flex items-center gap-2 transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            Export to Excel
-                        </button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                    <div>
-                        <label class="text-xs font-bold text-blue-800 uppercase tracking-wider">Project Title</label>
-                        <input type="text" id="boq-project-title" placeholder="e.g. Additional Cooling Tower" class="mt-1.5 w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:border-blue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-blue-800 uppercase tracking-wider">Prepared By</label>
-                        <input type="text" id="boq-prepared-by" placeholder="e.g. Juan dela Cruz" class="mt-1.5 w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:border-blue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-blue-800 uppercase tracking-wider">Date</label>
-                        <input type="date" id="boq-date" value="${todayDate}" class="mt-1.5 w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:border-blue-500 outline-none text-neutral-700">
-                    </div>
-                </div>
-                
-                <div class="overflow-x-auto bg-white p-4 shadow-sm border border-neutral-300">
-                    <table class="w-full border-collapse border border-black text-[11px] font-sans text-black table-fixed" style="min-width: 900px; font-family: Arial, sans-serif;">
-                        <colgroup>
-                            <col style="width: 8%;">
-                            <col style="width: 32%;">
-                            <col style="width: 6%;">
-                            <col style="width: 6%;">
-                            <col style="width: 10%;">
-                            <col style="width: 12%;">
-                            <col style="width: 14%;">
-                            <col style="width: 12%;">
-                        </colgroup>
-                        <thead>
-                            <tr class="bg-[#d9e1f2]">
-                                <th class="border border-black p-1.5 text-center">ITEM NO.</th>
-                                <th class="border border-black p-1.5 text-center">SCOPE DESCRIPTION</th>
-                                <th class="border border-black p-1.5 text-center">QTY</th>
-                                <th class="border border-black p-1.5 text-center">UNIT</th>
-                                <th class="border border-black p-1.5 text-center">MAN HOUR</th>
-                                <th class="border border-black p-1.5 text-center">LABOR COST (Php)</th>
-                                <th class="border border-black p-1.5 text-center">MATERIALS COST (Php)</th>
-                                <th class="border border-black p-1.5 text-center">TOTAL COST</th>
-                            </tr>
-                        </thead>
-                        <tbody>${finalTableHtml}</tbody>
-                    </table>
-                </div>
-            `;
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50','border-rose-100','text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50','border-neutral-100','text-slate-800');
+            else toast.classList.add('border-neutral-200','text-neutral-900');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2','opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('opacity-0','scale-95'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
 
         // ============================================================
-        // STYLED EXCEL EXPORT (USING XLSX-JS-STYLE)
+        // 4. EXCEL EXPORT (Adapted for Grid State)
         // ============================================================
+
         function exportToExcelBOQ() {
-            const projTitle = document.getElementById('boq-project-title')?.value || 'N/A';
-            const prepBy = document.getElementById('boq-prepared-by')?.value || 'N/A';
-            const rawDate = document.getElementById('boq-date')?.value;
-            const estDate = rawDate ? new Date(rawDate).toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'}) : 'N/A';
+            const estDate = estimateMeta.date
+                ? new Date(estimateMeta.date + 'T00:00:00').toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'})
+                : new Date().toLocaleDateString('en-US', {month: 'long', day: '2-digit', year: 'numeric'});
 
             const borderAll = { top: {style: 'thin'}, bottom: {style: 'thin'}, left: {style: 'thin'}, right: {style: 'thin'} };
             const fontArial = { name: "Arial", sz: 11 };
@@ -825,10 +1658,6 @@
             const stItemLeftBold   = { font: fontBold, fill: {fgColor: {rgb: colorItem}}, alignment: {horizontal: "left", vertical: "center"}, border: borderAll };
             const stItemRightBold  = { font: fontBold, fill: {fgColor: {rgb: colorItem}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
 
-            const stChildCenter    = { font: fontArial, fill: {fgColor: {rgb: "FFFFFF"}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
-            const stChildLeft      = { font: fontArial, fill: {fgColor: {rgb: "FFFFFF"}}, alignment: {horizontal: "left", vertical: "center"}, border: borderAll };
-            const stChildRight     = { font: fontArial, fill: {fgColor: {rgb: "FFFFFF"}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
-
             const stSubCenter      = { font: fontBold, fill: {fgColor: {rgb: colorHeader}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
             const stSubRight       = { font: fontBold, fill: {fgColor: {rgb: colorHeader}}, alignment: {horizontal: "right", vertical: "center"}, border: borderAll, z: '#,##0.00' };
             const stDirCenter      = { font: fontBold, fill: {fgColor: {rgb: colorDirect}}, alignment: {horizontal: "center", vertical: "center"}, border: borderAll };
@@ -845,12 +1674,12 @@
             const ws_data = [
                 [cStr('ENGINEERING ESTIMATE TEMPLATE', stTitleRow)],
                 [],
-                [cStr('PROJECT TITLE', stMetaLabel), cStr(projTitle, stMetaValue), '', '', '', cStr('Prepared by', stMetaLabel), cStr(prepBy, stMetaValue)],
-                ['', '', '', '', '', cStr('Date', stMetaLabel), cStr(estDate, stMetaValue)],
+                [cStr('PROJECT TITLE', stMetaLabel), cStr(estimateMeta.project || 'Untitled Estimate', stMetaValue), '', '', '', cStr('Date', stMetaLabel), cStr(estDate, stMetaValue)],
+                [cStr('PLANT', stMetaLabel), cStr(estimateMeta.plant || '-', stMetaValue), '', '', '', cStr('Prepared by', stMetaLabel), cStr(estimateMeta.preparedBy || '-', stMetaValue)],
                 [],
                 [
                     { v: 'ITEM NO.', t: 's', s: stHeader }, { v: 'SCOPE DESCRIPTION', t: 's', s: stHeader }, { v: 'QTY', t: 's', s: stHeader }, { v: 'UNIT', t: 's', s: stHeader }, 
-                    { v: 'MAN HOUR', t: 's', s: stHeader }, { v: 'LABOR COST (Php)', t: 's', s: stHeader }, { v: 'MATERIALS COST (Php)', t: 's', s: stHeader }, { v: 'TOTAL COST', t: 's', s: stHeader }
+                    { v: 'DAYS', t: 's', s: stHeader }, { v: 'LABOR COST (Php)', t: 's', s: stHeader }, { v: 'MATERIALS COST (Php)', t: 's', s: stHeader }, { v: 'TOTAL COST', t: 's', s: stHeader }
                 ]
             ];
 
@@ -863,55 +1692,55 @@
             let grandIndirectTotal = 0, grandIndirectManHours = 0, grandIndirectLabor = 0, grandIndirectMat = 0;
             let indirectRows = [];
 
-            SCOPE_CATEGORIES.forEach((cat, catIndex) => {
+            SCOPE_CATEGORIES.forEach((cat, cIdx) => {
                 let catTotal = 0, catManHours = 0, catLabor = 0, catMat = 0;
                 let hasCategoryData = false;
                 let catRows = [];
-                const catLetter = String.fromCharCode(65 + catIndex);
-                let itemCounter = 1;
+                const catLetter = String.fromCharCode(65 + cIdx);
 
-                cat.sections.forEach((sec, secIdx) => {
-                    sec.items.forEach((item, i) => {
-                        const iKey = `${cat.id}__${secIdx}__${i}`;
-                        const itemData = scopeItemData[iKey] || [];
-                        if (itemData.length > 0) {
-                            hasCategoryData = true;
-                            let parentManHours = 0, parentLaborCost = 0, parentMatCost = 0;
-                            
-                            itemData.forEach(row => {
-                                parentManHours += row.manHours; 
-                                parentLaborCost += row.labTotal; 
-                                parentMatCost += row.matTotal;
-                            });
+                cat.sections.forEach((sec, sIdx) => {
+                    sec.items.forEach((item, iIdx) => {
+                        const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+                        // An item can have multiple lines (material, labor, and/or lumpsum) — export one row per line.
+                        const lines = (gridState[itemKey] || []).filter(l => lineHasData(l));
+                        if (lines.length === 0) return;
 
-                            const parentTotal = parentLaborCost + parentMatCost;
-                            catTotal += parentTotal; catManHours += parentManHours; catLabor += parentLaborCost; catMat += parentMatCost;
+                        hasCategoryData = true;
+                        const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
 
-                            const displayNo = cat.isIndirect ? item.code : itemCounter;
-                            
-                            // 1. Parent Row (Yellow)
+                        lines.forEach((s) => {
+                            const { total } = computeLineCost(s);
+                            let qty = 0, unit = '-', days = 0, labCost = 0, matCost = 0;
+
+                            if (s.labId) {
+                                qty = parseFloat(s.headcount) || 0;
+                                days = parseFloat(s.days) || 0;
+                                unit = 'workers';
+                                labCost = total;
+                            } else if (s.matId) {
+                                qty = parseFloat(s.qty) || 0;
+                                const m = MASTER_DB[s.matId];
+                                unit = m ? m.unit : '-';
+                                matCost = total;
+                            } else {
+                                unit = 'lumpsum';
+                                // Pure lump-sum-only row — total still lands in TOTAL COST below,
+                                // just not bucketed into LABOR/MATERIALS COST since it's neither.
+                            }
+
+                            catTotal += total; catManHours += days; catLabor += labCost; catMat += matCost;
+
                             catRows.push([
-                                c(displayNo, stItemCenterBold), c(item.desc, stItemLeftBold), c(1, stItemCenterBold), c('lot', stItemCenterBold),
-                                c(parentManHours, stItemRightBold), c(parentLaborCost, stItemRightBold), c(parentMatCost, stItemRightBold), c(parentTotal, stItemRightBold)
+                                cStr(code, stItemCenterBold),
+                                cStr(item.desc, stItemLeftBold),
+                                c(qty, stItemCenterBold),
+                                cStr(unit, stItemCenterBold),
+                                c(days, stItemRightBold),
+                                c(labCost, stItemRightBold),
+                                c(matCost, stItemRightBold),
+                                c(total, stItemRightBold)
                             ]);
-
-                            // 2. Child Rows (White)
-                            itemData.forEach((row, childIdx) => {
-                                const childNo = `${displayNo}.${childIdx + 1}`;
-                                catRows.push([
-                                    cStr(childNo, stChildCenter),
-                                    cStr('   - ' + row.name, stChildLeft),
-                                    c(row.matQty || '-', stChildCenter),
-                                    cStr(row.matUnit || '-', stChildCenter),
-                                    c(row.manHours, stChildRight),
-                                    c(row.labTotal, stChildRight),
-                                    c(row.matTotal, stChildRight),
-                                    c(row.total, stChildRight)
-                                ]);
-                            });
-
-                            itemCounter++;
-                        }
+                        });
                     });
                 });
 
@@ -975,7 +1804,6 @@
                     c(lumpsumManHours, stLumpRight), c(lumpsumLabor, stLumpRight), c(lumpsumMat, stLumpRight), c(lumpsumTotal, stLumpRight)
                 ]);
                 merges.push({s: {r: currentRow, c: 0}, e: {r: currentRow, c: 3}});
-                currentRow++;
             }
 
             const ws = window.XLSX.utils.aoa_to_sheet(ws_data);
@@ -984,170 +1812,8 @@
             
             const wb = window.XLSX.utils.book_new();
             window.XLSX.utils.book_append_sheet(wb, ws, "Field Cost Estimate");
-            window.XLSX.writeFile(wb, "URC_Field_Cost_Estimate.xlsx");
+            window.XLSX.writeFile(wb, "URC_Worksheet_Export.xlsx");
         }
-
-        // ============================================================
-        // 5. ITEM BUILDER & LEDGER (UNIFIED LOGIC)
-        // ============================================================
-
-        function validateCartInputs() {
-            const matSel = document.getElementById('material-selector').value;
-            const matQty = parseFloat(document.getElementById('material-qty').value);
-            const hasMat = matSel && !isNaN(matQty) && matQty > 0;
-
-            const labSel = document.getElementById('labor-selector').value;
-            const labHrs = parseFloat(document.getElementById('labor-hours').value);
-            const hasLab = labSel && !isNaN(labHrs) && labHrs > 0;
-
-            document.getElementById('btn-add-item').disabled = !(hasMat || hasLab);
-        }
-
-        function selectScopeItem(iKey, desc) {
-            activeItemKey = iKey;
-            activeItemDesc = desc;
-            
-            document.getElementById('active-target-name').textContent = desc;
-            document.getElementById('active-target-name').classList.replace('text-neutral-500', 'text-blue-600');
-            document.getElementById('builder-controls').classList.remove('opacity-50', 'pointer-events-none');
-            
-            renderContent(); 
-            renderBuilderCart();
-        }
-
-        function addCombinedItemToScope() {
-            const matSel = document.getElementById('material-selector').value;
-            const matQty = parseFloat(document.getElementById('material-qty').value);
-            const hasMat = matSel && !isNaN(matQty) && matQty > 0;
-
-            const labSel = document.getElementById('labor-selector').value;
-            const labHrs = parseFloat(document.getElementById('labor-hours').value);
-            const hasLab = labSel && !isNaN(labHrs) && labHrs > 0;
-
-            if (!hasMat && !hasLab) return;
-
-            let matName = "", matUnit = "", matUnitCost = 0, matTotal = 0;
-            let labName = "", labUnitCost = 0, labTotal = 0;
-            
-            if (hasMat) {
-                const mat = MASTER_DB[matSel];
-                matName = mat.name;
-                matUnit = mat.unit;
-                matUnitCost = mat.price;
-                matTotal = matQty * matUnitCost;
-            }
-
-            if (hasLab) {
-                const lab = LABOR_DB[labSel];
-                labName = lab.name;
-                labUnitCost = lab.dailyRate / 8; // hourly rate
-                labTotal = labHrs * labUnitCost;
-            }
-
-            const itemName = hasMat ? matName : (hasLab ? `${labName} (Labor Task)` : 'Unknown');
-
-            if (!scopeItemData[activeItemKey]) scopeItemData[activeItemKey] = [];
-
-            scopeItemData[activeItemKey].push({
-                id: Date.now(),
-                name: itemName,
-                matQty: hasMat ? matQty : 0,
-                matUnit: matUnit,
-                matUnitCost: matUnitCost,
-                matTotal: matTotal,
-                labName: labName,
-                manHours: hasLab ? labHrs : 0,
-                labUnitCost: labUnitCost,
-                labTotal: labTotal,
-                total: matTotal + labTotal
-            });
-
-            document.getElementById('material-qty').value = '';
-            document.getElementById('material-selector').value = '';
-            document.getElementById('labor-hours').value = '';
-            document.getElementById('labor-selector').value = '';
-            validateCartInputs();
-            
-            renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
-        }
-        
-        function removeRow(id) {
-            scopeItemData[activeItemKey] = scopeItemData[activeItemKey].filter(item => item.id !== id);
-            renderBuilderCart(); updateLedger(); renderNavigation(); renderContent();
-        }
-
-        function renderBuilderCart() {
-            const container = document.getElementById('current-item-breakdown');
-            const data = scopeItemData[activeItemKey] || [];
-            
-            if (data.length === 0) {
-                container.innerHTML = '<div class="text-neutral-400 italic text-center py-4">No data added yet.</div>';
-                document.getElementById('current-item-subtotal').textContent = '₱0.00';
-                return;
-            }
-
-            let subtotal = 0;
-            container.innerHTML = data.map(item => {
-                subtotal += item.total;
-                
-                let detailsHtml = '';
-                if (item.matTotal > 0) detailsHtml += `<div class="text-xs text-neutral-500 truncate">Mat: ${item.matQty} ${item.matUnit} @ ₱${item.matUnitCost.toLocaleString(undefined, {minimumFractionDigits:2})}/${item.matUnit}</div>`;
-                if (item.labTotal > 0) detailsHtml += `<div class="text-xs text-neutral-500 truncate">Lab: ${item.labName} (${item.manHours} hrs) @ ₱${item.labUnitCost.toLocaleString(undefined, {minimumFractionDigits:2})}/hr</div>`;
-
-                return `
-                    <div class="flex justify-between items-center bg-neutral-50 p-2 rounded border border-neutral-100 min-w-0">
-                        <div class="min-w-0 overflow-hidden pr-2">
-                            <span class="text-sm font-bold text-neutral-800 block truncate" title="${item.name}">${item.name}</span>
-                            ${detailsHtml}
-                        </div>
-                        <div class="flex items-center gap-3 flex-shrink-0">
-                            <span class="font-bold text-neutral-900">₱${item.total.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
-                            <button onclick="removeRow(${item.id})" class="text-red-400 hover:text-red-600">✕</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            document.getElementById('current-item-subtotal').textContent = `₱${subtotal.toLocaleString(undefined, {minimumFractionDigits:2})}`;
-        }
-
-        function updateLedger() {
-            let definedCost = 0;
-            
-            Object.values(scopeItemData).forEach(itemArray => {
-                itemArray.forEach(row => definedCost += row.total);
-            });
-
-            const ufField = definedCost * 0.02;
-            const ufUnlisted = definedCost * 0.02;
-            const ufPost = definedCost * 0.01;
-            const undefinedTotal = ufField + ufUnlisted + ufPost; // 5%
-            
-            const contingency = definedCost * 0.05; // 5% Risk Funds
-            
-            const rawTotal = definedCost + undefinedTotal + contingency;
-            const roundedTotal = Math.round(rawTotal / 1000) * 1000;
-
-            const fmt = (num) => `₱${num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-            
-            document.getElementById('ledger-defined').textContent = fmt(definedCost);
-            document.getElementById('ledger-undefined').textContent = fmt(undefinedTotal);
-            document.getElementById('ledger-uf-field').textContent = fmt(ufField);
-            document.getElementById('ledger-uf-unlisted').textContent = fmt(ufUnlisted);
-            document.getElementById('ledger-uf-post').textContent = fmt(ufPost);
-            
-            document.getElementById('ledger-risk').textContent = fmt(contingency);
-            document.getElementById('ledger-contingency').textContent = fmt(contingency);
-            
-            document.getElementById('ledger-raw').textContent = fmt(rawTotal);
-            document.getElementById('ledger-rounded').textContent = `₱${roundedTotal.toLocaleString()}`;
-        }
-
-        function goBackMain() {
-            document.body.style.transition = 'opacity 0.2s';
-            document.body.style.opacity = '0';
-            setTimeout(() => { Auth.logout(); }, 200);
-        }        
     </script>
 </body>
 </html>

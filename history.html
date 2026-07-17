@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
+    <link rel="icon" type="image/png" href="urclogo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URC CCC — Estimate History</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/src/auth.js"></script>
+    <!-- Navigation --> 
+    <!-- <script src="/src/nav.js"></script> -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -28,10 +31,10 @@
         .tbl tr:not(:last-child) th { border-bottom: 1px solid #e5e7eb; }
         .tbl .total-row td { border-top: 2px solid #e5e7eb; font-weight: 700; background: #f9fafb; }
         .kv-grid { display: grid; grid-template-columns: 1fr 1fr; }
-        .kv-cell { padding: 8px 14px; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+        .kv-cell { padding: 5px 10px; font-size: 12px; border-bottom: 1px solid #f3f4f6; line-height: 1.3; }
         .kv-cell:nth-child(odd) { border-right: 1px solid #f3f4f6; }
-        .kv-label { color: #9ca3af; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
-        .kv-value { color: #111827; font-weight: 600; }
+        .kv-label { color: #9ca3af; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1px; }
+        .kv-value { color: #111827; font-weight: 600; font-size: 12.5px; }
     </style>
 </head>
 <body class="h-full flex bg-white font-sans overflow-hidden select-none">
@@ -39,23 +42,8 @@
 <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
 <!-- SIDEBAR -->
-<aside class="w-64 border-r border-neutral-200 flex flex-col flex-shrink-0 bg-white p-6 z-20">
-    <h1 class="text-xl font-bold tracking-tight text-neutral-900">URC CCC</h1>
-    <p class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mt-1">Calamba Plant</p>
-    <nav class="flex-1 mt-8 space-y-1 relative">
-        <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Building Calculator</button>
-        <button onclick="window.location.href='calculator.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Footing &amp; Pedestal Cal.</button>
-        <button onclick="window.location.href='cost_estimate_scope.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Cost Estimate Scope</button>
-        <button onclick="window.location.href='labor_resources.html'" class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-xl text-neutral-600 hover:bg-neutral-50 cursor-pointer text-left transition-colors">Labor &amp; Resources</button>
-        <div class="pt-6">
-            <span class="text-xs font-bold text-neutral-900 block px-3 mb-2">Library</span>
-            <button class="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-xl bg-neutral-100 text-neutral-900 cursor-pointer text-left">History</button>
-        </div>
-    </nav>
-    <div class="pt-4 border-t border-neutral-100 mt-auto">
-        <button onclick="goBackMain()" class="w-full py-2.5 px-4 bg-black hover:bg-neutral-800 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">Main Page</button>
-    </div>
-</aside>
+<div id="nav-placeholder"></div>
+<script src="/src/nav.js"></script>
 
 <!-- MAIN -->
 <main class="flex-1 flex flex-col h-full overflow-hidden bg-white">
@@ -64,7 +52,7 @@
             <h2 class="text-2xl font-bold text-neutral-900">History</h2>
             <span id="count-badge" class="text-xs font-semibold text-neutral-400 bg-neutral-100 px-2.5 py-0.5 rounded-full hidden">0 saved</span>
         </div>
-        <button id="btn-clear-all" onclick="clearAll()" class="hidden text-sm font-semibold text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer">Clear All</button>
+        <button id="btn-clear-all" onclick="clearAll()" class="hidden text-sm font-semibold text-neutral-500 hover:text-neutral-800 px-3 py-1.5 rounded-lg hover:bg-neutral-100 transition cursor-pointer">Clear All</button>
     </header>
 
     <div class="flex-1 overflow-y-auto px-8 py-6">
@@ -72,7 +60,7 @@
         <!-- Demo banner -->
         <div id="demo-banner" class="hidden mb-5 flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span>No saved estimates yet — showing demo data. Fill all three pages and click <strong>Save Estimate</strong> to create a real record.</span>
+            <span>No saved estimates yet — showing demo data. Fill out Cost Estimate Scope (and Building Calculator, once its ledger is ready) then click <strong>Save Estimate</strong> to create a real record.</span>
         </div>
 
         <!-- Records -->
@@ -84,7 +72,7 @@
                 <svg class="w-7 h-7 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <p class="text-sm font-semibold text-neutral-500">No estimates saved yet</p>
-            <p class="text-sm text-neutral-400 mt-0.5">Complete all three pages and click Save Estimate.</p>
+            <p class="text-sm text-neutral-400 mt-0.5">Fill out Cost Estimate Scope and click Save Estimate.</p>
         </div>
 
     </div>
@@ -97,6 +85,7 @@ const DEMO = [{
     savedAt: new Date(Date.now() - 7200000).toISOString(),
     projectName: 'Calamba Warehouse Phase 2',
     engineerName: 'Juan dela Cruz',
+    plant: 'Calamba', estimateType: 'Budgetary', estimateDate: '2026-07-01', meanSpendingDate: '2026-09-01',
     calculator: {
         snapshot: {
             length:60, width:40, clearHeight:9, stories:1, mezzanine:25,
@@ -110,22 +99,32 @@ const DEMO = [{
         summary: { floorArea:2400, grossArea:3000, bldgVolume:21600, perimeter:200, nodes:24, concreteVol:55.3 }
     },
     ces: {
-        categoryTotals: { 'Site Development':850000, 'Main Building':3200000, 'Utilities':450000, 'Others (Equipment)':280000 },
-        pricedItems:7, grandTotal:4780000
+        categoryTotals: { 'Yard & Underground':850000, 'RM Warehouse':3200000, 'Plant Utilities':450000, 'Indirect Costs':280000 },
+        materialCost: 2900000, laborCost: 1580000, lumpSumCost: 300000, definedCost: 4780000,
+        pricedLines: 46,
+        laborBreakdown: [
+            { name:'NCR Region',      ratePerDay:5560, personDays:120, subtotal:667200 },
+            { name:'Carpenter',       ratePerDay:5600, personDays:60,  subtotal:336000 },
+            { name:'Mason',           ratePerDay:5600, personDays:45,  subtotal:252000 },
+            { name:'Welder',          ratePerDay:6520, personDays:30,  subtotal:195600 },
+            { name:'Civil Engineer',  ratePerDay:21600,personDays:6,   subtotal:129600 }
+        ]
     },
-    labor: {
-        roles:[
-            { name:'NCR (Unskilled)',  rate:695,  count:15, days:90 },
-            { name:'Carpenter',        rate:700,  count:8,  days:60 },
-            { name:'Mason',            rate:700,  count:5,  days:45 },
-            { name:'Welder',           rate:815,  count:4,  days:30 },
-            { name:'Civil Engineer',   rate:2700, count:2,  days:120 }
-        ],
-        globalEquipment:500000, globalProfit:12,
-        laborCost:2043375, equipmentCost:500000, profitCost:305205,
-        grandTotal:7628580, totalHeads:34
+    scorecards: {
+        contingency: { subtotal: 8, criteria: [
+            { label:'Site', value:2, desc:'Site scope options are known but may not be final. Major site conditions are assumed.' },
+            { label:'Resources (Construction, Engineering, & Business)', value:2, desc:'All required construction, engineering, and business resources are available and experienced with URC, the site, and the process.' },
+            { label:'Schedule', value:2, desc:'Timing is not an issue.' },
+            { label:'Pricing', value:2, desc:'Based on quotes, purchase orders and recent experience. Escalation and currency fluctuation impact is negligible.' }
+        ]},
+        undefinedCost: { subtotal: 3, criteria: [
+            { label:'Project Complexity', value:1, desc:'Single site; reapplication of current process at same site or new simple system.' },
+            { label:'Technology', value:0, desc:'Reapplication of technology that exists in URC; standard equipment modules.' },
+            { label:'Completeness of Definition (Project, Schedule, & Estimate)', value:2, desc:'All needed design and review is complete.' }
+        ]}
     },
-    grandTotal:7628580
+    escalationPct: 5,
+    grandTotal: 5544800
 }];
 
 // ── STORAGE ───────────────────────────────────────────────────────────────────
@@ -180,7 +179,7 @@ function rowHTML(rec, isDemo) {
 <div class="border border-neutral-200/80 rounded-2xl overflow-hidden shadow-sm" id="row-${id}">
 
     <!-- Dark header bar -->
-    <div class="bg-slate-700 px-5 py-3.5 flex items-center justify-between gap-4">
+    <div class="bg-neutral-700 px-5 py-3.5 flex items-center justify-between gap-4">
         <div class="flex items-center gap-2 min-w-0 flex-1">
             <span class="text-white font-semibold text-sm truncate">${pn}</span>
             <span class="text-white text-sm flex-shrink-0">|</span>
@@ -203,9 +202,9 @@ function rowHTML(rec, isDemo) {
         </div>
     </div>
 
-    <!-- COLLAPSED: 3 mini-cards -->
-    <div id="collapsed-${id}" class="p-4 grid grid-cols-3 gap-3 bg-white">
-        ${miniCalc(rec)} ${miniCES(rec)} ${miniLabor(rec)}
+    <!-- COLLAPSED: 4 mini-cards -->
+    <div id="collapsed-${id}" class="p-4 grid grid-cols-4 gap-3 bg-white">
+        ${miniCalc(rec)} ${miniCES(rec)} ${miniLabor(rec)} ${miniScorecards(rec)}
     </div>
 
     <!-- EXPANDED: full detail (hidden) -->
@@ -214,10 +213,10 @@ function rowHTML(rec, isDemo) {
         ${expandedCES(rec)}
         ${expandedLabor(rec)}
         <!-- Grand total bar -->
-        <div class="flex items-center justify-between bg-neutral-100 text-white rounded-xl px-5 py-4 mt-2">
+        <div class="flex items-center justify-between bg-neutral-700 text-white rounded-xl px-5 py-4 mt-2">
             <div>
-                <p class="text-xs font-bold uppercase tracking-widest text-neutral-400">Combined Grand Total</p>
-                <p class="text-[10px] text-neutral-500 mt-0.5">Materials + Labor + Equipment + Profit</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-white/70">Estimated Grand Total</p>
+                <p class="text-[10px] text-white/50 mt-0.5">Defined Cost × (1 + Undefined Cost % + Escalation % + Contingency %)</p>
             </div>
             <span class="text-2xl font-black">${total}</span>
         </div>
@@ -245,28 +244,49 @@ function miniCalc(rec) {
 
 function miniCES(rec) {
     const c = rec.ces || {};
-    const cats = Object.keys(c.categoryTotals || {});
+    const cats = Object.keys(c.categoryTotals || {}).filter(k => c.categoryTotals[k] > 0);
     return `
 <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
     <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Cost Estimate Scope</p>
     <div class="space-y-2">
-        ${kv('Items Priced',  c.pricedItems || 0)}
+        ${kv('Lines Priced',  c.pricedLines || 0)}
         ${kv('Categories',    cats.length + ' active')}
-        ${kvBig('Scope Total', fmt(c.grandTotal || 0), 'text-emerald-700')}
+        ${kv('Material Cost', fmt(c.materialCost||0))}
+        ${kv('Lump Sum',      fmt(c.lumpSumCost||0))}
+        ${kvBig('Defined Cost', fmt(c.definedCost || 0))}
     </div>
 </div>`;
 }
 
 function miniLabor(rec) {
-    const l = rec.labor || {};
+    const c = rec.ces || {};
+    const roles = c.laborBreakdown || [];
+    const totalPersonDays = roles.reduce((s, r) => s + (r.personDays||0), 0);
     return `
 <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
-    <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Labor &amp; Resources</p>
+    <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Labor</p>
     <div class="space-y-2">
-        ${kv('Total Heads',   l.totalHeads || 0)}
-        ${kv('Profit Margin', (l.globalProfit||0) + '%')}
-        ${kv('Labor Cost',    fmt(l.laborCost||0))}
-        ${kv('Equipment',     fmt(l.equipmentCost||0))}
+        ${kv('Roles Used',    roles.length)}
+        ${kv('Person-Days',   totalPersonDays.toLocaleString())}
+        ${kvBig('Labor Cost', fmt(c.laborCost||0))}
+    </div>
+</div>`;
+}
+
+function miniScorecards(rec) {
+    const sc = rec.scorecards || {};
+    const cont = sc.contingency || {};
+    const undef = sc.undefinedCost || {};
+    const escl = rec.escalationPct;
+    const combined = (cont.subtotal||0) + (undef.subtotal||0) + (escl||0);
+    return `
+<div class="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3">Scorecards</p>
+    <div class="space-y-2">
+        ${kv('Undefined Cost', (undef.subtotal ?? '—') + '%')}
+        ${kv('Escalation',     (escl ?? '—') + '%')}
+        ${kv('Contingency',    (cont.subtotal ?? '—') + '%')}
+        ${kvBig('Combined',    combined + '%')}
     </div>
 </div>`;
 }
@@ -299,8 +319,8 @@ function expandedCalc(rec) {
             ${kvc('Bay Nodes',      m.nodes||'—')}
             ${kvc('Dock Doors',     s.dockDoors||0)}
             ${kvc('Drive-in Doors', s.driveInDoors||0)}
-            ${kvc('Footing',        `${s.footingLength||0}×${s.footingWidth||0}×${s.footingDepth||0} m`)}
-            ${kvc('Pedestal',       `${s.pedestalLength||0}×${s.pedestalWidth||0}×${s.pedestalHeight||0} m`)}
+            ${kvc('Footing (L×W×D)',  `${s.footingLength||0}×${s.footingWidth||0}×${s.footingDepth||0} m`)}
+            ${kvc('Pedestal (L×W×H)', `${s.pedestalLength||0}×${s.pedestalWidth||0}×${s.pedestalHeight||0} m`)}
         </div>
     </div>
 </div>`;
@@ -309,19 +329,28 @@ function expandedCalc(rec) {
 function expandedCES(rec) {
     const c    = rec.ces || {};
     const cats = c.categoryTotals || {};
-    const rows = Object.entries(cats);
+    const rows = Object.entries(cats).filter(([,val]) => val > 0);
     if (!rows.length) return '';
+    const sc    = rec.scorecards || {};
+    const cont  = sc.contingency   || {};
+    const undef = sc.undefinedCost || {};
     const rowsHTML = rows.map(([name, val]) => `
         <tr><td class="text-neutral-700">${esc(name)}</td><td class="text-right font-semibold text-neutral-800">${fmt(val)}</td></tr>
     `).join('');
     return `
 <div>
     <p class="text-sm font-bold text-neutral-800 mb-2">Cost Estimate Scope</p>
-    <div class="section-box">
+    <div class="section-box mb-3">
         <table class="tbl w-full">
             <thead><tr><th class="text-left">Category</th><th class="text-right">Amount</th></tr></thead>
             <tbody>${rowsHTML}
-                <tr class="total-row"><td>Total</td><td class="text-right text-emerald-700">${fmt(c.grandTotal||0)}</td></tr>
+                <tr><td class="text-neutral-500">Materials</td><td class="text-right text-neutral-700">${fmt(c.materialCost||0)}</td></tr>
+                <tr><td class="text-neutral-500">Labor</td><td class="text-right text-neutral-700">${fmt(c.laborCost||0)}</td></tr>
+                <tr><td class="text-neutral-500">Lump Sum</td><td class="text-right text-neutral-700">${fmt(c.lumpSumCost||0)}</td></tr>
+                <tr class="total-row"><td>Defined Cost</td><td class="text-right text-neutral-800">${fmt(c.definedCost||0)}</td></tr>
+                <tr><td class="text-neutral-500">Undefined Cost</td><td class="text-right text-neutral-700">${undef.subtotal ?? '—'}%</td></tr>
+                <tr><td class="text-neutral-500">Escalation</td><td class="text-right text-neutral-700">${rec.escalationPct ?? '—'}%</td></tr>
+                <tr><td class="text-neutral-500">Contingency</td><td class="text-right text-neutral-700">${cont.subtotal ?? '—'}%</td></tr>
             </tbody>
         </table>
     </div>
@@ -329,38 +358,30 @@ function expandedCES(rec) {
 }
 
 function expandedLabor(rec) {
-    const l     = rec.labor || {};
-    const roles = (l.roles || []).filter(r => (r.count||0) > 0);
-    if (!roles.length && !l.laborCost) return '';
-    const roleRows = roles.map(r => {
-        const sub = r.rate * r.count * r.days;
-        return `<tr>
+    const c     = rec.ces || {};
+    const roles = c.laborBreakdown || [];
+    if (!roles.length) return '';
+    const roleRows = roles.map(r => `<tr>
             <td class="text-neutral-700">${esc(r.name)}</td>
-            <td class="text-right text-neutral-500">${fmt(r.rate)}</td>
-            <td class="text-center font-semibold">${r.count}</td>
-            <td class="text-center text-neutral-500">${r.days}</td>
-            <td class="text-right font-semibold text-neutral-800">${fmt(sub)}</td>
-        </tr>`;
-    }).join('');
+            <td class="text-right text-neutral-500">${fmt(r.ratePerDay)}</td>
+            <td class="text-center text-neutral-500">${r.personDays}</td>
+            <td class="text-right font-semibold text-neutral-800">${fmt(r.subtotal)}</td>
+        </tr>`).join('');
+    const laborTotal = roles.reduce((s, r) => s + (r.subtotal||0), 0);
     return `
 <div>
-    <p class="text-sm font-bold text-neutral-800 mb-2">Labor &amp; Resources</p>
+    <p class="text-sm font-bold text-neutral-800 mb-2">Labor by Role</p>
+    <p class="text-xs text-neutral-400 mb-2">Person-Days is headcount × days, summed across every scope item that used this role — not a single crew size, since the same role can be assigned differently line to line.</p>
     <div class="section-box">
-        <table class="tbl w-full min-w-[480px]">
+        <table class="tbl w-full min-w-[420px]">
             <thead><tr>
                 <th class="text-left">Role</th>
                 <th class="text-right">Rate / Day</th>
-                <th class="text-center">Heads</th>
-                <th class="text-center">Days</th>
+                <th class="text-center">Person-Days</th>
                 <th class="text-right">Subtotal</th>
             </tr></thead>
             <tbody>${roleRows}
-                <tr class="total-row">
-                    <td colspan="4">Labor Cost</td>
-                    <td class="text-right">${fmt(l.laborCost||0)}</td>
-                </tr>
-                <tr><td colspan="4" class="text-neutral-500">Equipment Cost</td><td class="text-right">${fmt(l.equipmentCost||0)}</td></tr>
-                <tr><td colspan="4" class="text-neutral-500">Overhead &amp; Profit (${l.globalProfit||0}%)</td><td class="text-right">${fmt(l.profitCost||0)}</td></tr>
+                <tr class="total-row"><td colspan="3">Labor Cost</td><td class="text-right">${fmt(laborTotal)}</td></tr>
             </tbody>
         </table>
     </div>
@@ -453,12 +474,15 @@ function showToast(msg) {
     setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2500);
 }
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
-function goBackMain() {
-    document.body.style.transition = 'opacity 0.2s';
-    document.body.style.opacity = '0';
-    setTimeout(() => { Auth.logout(); }, 200);
-}
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Offline Engine Active: ', reg.scope))
+                .catch(err => console.error('Offline Engine Failed: ', err));
+        });
+    }
 </script>
 </body>
 </html>

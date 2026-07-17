@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
+    <link rel="icon" type="image/png" href="urclogo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civil Cost Calculator — ESD / URC</title>
@@ -74,11 +75,35 @@
         .error-msg.visible {
             display: block;
         }
+
+        #page-transition-circle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff 0%, #fff 78%, rgba(255,255,255,0.6) 90%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.65s ease;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+
+    <!-- Lets the browser natively cross-fade the actual page swap on top of the bloom above,
+         in browsers that support it (Chrome/Edge 126+, Safari 18.2+). No-op elsewhere. -->
+    <style>
+        @view-transition {
+            navigation: auto;
+        }
     </style>
 </head>
 <body class="h-full overflow-hidden select-none">
 
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="page-transition-circle"></div>
 
     <!-- ============================================================ -->
     <!-- LANDING PAGE                                                  -->
@@ -88,21 +113,44 @@
 
             <!-- Title -->
             <div class="text-center">
-                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-2">ESD · URC / JG Summit</p>
+                <img src="urclogo.png" alt="URC Logo" class="w-24 h-24 mx-auto mb-3 rounded-2xl object-cover shadow-sm">
                 <h1 class="text-5xl font-semibold text-black leading-tight">Civil Cost Calculator</h1>
                 <p class="text-neutral-500 text-base mt-2">Engineering Services Department</p>
             </div>
 
             <p class="text-2xl text-black text-center mt-2">What are we calculating today?</p>
 
-            <!-- Calculator Button -->
-            <button
-                onclick="showLoginForm('calculator')"
-                class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
-                <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
-            </button>
+            <!-- ============================================== -->
+            <!-- LOGGED-IN VIEW: hub buttons + logout            -->
+            <!-- Shown only when Auth.isLoggedIn() is true       -->
+            <!-- ============================================== -->
+            <div id="hub-buttons" class="hidden flex-col items-center gap-6 w-full">
+                <button
+                    onclick="navigateWithTransition('calculator.html', event)"
+                    class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+                    <span class="text-black text-lg font-semibold tracking-wide">Calculator</span>
+                </button>
 
-            <!-- Login Form (hidden by default, shown on button click) -->
+                <div id="divider-section" class="flex flex-col items-center gap-4 w-full max-w-sm">
+                    <p class="text-zinc-500 text-base">Changing something?</p>
+                    <button
+                        onclick="navigateWithTransition('admin.html', event)"
+                        class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
+                        <span class="text-black text-lg font-semibold tracking-wide">Access Price List</span>
+                    </button>
+                </div>
+
+                <button
+                    onclick="Auth.logout()"
+                    class="w-72 h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
+                    <span class="text-white text-base font-medium">Logout</span>
+                </button>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- LOGGED-OUT VIEW: login form                     -->
+            <!-- Shown only when Auth.isLoggedIn() is false      -->
+            <!-- ============================================== -->
             <div id="login-form" class="login-form w-full max-w-sm">
                 <p id="login-label" class="text-sm font-semibold text-neutral-600 text-center">Enter your URC credentials</p>
                 <input
@@ -127,21 +175,6 @@
                     class="w-full h-10 px-4 bg-black rounded-lg flex justify-center items-center gap-2 cursor-pointer hover:bg-neutral-800 transition shadow-sm">
                     <span class="text-white text-base font-medium">Login</span>
                 </button>
-                <button
-                    onclick="hideLoginForm()"
-                    class="w-full h-10 bg-zinc-100 hover:bg-zinc-200 transition rounded-lg cursor-pointer flex items-center justify-center border border-zinc-200">
-                    <span class="text-black text-sm font-medium">Cancel</span>
-                </button>
-            </div>
-
-            <!-- Divider — hidden when login form is visible -->
-            <div id="divider-section" class="flex flex-col items-center gap-4 w-full max-w-sm">
-                <p class="text-zinc-500 text-base">Changing something?</p>
-                <button
-                    onclick="showLoginForm('admin')"
-                    class="w-72 h-14 bg-zinc-100 hover:bg-zinc-200 transition-all cursor-pointer rounded-2xl shadow-md flex items-center justify-center active:scale-95 duration-150">
-                    <span class="text-black text-lg font-semibold tracking-wide">Access Price List</span>
-                </button>
             </div>
 
         </div>
@@ -151,36 +184,57 @@
     <script src="src/auth.js"></script>
 
     <script>
-        // Where to redirect after login — set by whichever button was clicked
-        let loginDestination = 'calculator';
+        // Login always redirects to the calculator by default.
+        // Admin is reached via the hub AFTER login, not before.
+        let loginDestination = 'page-landing';
 
-        // Show login form
-        function showLoginForm(destination) {
-            loginDestination = destination;
-            const form = document.getElementById('login-form');
-            const divider = document.getElementById('divider-section');
-            const label = document.getElementById('login-label');
-
-            form.classList.add('visible');
-            divider.style.display = 'none';
-
-            if (destination === 'admin') {
-                label.textContent = 'Login to manage prices';
-            } else {
-                label.textContent = 'Enter your URC credentials';
-            }
-
-            // Focus email field
-            setTimeout(() => document.getElementById('login-email').focus(), 100);
+        // Circle-reveal page transition, expanding from the click point
+        function playTransition(x, y) {
+            const circle = document.getElementById('page-transition-circle');
+            const size = Math.hypot(window.innerWidth, window.innerHeight) * 2.7;
+            circle.style.left = x + 'px';
+            circle.style.top = y + 'px';
+            circle.style.width = size + 'px';
+            circle.style.height = size + 'px';
+            circle.style.opacity = '1';
+            circle.style.transform = 'translate(-50%, -50%) scale(0)';
+            void circle.offsetWidth; // force reflow so the transition actually plays
+            circle.style.transform = 'translate(-50%, -50%) scale(1)';
         }
 
-        // Hide login form
-        function hideLoginForm() {
-            document.getElementById('login-form').classList.remove('visible');
-            document.getElementById('divider-section').style.display = 'flex';
-            document.getElementById('login-error').classList.remove('visible');
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-password').value = '';
+        // Snap the circle back to invisible, e.g. after a failed login
+        function resetTransition() {
+            const circle = document.getElementById('page-transition-circle');
+            circle.style.transition = 'none';
+            circle.style.transform = 'translate(-50%, -50%) scale(0)';
+            circle.style.opacity = '0';
+            void circle.offsetWidth;
+            circle.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.65s ease';
+        }
+
+        // Play the transition, then navigate once it's had time to cover the screen
+        function navigateWithTransition(url, evt) {
+            const x = evt ? evt.clientX : window.innerWidth / 2;
+            const y = evt ? evt.clientY : window.innerHeight / 2;
+            playTransition(x, y);
+            setTimeout(() => { window.location.href = url; }, 540);
+        }
+
+        // Decide which view to show based on current auth state
+        function renderAuthState() {
+            const hub = document.getElementById('hub-buttons');
+            const loginForm = document.getElementById('login-form');
+
+            if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+                hub.classList.remove('hidden');
+                hub.classList.add('flex');
+                loginForm.classList.remove('visible');
+            } else {
+                hub.classList.remove('flex');
+                hub.classList.add('hidden');
+                loginForm.classList.add('visible');
+                setTimeout(() => document.getElementById('login-email')?.focus(), 100);
+            }
         }
 
         // Submit login
@@ -201,9 +255,13 @@
             loginBtn.disabled = true;
             errorEl.classList.remove('visible');
 
+            const btnRect = loginBtn.getBoundingClientRect();
+            playTransition(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2);
+
             const result = await Auth.login(email, password, loginDestination);
 
             if (!result.success) {
+                resetTransition();
                 errorEl.textContent = result.error || 'Invalid email or password.';
                 errorEl.classList.add('visible');
                 loginBtn.innerHTML = '<span class="text-white text-base font-medium">Login</span>';
@@ -228,17 +286,8 @@
             }, 3000);
         }
 
-        // If already logged in, redirect to calculator
-        window.onload = function() {
-            // if (Auth.isLoggedIn()) {
-            //     window.location.href = '/calculator.html';
-            // }
-        };
+        document.addEventListener('DOMContentLoaded', renderAuthState);
     </script>
-
-
-
-
 
     <canvas id="pc" style="position:fixed;bottom:0;left:0;width:100%;height:55vh;pointer-events:none;z-index:0;"></canvas>
     <script>
@@ -252,11 +301,8 @@
             H = c.height = c.offsetHeight;
         }
 
-        // Arc zone — particles live below a swooping curve
-        // Curve: y > arcY(px) where arcY is a parabola dipping low in center
         function arcY(px) {
-            // Parabola: highest at edges (y=0), lowest at center (y = H * 0.55)
-            var t = (px / W) * 2 - 1; // -1 to 1
+            var t = (px / W) * 2 - 1;
             return H * (0.55 - 0.55 * t * t);
         }
 
@@ -282,8 +328,6 @@
 
             for (var i = 0; i < P.length; i++) {
                 var p = P[i];
-
-                // Repel from mouse
                 var dx = p.x - M.x, dy = p.y - M.y;
                 var d = Math.sqrt(dx*dx+dy*dy);
                 if (d < 85 && d > 0) {
@@ -298,20 +342,17 @@
 
                 p.x += p.vx; p.y += p.vy;
 
-                // Bounce off arc boundary — push back down
                 var threshold = arcY(p.x);
                 if (p.y < threshold) {
                     p.y = threshold;
                     p.vy = Math.abs(p.vy) * .6;
                 }
 
-                // Bounce off screen edges
                 if (p.x < 0) { p.x = 0; p.vx *= -1; }
                 if (p.x > W) { p.x = W; p.vx *= -1; }
                 if (p.y > H) { p.y = H; p.vy *= -1; }
             }
 
-            // Draw connections
             for (var i = 0; i < P.length; i++) {
                 for (var j = i+1; j < P.length; j++) {
                     var dx = P[i].x-P[j].x, dy = P[i].y-P[j].y;
@@ -327,7 +368,6 @@
                 }
             }
 
-            // Draw dots
             for (var i = 0; i < P.length; i++) {
                 x.beginPath();
                 x.arc(P[i].x, P[i].y, 2.5, 0, 6.28);
@@ -356,5 +396,14 @@
         fr();
     })();
     </script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Offline Engine Active: ', reg.scope))
+                .catch(err => console.error('Offline Engine Failed: ', err));
+        });
+    }
+</script>
 </body>
 </html>

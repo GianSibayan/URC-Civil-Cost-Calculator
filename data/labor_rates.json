@@ -1,0 +1,77 @@
+[
+  {
+    "id": "ncr",
+    "name": "NCR Region",
+    "rate": 695
+  },
+  {
+    "id": "visayas",
+    "name": "Visayas Region",
+    "rate": 500
+  },
+  {
+    "id": "mindanao",
+    "name": "Mindanao Region",
+    "rate": 500
+  },
+  {
+    "id": "carpenter",
+    "name": "Carpenter",
+    "rate": 700
+  },
+  {
+    "id": "mason",
+    "name": "Mason",
+    "rate": 700
+  },
+  {
+    "id": "welder",
+    "name": "Welder",
+    "rate": 815
+  },
+  {
+    "id": "electrician",
+    "name": "Electrician",
+    "rate": 875
+  },
+  {
+    "id": "plumber",
+    "name": "Plumber",
+    "rate": 700
+  },
+  {
+    "id": "pipeFitter",
+    "name": "Pipe Fitter",
+    "rate": 700
+  },
+  {
+    "id": "civilEng",
+    "name": "Civil Engineer",
+    "rate": 2700
+  },
+  {
+    "id": "electricalEng",
+    "name": "Electrical Engineer",
+    "rate": 2100
+  },
+  {
+    "id": "mechanicalEng",
+    "name": "Mechanical Engineer",
+    "rate": 2500
+  },
+  {
+    "id": "generalEng",
+    "name": "General Engineer",
+    "rate": 1700
+  },
+  {
+    "id": "itEng",
+    "name": "IT / Software Engineer",
+    "rate": 2500
+  },
+  {
+    "id": "consultant",
+    "name": "Consultant",
+    "rate": 5000
+  }
+]

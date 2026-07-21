@@ -164,13 +164,17 @@
 
         <div id="ces-workspace" class="flex-1 flex overflow-hidden p-4 gap-4">
             
-            <div class="flex-1 bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
+            <div id="grid-card" class="flex-1 bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
                 <div class="p-3 border-b border-neutral-200 bg-neutral-50 flex justify-between items-center flex-shrink-0 gap-3">
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button id="tab-btn-grid" onclick="switchTab('grid')" class="px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition">Scope Items Grid</button>
                         <button id="tab-btn-contingency" onclick="switchTab('contingency')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Contingency Scorecard</button>
                         <button id="tab-btn-undefined" onclick="switchTab('undefinedCost')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Undefined Costs Scorecard</button>
                     </div>
+                    <button id="btn-fullscreen-toggle" onclick="toggleGridFullscreen()" title="Expand this panel to fill the screen" class="flex-shrink-0 px-3 py-1.5 text-xs font-bold text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-100 transition inline-flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        Full Screen
+                    </button>
                     <div id="grid-toolbar-extras" class="flex-1 flex justify-end items-center gap-3">
                         <div class="relative w-64">
                             <input type="text" id="grid-search-input" placeholder="Search categories or scope items..." class="w-full text-xs pl-8 pr-3 py-1.5 border border-neutral-200 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" oninput="onGridSearchInput(this.value)">
@@ -206,9 +210,12 @@
                 <div id="tab-panel-undefined" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
             </div>
 
-            <div id="boq-panel" class="w-80 flex-shrink-0 flex flex-col gap-4">
-                <div class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
-                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-6 border-b border-neutral-100 pb-3">Bill Of Quantities</h3>
+            <div id="boq-panel" class="w-80 flex-shrink-0 flex flex-col gap-4 transition-[width] duration-150">
+                <div id="boq-panel-expanded" class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
+                    <div class="flex items-center justify-between gap-2 mb-6 border-b border-neutral-100 pb-3">
+                        <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill Of Quantities</h3>
+                        <button onclick="toggleBoqPanel()" title="Collapse this panel" class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition text-sm leading-none">»</button>
+                    </div>
 
                     <div id="breakdown-content" class="flex-1 flex flex-col overflow-hidden">
                         <div id="breakdown-header" class="mb-1">
@@ -236,6 +243,10 @@
                     </div>
 
                 </div>
+                <button id="boq-panel-collapsed-strip" onclick="toggleBoqPanel()" title="Expand Bill Of Quantities" class="hidden w-10 h-full bg-white border border-neutral-200 shadow-sm rounded-xl flex-col items-center justify-center gap-3 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-50 transition cursor-pointer">
+                    <span class="text-sm leading-none">«</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest" style="writing-mode: vertical-rl;">Bill Of Quantities</span>
+                </button>
             </div>
         </div>
     </main>
@@ -262,6 +273,17 @@
         let popoverTarget = null; // { itemKey, idx } — which line the shared Selection popover is currently editing
         let popoverSearchQuery = '';
         let popoverActiveFilter = 'all'; // single radio choice: 'all' | 'labor' | a DB_CONFIG id — only one narrows the list at a time
+
+        // WBS items now support add/edit/remove on top of the hardcoded SCOPE_CATEGORIES defaults.
+        // Every item (default or custom) gets a permanent `id` — gridState, selectedItem, and the
+        // BOQ panel are all keyed off this id, NOT array position, so inserting/removing a row can
+        // never reattach another row's saved cost data to the wrong item. Default items' ids are
+        // generated once at hydration time in the exact `${catId}__${sectionIdx}__${itemIdx}` shape
+        // they already used as their positional key — so nothing already saved in a browser breaks.
+        // Custom items get a distinct `custom-<timestamp>-<random>` id that can never collide with that.
+        let scopeOverrides = { added: [], edited: {}, removed: [] };
+        let gridFullscreen = false;
+        let boqCollapsed = false;
 
         const DB_CONFIG = [
             { id: 'concreting_materials', file: 'data/concreting_materials.json', schema: 'simple', label: 'Concreting Materials' },
@@ -413,6 +435,154 @@
         // rows to whatever the first category holds. loadCollapsedState() below may override this
         // with the person's own last-used state.
         collapsedCategories = new Set(SCOPE_CATEGORIES.slice(1).map(c => c.id));
+
+        // ============================================================
+        // EDITABLE WBS ITEMS — id assignment, overrides persistence, hydration
+        // ============================================================
+
+        function generateItemId() {
+            return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
+        // Walks the live SCOPE_CATEGORIES tree looking up an item by its stable id — used instead
+        // of parsing the id string, since custom items' ids carry no positional meaning at all.
+        function findItemById(itemId) {
+            for (let cIdx = 0; cIdx < SCOPE_CATEGORIES.length; cIdx++) {
+                const cat = SCOPE_CATEGORIES[cIdx];
+                for (let sIdx = 0; sIdx < cat.sections.length; sIdx++) {
+                    const sec = cat.sections[sIdx];
+                    for (let iIdx = 0; iIdx < sec.items.length; iIdx++) {
+                        if (sec.items[iIdx].id === itemId) return { cat, cIdx, sec, sIdx, item: sec.items[iIdx], iIdx };
+                    }
+                }
+            }
+            return null;
+        }
+
+        function loadScopeOverrides() {
+            try {
+                const raw = localStorage.getItem('urc_ces_scope_overrides');
+                if (raw) scopeOverrides = Object.assign({ added: [], edited: {}, removed: [] }, JSON.parse(raw));
+            } catch(e) {}
+        }
+
+        function saveScopeOverrides() {
+            try { localStorage.setItem('urc_ces_scope_overrides', JSON.stringify(scopeOverrides)); } catch(e) {}
+        }
+
+        // Runs once on load, after loadScopeOverrides(). Must run before renderGrid()/any total
+        // calculation, since everything downstream assumes every item already has a stable `id`.
+        function hydrateScopeStructure() {
+            // 1. Give every default item a stable id matching its current positional key exactly —
+            // this is what makes the switch to id-based keys backward-compatible with data already
+            // sitting in someone's gridState/localStorage from before this feature existed.
+            SCOPE_CATEGORIES.forEach((cat, cIdx) => {
+                cat.sections.forEach((sec, sIdx) => {
+                    sec.items.forEach((item, iIdx) => {
+                        if (!item.id) item.id = `${cat.id}__${sIdx}__${iIdx}`;
+                    });
+                });
+            });
+
+            // 2. Inject any custom items the person has added, into their original section.
+            scopeOverrides.added.forEach(a => {
+                const cat = SCOPE_CATEGORIES.find(c => c.id === a.catId);
+                if (!cat) return;
+                const sec = cat.sections[a.sectionIdx];
+                if (!sec) return;
+                if (!sec.items.some(i => i.id === a.id)) {
+                    sec.items.push({ id: a.id, code: a.code || '', desc: a.desc || '' });
+                }
+            });
+
+            // 3. Apply any code/description edits — covers both default items and custom ones.
+            SCOPE_CATEGORIES.forEach(cat => cat.sections.forEach(sec => {
+                sec.items.forEach(item => {
+                    const e = scopeOverrides.edited[item.id];
+                    if (e) {
+                        if (e.code !== undefined) item.code = e.code;
+                        if (e.desc !== undefined) item.desc = e.desc;
+                    }
+                });
+            }));
+
+            // 4. Strip out anything the person has removed.
+            if (scopeOverrides.removed.length) {
+                SCOPE_CATEGORIES.forEach(cat => cat.sections.forEach(sec => {
+                    sec.items = sec.items.filter(item => !scopeOverrides.removed.includes(item.id));
+                }));
+            }
+        }
+
+        // Adds a brand-new, blank WBS item to the end of a section. The person fills in its code
+        // and description inline, the same way they'd edit any existing row.
+        function addWbsItem(catId, sectionIdx) {
+            const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
+            if (!cat) return;
+            const sec = cat.sections[sectionIdx];
+            if (!sec) return;
+
+            const id = generateItemId();
+            sec.items.push({ id, code: '', desc: '' });
+            scopeOverrides.added.push({ id, catId, sectionIdx, code: '', desc: '' });
+            saveScopeOverrides();
+
+            renderGrid();
+            selectItem(id);
+            showToast('New WBS item added — fill in its description.', 'info');
+            setTimeout(() => { const el = document.getElementById(`desc-input-${id}`); if (el) el.focus(); }, 30);
+        }
+
+        // Removes a WBS item entirely (all its lines, not just one). Confirms first if it already
+        // has priced lines, since that cost data is discarded permanently along with the row.
+        function removeItem(itemKey) {
+            const found = findItemById(itemKey);
+            if (!found) return;
+            const hasData = (gridState[itemKey] || []).some(lineHasData);
+            const msg = hasData
+                ? 'This WBS item has priced material/labor/lump sum lines. Remove it and that cost data permanently?'
+                : 'Remove this WBS item?';
+            if (!confirm(msg)) return;
+
+            found.sec.items.splice(found.iIdx, 1);
+            delete gridState[itemKey];
+
+            // A still-pending custom item just gets dropped from "added"; anything else (default
+            // items, or custom items that already existed before this session) gets marked removed
+            // so it stays gone on reload.
+            const wasPendingAdd = scopeOverrides.added.some(a => a.id === itemKey);
+            if (wasPendingAdd) {
+                scopeOverrides.added = scopeOverrides.added.filter(a => a.id !== itemKey);
+            } else if (!scopeOverrides.removed.includes(itemKey)) {
+                scopeOverrides.removed.push(itemKey);
+            }
+            delete scopeOverrides.edited[itemKey];
+            saveScopeOverrides();
+
+            if (selectedItem === itemKey) clearSelection();
+            saveToCache();
+            renderGrid();
+            renderBreakdownPanel();
+            showToast('WBS item removed.', 'info');
+        }
+
+        // Commits an inline edit to a WBS item's code or description. Bound to onblur (not
+        // oninput) so a full renderGrid() mid-edit never yanks focus out of the field.
+        function updateItemField(itemKey, field, value) {
+            const found = findItemById(itemKey);
+            if (!found) return;
+            found.item[field] = value;
+
+            const addedEntry = scopeOverrides.added.find(a => a.id === itemKey);
+            if (addedEntry) addedEntry[field] = value;
+
+            if (!scopeOverrides.edited[itemKey]) scopeOverrides.edited[itemKey] = {};
+            scopeOverrides.edited[itemKey][field] = value;
+            saveScopeOverrides();
+
+            renderGrid();
+            renderBreakdownPanel();
+        }
 
         // ============================================================
         // SCORECARDS (Contingency + Undefined Cost)
@@ -810,6 +980,9 @@
             loadMeta();
             loadCollapsedState();
             loadScorecardState();
+            loadScopeOverrides();
+            hydrateScopeStructure(); // must run before any render/total call — assigns every item's stable id
+            loadBoqPanelState();
             await fetchLaborRates(); 
             await fetchAllDatabases(); 
             renderGrid();
@@ -995,7 +1168,10 @@
             closeSelectionPopover();
         });
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeSelectionPopover();
+            if (e.key === 'Escape') {
+                closeSelectionPopover();
+                if (gridFullscreen) toggleGridFullscreen();
+            }
         });
 
         // Clicking outside the grid/BOQ workspace entirely (header bar, metadata fields,
@@ -1059,7 +1235,7 @@
             const sec = cat.sections[parseInt(sIdx)];
             if (!sec) return 0;
             let sum = 0;
-            sec.items.forEach((item, iIdx) => { sum += itemTotal(`${catId}__${sIdx}__${iIdx}`); });
+            sec.items.forEach(item => { sum += itemTotal(item.id); });
             return sum;
         }
 
@@ -1130,8 +1306,9 @@
                     sec.items.forEach((item, iIdx) => {
                         if (searchQuery && !secTitleMatches && !matchesSearch(item.desc)) return; // hide non-matching individual items
 
-                        const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
-                        const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+                        const itemKey = item.id;
+                        const autoCode = cat.isIndirect ? '' : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+                        const code = item.code || autoCode; // an explicit edit always wins over the auto-numbered position
                         const lines = getLines(itemKey);
 
                         lines.forEach((line, lIdx) => {
@@ -1142,8 +1319,15 @@
 
                             if (lIdx === 0) {
                                 html += `
-                                <td class="excel-cell readonly-cell text-center font-bold cursor-pointer" rowspan="${lines.length}" data-boq-trigger="1" onclick="selectItem('${itemKey}')">${code}</td>
-                                <td class="excel-cell readonly-cell font-medium text-neutral-900 cursor-pointer" rowspan="${lines.length}" title="${item.desc}" data-boq-trigger="1" onclick="selectItem('${itemKey}')"><div class="truncate w-52">${item.desc}</div></td>`;
+                                <td class="excel-cell text-center" rowspan="${lines.length}" data-boq-trigger="1" onclick="selectItem('${itemKey}')">
+                                    <input type="text" id="code-input-${itemKey}" class="w-full bg-transparent text-center font-bold text-neutral-900 border-0 border-b border-transparent hover:border-neutral-300 focus:border-blue-400 focus:outline-none" placeholder="${escapeHtml(autoCode)}" value="${escapeHtml(item.code || '')}" title="WBS code — edit to override the auto-numbered ${escapeHtml(autoCode)}" onclick="event.stopPropagation(); selectItem('${itemKey}')" onblur="updateItemField('${itemKey}', 'code', this.value)">
+                                </td>
+                                <td class="excel-cell font-medium text-neutral-900" rowspan="${lines.length}" data-boq-trigger="1">
+                                    <div class="flex items-center gap-1">
+                                        <input type="text" id="desc-input-${itemKey}" class="excel-input flex-1 truncate" placeholder="Scope description" title="${escapeHtml(item.desc || '')}" value="${escapeHtml(item.desc || '')}" onclick="event.stopPropagation(); selectItem('${itemKey}')" onblur="updateItemField('${itemKey}', 'desc', this.value)">
+                                        <button onclick="event.stopPropagation(); removeItem('${itemKey}')" class="text-neutral-300 hover:text-red-500 transition text-xs font-bold flex-shrink-0 px-0.5" title="Remove this WBS item (all its lines)">✕</button>
+                                    </div>
+                                </td>`;
                             }
 
                             // Quantity cell splits into Headcount / Days only when a laborer is selected — kept tight and centered so short numbers don't float apart.
@@ -1175,6 +1359,20 @@
                             </tr>`;
                         });
                     });
+
+                    // Lets the person add a brand-new WBS row to this section — not just new
+                    // material/labor lines on an existing one. Hidden while a search filter is
+                    // active, same reasoning as everything else that only makes sense unfiltered.
+                    if (!searchQuery) {
+                        html += `
+                        <tr class="border-b border-dashed border-neutral-200">
+                            <td colspan="9" class="p-1.5 text-center">
+                                <button onclick="addWbsItem('${cat.id}', ${sIdx})" class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition inline-flex items-center gap-1 cursor-pointer">
+                                    <span class="text-sm leading-none">+</span> Add WBS Item
+                                </button>
+                            </td>
+                        </tr>`;
+                    }
 
                     // One TOTAL row per section (e.g. after the last item of "Yard & Underground"),
                     // not one per WBS item. Value lands under the Total Cost column. Always reflects
@@ -1262,10 +1460,15 @@
                 else tr.classList.remove('bg-blue-50/40');
             }
 
-            // Keep the section's inline TOTAL row live without a full grid re-render.
-            const sectionKey = itemKey.split('__').slice(0, 2).join('__');
-            const elSectionTotal = document.getElementById(`txt-sectiontotal-${sectionKey}`);
-            if (elSectionTotal) elSectionTotal.textContent = fmt(sectionTotal(sectionKey));
+            // Keep the section's inline TOTAL row live without a full grid re-render. Looked up via
+            // the item's actual position in SCOPE_CATEGORIES rather than parsed from itemKey, since
+            // a custom WBS item's id carries no positional structure to split apart.
+            const found = findItemById(itemKey);
+            if (found) {
+                const sectionKey = `${found.cat.id}__${found.sIdx}`;
+                const elSectionTotal = document.getElementById(`txt-sectiontotal-${sectionKey}`);
+                if (elSectionTotal) elSectionTotal.textContent = fmt(sectionTotal(sectionKey));
+            }
 
             return { total };
         }
@@ -1328,6 +1531,56 @@
             selectedCategory = null;
             applyBoqHighlight();
             renderBreakdownPanel();
+        }
+
+        // Collapses the BOQ panel to a thin strip on its left edge, freeing that width for the
+        // grid/scorecard card next to it. Purely a display toggle — none of the panel's own data
+        // or currently-selected view changes while collapsed, it's just not shown.
+        function loadBoqPanelState() {
+            try { boqCollapsed = localStorage.getItem('urc_ces_boq_collapsed') === 'true'; } catch(e) {}
+            applyBoqPanelState();
+        }
+
+        function toggleBoqPanel() {
+            boqCollapsed = !boqCollapsed;
+            try { localStorage.setItem('urc_ces_boq_collapsed', String(boqCollapsed)); } catch(e) {}
+            applyBoqPanelState();
+        }
+
+        // Maximizes the grid/scorecard card to fill the whole screen (sidebar, header, and the
+        // BOQ panel all covered) — a plain CSS overlay rather than the browser's native Fullscreen
+        // API, so there's no permission prompt and it behaves the same in every browser.
+        function toggleGridFullscreen() {
+            gridFullscreen = !gridFullscreen;
+            const card = document.getElementById('grid-card');
+            const btn = document.getElementById('btn-fullscreen-toggle');
+            if (!card || !btn) return;
+
+            card.classList.toggle('fixed', gridFullscreen);
+            card.classList.toggle('inset-0', gridFullscreen);
+            card.classList.toggle('z-40', gridFullscreen);
+            card.classList.toggle('rounded-none', gridFullscreen);
+            card.classList.toggle('m-0', gridFullscreen);
+
+            if (gridFullscreen) {
+                btn.title = 'Return to the normal view';
+                btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V5m0 4H5m4 0L4 4m11 5V5m0 4h4m-4 0l5-5M9 15v4m0-4H5m4 0l-5 5m11-5v4m0-4h4m-4 0l5 5"></path></svg> Exit Full Screen`;
+            } else {
+                btn.title = 'Expand this panel to fill the screen';
+                btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg> Full Screen`;
+            }
+        }
+
+        function applyBoqPanelState() {
+            const panel = document.getElementById('boq-panel');
+            const expanded = document.getElementById('boq-panel-expanded');
+            const strip = document.getElementById('boq-panel-collapsed-strip');
+            if (!panel || !expanded || !strip) return;
+            panel.classList.toggle('w-80', !boqCollapsed);
+            panel.classList.toggle('w-10', boqCollapsed);
+            expanded.classList.toggle('hidden', boqCollapsed);
+            strip.classList.toggle('hidden', !boqCollapsed);
+            strip.classList.toggle('flex', boqCollapsed);
         }
 
         // Keeps the blue selection ring in sync with whichever row/header is the current
@@ -1411,13 +1664,14 @@
         // all-categories views) followed by its grouped Mat/Lab/Lump Sum lines. Returns ''
         // if the item has no priced lines, so callers can skip it entirely.
         function buildItemGroupHtml(cat, cIdx, sIdx, iIdx, item) {
-            const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+            const itemKey = item.id;
             const grouped = buildGroupedLinesHtml(getLines(itemKey));
             if (!grouped.html) return { html: '', subtotal: 0 };
 
-            const code = cat.isIndirect ? item.code : `${cIdx + 1}.${sIdx + 1}.${iIdx + 1}`;
+            const autoCode = cat.isIndirect ? '' : `${cIdx + 1}.${sIdx + 1}.${iIdx + 1}`;
+            const code = item.code || autoCode;
             const html = `<div class="mb-4">
-                <p class="text-[11px] font-bold text-neutral-900 uppercase tracking-wide mb-1">WBS ${code} — ${item.desc}</p>
+                <p class="text-[11px] font-bold text-neutral-900 uppercase tracking-wide mb-1">WBS ${escapeHtml(code)} — ${escapeHtml(item.desc || '')}</p>
                 ${grouped.html}
             </div>`;
             return { html, subtotal: grouped.subtotal };
@@ -1469,13 +1723,11 @@
         // View 1: a single scope item's material/labor/lump-sum lines (clicking a WBS number
         // or scope description).
         function renderItemBreakdownPanel() {
-            const [catId, sIdx, iIdx] = selectedItem.split('__');
-            const cat = SCOPE_CATEGORIES.find(c => c.id === catId);
-            if (!cat) { clearSelection(); return; }
-            const sec = cat.sections[parseInt(sIdx)];
-            const item = sec.items[parseInt(iIdx)];
-            const cIdx = SCOPE_CATEGORIES.indexOf(cat);
-            const code = cat.isIndirect ? item.code : `${cIdx+1}.${parseInt(sIdx)+1}.${parseInt(iIdx)+1}`;
+            const found = findItemById(selectedItem);
+            if (!found) { clearSelection(); return; }
+            const { cat, cIdx, sIdx, iIdx, item } = found;
+            const autoCode = cat.isIndirect ? '' : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+            const code = item.code || autoCode;
 
             setBreakdownHeader('item', cat.label, `WBS ${code}`, item.desc);
 
@@ -1700,13 +1952,14 @@
 
                 cat.sections.forEach((sec, sIdx) => {
                     sec.items.forEach((item, iIdx) => {
-                        const itemKey = `${cat.id}__${sIdx}__${iIdx}`;
+                        const itemKey = item.id;
                         // An item can have multiple lines (material, labor, and/or lumpsum) — export one row per line.
                         const lines = (gridState[itemKey] || []).filter(l => lineHasData(l));
                         if (lines.length === 0) return;
 
                         hasCategoryData = true;
-                        const code = cat.isIndirect ? item.code : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+                        const autoCode = cat.isIndirect ? '' : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
+                        const code = item.code || autoCode;
 
                         lines.forEach((s) => {
                             const { total } = computeLineCost(s);

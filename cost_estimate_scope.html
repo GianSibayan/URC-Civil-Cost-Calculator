@@ -1808,6 +1808,61 @@
         // Defined Cost: category totals, labor-by-role, and both scorecards in full detail.
         // confirmSaveEstimate() below (and calc.html's copy) both read from this single object
         // so a record looks identical no matter which page's Save button wrote it.
+        // Serializable mirror of renderAllBreakdownPanel()'s traversal — every priced WBS item,
+        // grouped Mat/Lab/Lump Sum lines and all, as plain data instead of HTML. Written to
+        // localStorage on every edit so a separate page (estimate_summary.html) can render the
+        // identical breakdown without duplicating SCOPE_CATEGORIES or reading gridState directly.
+        function buildFullBreakdownData() {
+            const categories = [];
+            let grand = 0;
+
+            SCOPE_CATEGORIES.forEach((cat, cIdx) => {
+                const items = [];
+                let catSubtotal = 0;
+
+                cat.sections.forEach((sec, sIdx) => {
+                    sec.items.forEach((item, iIdx) => {
+                        const lines = getLines(item.id).filter(lineHasData);
+                        if (!lines.length) return;
+
+                        const autoCode = cat.isIndirect ? '' : `${cIdx + 1}.${sIdx + 1}.${iIdx + 1}`;
+                        const code = item.code || autoCode;
+
+                        const mat = [], lab = [], lump = [];
+                        let itemSubtotal = 0;
+                        lines.forEach(line => {
+                            const { total } = computeLineCost(line);
+                            itemSubtotal += total;
+                            const lumpSum = parseFloat(line.lumpSum) || 0;
+                            if (line.labId) {
+                                const labName = LABOR_DB[line.labId] ? LABOR_DB[line.labId].name : 'Labor';
+                                let label = `${labName} — ${line.headcount || 0} × ${line.days || 0} day(s)`;
+                                if (lumpSum > 0) label += ` (+ ${fmtMoney(lumpSum)} lump sum)`;
+                                lab.push({ label, total });
+                            } else if (line.matId) {
+                                const matName = MASTER_DB[line.matId] ? MASTER_DB[line.matId].name : 'Material';
+                                let label = `${matName} × ${line.qty || 0}`;
+                                if (lumpSum > 0) label += ` (+ ${fmtMoney(lumpSum)} lump sum)`;
+                                mat.push({ label, total });
+                            } else {
+                                lump.push({ label: 'Lump sum item', total });
+                            }
+                        });
+
+                        items.push({ code, desc: item.desc || '', subtotal: itemSubtotal, mat, lab, lump });
+                        catSubtotal += itemSubtotal;
+                    });
+                });
+
+                if (items.length) {
+                    categories.push({ label: cat.label, subtotal: catSubtotal, items });
+                    grand += catSubtotal;
+                }
+            });
+
+            return { categories, grandTotal: grand, updatedAt: Date.now() };
+        }
+
         function updateTotals() {
             const breakdown = getCostBreakdown();
             try {
@@ -1825,6 +1880,7 @@
                     },
                     updatedAt: Date.now()
                 }));
+                localStorage.setItem('urc_ces_full_breakdown', JSON.stringify(buildFullBreakdownData()));
             } catch(e) {}
             updateSaveButtonState();
         }

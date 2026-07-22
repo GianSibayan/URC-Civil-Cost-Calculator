@@ -6,6 +6,7 @@ const ASSETS_TO_CACHE = [
     '/index.html',
     '/calculator.html',
     '/cost_estimate_scope.html',
+    '/estimate_summary.html',
     '/labor_resources.html',
     '/contingency_scorecard.html',
     '/admin.html',

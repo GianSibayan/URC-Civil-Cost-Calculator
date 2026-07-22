@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <link rel="icon" type="image/png" href="urclogo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URC CCC — Estimate Summary</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script src="/src/auth.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter','-apple-system','BlinkMacSystemFont','"SF Pro"','"SF Pro Text"','"SF Pro Display"','"Segoe UI"','Roboto','Helvetica','Arial','sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif; background-color: #ffffff; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="h-full flex bg-white font-sans overflow-hidden select-none">
+
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="nav-placeholder"></div>
+    <script src="/src/nav.js"></script>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+
+        <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white flex-shrink-0">
+            <div>
+                <h2 class="text-2xl font-bold text-neutral-900">Estimate Summary</h2>
+                <p id="last-updated" class="text-[11px] text-neutral-400 leading-tight">—</p>
+            </div>
+            <button onclick="refreshSummary()" title="Re-read the latest numbers from Master Estimator and Dimensions Calculator" class="px-4 py-2 text-sm font-medium bg-white border border-neutral-200 text-neutral-600 rounded-lg hover:bg-neutral-50 transition inline-flex items-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Refresh
+            </button>
+        </header>
+
+        <!-- Read-only project meta, sourced from Master Estimator's header bar (urc_ces_meta) -->
+        <div class="px-8 py-3 border-b border-neutral-200 bg-white flex-shrink-0 flex flex-wrap items-end gap-x-8 gap-y-2">
+            <div class="flex flex-col gap-1">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Project Title</span>
+                <span id="meta-project" class="text-sm font-semibold text-neutral-900">—</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Plant</span>
+                <span id="meta-plant" class="text-sm font-semibold text-neutral-900">—</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Estimate Type</span>
+                <span id="meta-type" class="text-sm font-semibold text-neutral-900">—</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Prepared By</span>
+                <span id="meta-preparedby" class="text-sm font-semibold text-neutral-900">—</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Date</span>
+                <span id="meta-date" class="text-sm font-semibold text-neutral-900">—</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Mean Spending Date</span>
+                <span id="meta-meanspend" class="text-sm font-semibold text-neutral-900">—</span>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-8">
+
+            <!-- Financial Ledger — identical card to Dimensions Calculator's, on the same
+                 light-gray backdrop it lives on there, just centered up top instead of a
+                 sidebar. Escalation shown read-only (set on Dimensions Calculator) so there's
+                 only ever one place that number is entered. -->
+            <div class="max-w-xl mx-auto bg-[#f8f9fa] rounded-2xl p-4">
+                <div class="bg-white p-6 rounded-2xl border border-neutral-200/60 shadow-sm space-y-4">
+                    <h4 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Financial Ledger</h4>
+
+                    <div class="space-y-2 text-sm text-neutral-600">
+                        <div class="flex justify-between gap-3"><span class="truncate">Material Costs</span><span id="fl-material" class="font-bold text-amber-800 whitespace-nowrap shrink-0">₱0.00</span></div>
+                        <div class="flex justify-between gap-3"><span class="truncate">Labor Costs</span><span id="fl-labor" class="font-bold text-blue-900 whitespace-nowrap shrink-0">₱0.00</span></div>
+                    </div>
+
+                    <div class="border-t border-neutral-100 pt-3 flex justify-between items-center gap-3">
+                        <span class="text-xs font-bold text-neutral-500 uppercase tracking-wide">Raw Total</span>
+                        <span id="fl-defined" class="font-bold text-neutral-900 whitespace-nowrap shrink-0">₱0.00</span>
+                    </div>
+
+                    <div class="space-y-2.5 text-sm text-neutral-600 pt-1">
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                            <span class="flex items-center gap-1.5 min-w-0">
+                                <span class="truncate">Undefined Cost</span>
+                                <span id="fl-undefined-pct" class="shrink-0 text-[10px] font-semibold text-neutral-500 bg-neutral-100 rounded px-1.5 py-0.5">0.0%</span>
+                            </span>
+                            <span id="fl-undefined" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
+                        </div>
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                            <span class="flex items-center gap-1.5 min-w-0" title="Set on Dimensions Calculator">
+                                <span class="truncate">Escalation</span>
+                                <span id="fl-escalation-pct" class="shrink-0 text-[10px] font-semibold text-neutral-500 bg-neutral-100 rounded px-1.5 py-0.5">0.0%</span>
+                            </span>
+                            <span id="fl-escalation" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
+                        </div>
+                        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                            <span class="flex items-center gap-1.5 min-w-0">
+                                <span class="truncate">Contingency</span>
+                                <span id="fl-contingency-pct" class="shrink-0 text-[10px] font-semibold text-neutral-500 bg-neutral-100 rounded px-1.5 py-0.5">0.0%</span>
+                            </span>
+                            <span id="fl-contingency" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-neutral-200 pt-4 mt-2 flex justify-between items-center gap-3">
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-bold text-neutral-900 uppercase tracking-wide">Estimated Grand Total</h4>
+                            <p class="text-[10px] text-neutral-400 leading-tight">Raw Total × (1 + Undefined% + Escalation% + Contingency%)</p>
+                        </div>
+                        <div id="fl-total" class="text-2xl font-black text-neutral-900 whitespace-nowrap shrink-0">₱0.00</div>
+                    </div>
+
+                    <div class="border-t border-neutral-100 pt-3 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-[11px] text-neutral-400 font-medium shrink-0">Convert to</span>
+                            <select id="select-currencyTarget" class="text-xs font-semibold border border-neutral-200 rounded-md pl-2 pr-6 py-1 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white cursor-pointer" onchange="setCurrencyTarget(this.value)">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="JPY">JPY</option>
+                                <option value="SGD">SGD</option>
+                            </select>
+                        </div>
+                        <div class="text-right min-w-0">
+                            <div id="fl-total-converted" class="text-sm font-bold text-neutral-700 whitespace-nowrap">—</div>
+                            <p id="fl-fx-asof" class="text-[10px] text-neutral-400 leading-tight">Rates unavailable</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill Of Quantities — every priced category/WBS item, same visual language as the
+                 CES BOQ panel's card and line styling. Which slice you're looking at is now an
+                 explicit, always-visible button choice instead of something you discover by
+                 clicking a row — the exact thing that confused Sir Tony in CES. -->
+            <div class="bg-white border border-neutral-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
+                <div class="p-6 pb-4 border-b border-neutral-100 flex flex-col gap-4">
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill Of Quantities — Full Breakdown</h3>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <button id="boq-view-all" onclick="setBoqViewMode('all')" class="px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition cursor-pointer">All Categories</button>
+                            <button id="boq-view-category" onclick="setBoqViewMode('category')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">By Category</button>
+                            <button id="boq-view-item" onclick="setBoqViewMode('item')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">By WBS Item</button>
+                        </div>
+                        <div id="boq-category-picker" class="hidden flex-wrap items-center gap-2"></div>
+                        <select id="boq-item-picker" class="hidden text-xs font-semibold border border-neutral-200 rounded-md px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white cursor-pointer max-w-xs" onchange="selectBoqItem(this.value)">
+                            <option value="">Pick a WBS item…</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="px-6 pt-4 pb-2" id="boq-full-content">
+                    <p class="text-sm text-neutral-400 text-center py-16">Loading…</p>
+                </div>
+                <div class="border-t border-neutral-200 px-6 py-4 flex-shrink-0 flex justify-between items-baseline bg-white">
+                    <span id="boq-total-label" class="text-xs font-bold text-neutral-500 uppercase tracking-wide">Grand Total</span>
+                    <span id="boq-grand-total" class="text-xl font-black text-blue-600">₱0.00</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // ============================================================
+        // Read-only report page. Everything here is sourced from what
+        // Master Estimator (CES) and Dimensions Calculator already write to
+        // localStorage on every edit — this page never recomputes cost data
+        // itself, so there's only ever one source of truth for any number.
+        // ============================================================
+
+        function fmtMoney(num) {
+            return `₱${(num || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function buildGroupHtml(label, colorCls, lines) {
+            if (!lines || !lines.length) return '';
+            let html = `<p class="text-[10px] font-bold ${colorCls} uppercase tracking-wide mt-2.5 mb-1 first:mt-0">${label}</p><div class="space-y-1.5">`;
+            lines.forEach(line => {
+                html += `<div class="px-2.5 py-2 bg-neutral-50 border border-neutral-100 rounded-lg text-xs flex items-center justify-between gap-2" title="${escapeHtml(line.label)}">
+                    <span class="truncate text-neutral-600">${escapeHtml(line.label)}</span>
+                    <span class="font-medium text-neutral-900 flex-shrink-0">${fmtMoney(line.total)}</span>
+                </div>`;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        // ============================================================
+        // BILL OF QUANTITIES — three views, same three CES already has (all
+        // categories / one category / one item), just picked with visible
+        // buttons instead of discovered by clicking a row.
+        // ============================================================
+        let boqViewMode = 'all'; // 'all' | 'category' | 'item'
+        let boqSelectedCategoryIdx = null;
+        let boqSelectedItemKey = null; // '<categoryIndex>__<itemIndex>' — only ever used to look
+                                        // back into the freshly-read data for this one render pass,
+                                        // never persisted, so index-based is safe here.
+
+        function setBoqViewMode(mode) {
+            boqViewMode = mode;
+            boqSelectedCategoryIdx = null;
+            boqSelectedItemKey = null;
+            renderFullBoq();
+        }
+
+        function selectBoqCategory(idx) {
+            boqSelectedCategoryIdx = idx;
+            renderFullBoq();
+        }
+
+        function selectBoqItem(key) {
+            boqSelectedItemKey = key || null;
+            renderFullBoq();
+        }
+
+        function setBoqTotal(label, amount) {
+            document.getElementById('boq-total-label').textContent = label;
+            document.getElementById('boq-grand-total').textContent = fmtMoney(amount);
+        }
+
+        function updateBoqViewButtons() {
+            const active   = 'px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition cursor-pointer';
+            const inactive = 'px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer';
+            ['all', 'category', 'item'].forEach(m => {
+                const btn = document.getElementById('boq-view-' + m);
+                if (btn) btn.className = (boqViewMode === m) ? active : inactive;
+            });
+        }
+
+        // One category's card — dark-navy header plus its WBS items, exactly the CES BOQ
+        // panel's styling. Used by both the "All Categories" grid and the "By Category" view.
+        function categoryCardHtml(cat) {
+            let itemsHtml = '';
+            cat.items.forEach(item => {
+                itemsHtml += `<div class="mb-4 last:mb-0">
+                    <p class="text-[11px] font-bold text-neutral-900 uppercase tracking-wide mb-1">WBS ${escapeHtml(item.code)} — ${escapeHtml(item.desc)}</p>
+                    ${buildGroupHtml('Mat', 'text-amber-600', item.mat)}
+                    ${buildGroupHtml('Lab', 'text-blue-600', item.lab)}
+                    ${buildGroupHtml('Lump Sum', 'text-purple-600', item.lump)}
+                </div>`;
+            });
+            return `<div class="border border-neutral-200 rounded-xl overflow-hidden bg-white">
+                <div class="flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-700">
+                    <p class="text-xs font-bold text-white uppercase tracking-wide">${escapeHtml(cat.label)}</p>
+                    <span class="text-[10px] font-semibold text-neutral-300">${fmtMoney(cat.subtotal)}</span>
+                </div>
+                <div class="p-4">${itemsHtml}</div>
+            </div>`;
+        }
+
+        // "All Categories" — every priced category tiled in a responsive grid, so the extra
+        // width this page has (versus CES's narrow w-80 BOQ panel) gets used for more columns
+        // rather than one column stretched uncomfortably wide.
+        function renderAllMode(data) {
+            let html = `<div class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 pb-4">`;
+            data.categories.forEach(cat => { html += categoryCardHtml(cat); });
+            html += `</div>`;
+            document.getElementById('boq-full-content').innerHTML = html;
+            setBoqTotal('Grand Total', data.grandTotal);
+        }
+
+        // "By Category" — a row of category buttons (there are only ~10, so all fit as one-click
+        // pills rather than a dropdown) narrows the whole card down to just that category.
+        function renderCategoryMode(data) {
+            const picker = document.getElementById('boq-category-picker');
+            let pickerHtml = '';
+            data.categories.forEach((cat, idx) => {
+                const active = boqSelectedCategoryIdx === idx;
+                const cls = active
+                    ? 'px-3 py-1.5 rounded-full bg-slate-700 text-white text-[11px] font-bold whitespace-nowrap transition cursor-pointer'
+                    : 'px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-600 text-[11px] font-semibold hover:bg-neutral-200 whitespace-nowrap transition cursor-pointer';
+                pickerHtml += `<button onclick="selectBoqCategory(${idx})" class="${cls}">${escapeHtml(cat.label)}</button>`;
+            });
+            picker.innerHTML = pickerHtml;
+
+            const container = document.getElementById('boq-full-content');
+            const cat = data.categories[boqSelectedCategoryIdx];
+            if (!cat) {
+                container.innerHTML = '<p class="text-sm text-neutral-400 text-center py-16">Pick a category above to see its full breakdown.</p>';
+                setBoqTotal('Category Subtotal', 0);
+                return;
+            }
+            container.innerHTML = `<div class="max-w-2xl mx-auto pb-4">${categoryCardHtml(cat)}</div>`;
+            setBoqTotal('Category Subtotal', cat.subtotal);
+        }
+
+        // "By WBS Item" — a single dropdown (grouped by category) narrows down to one item's
+        // Mat/Lab/Lump Sum lines. A dropdown rather than buttons here since there can be far
+        // more priced items than categories.
+        function renderItemMode(data) {
+            const picker = document.getElementById('boq-item-picker');
+            let optHtml = '<option value="">Pick a WBS item…</option>';
+            data.categories.forEach((cat, cIdx) => {
+                optHtml += `<optgroup label="${escapeHtml(cat.label)}">`;
+                cat.items.forEach((item, iIdx) => {
+                    const key = `${cIdx}__${iIdx}`;
+                    const selected = boqSelectedItemKey === key ? ' selected' : '';
+                    optHtml += `<option value="${key}"${selected}>WBS ${escapeHtml(item.code)} — ${escapeHtml(item.desc)}</option>`;
+                });
+                optHtml += `</optgroup>`;
+            });
+            picker.innerHTML = optHtml;
+
+            const container = document.getElementById('boq-full-content');
+            if (!boqSelectedItemKey) {
+                container.innerHTML = '<p class="text-sm text-neutral-400 text-center py-16">Pick a WBS item above to see its breakdown.</p>';
+                setBoqTotal('Item Subtotal', 0);
+                return;
+            }
+            const [cIdx, iIdx] = boqSelectedItemKey.split('__').map(Number);
+            const cat = data.categories[cIdx];
+            const item = cat && cat.items[iIdx];
+            if (!item) {
+                container.innerHTML = '<p class="text-sm text-neutral-400 text-center py-16">That item is no longer priced.</p>';
+                setBoqTotal('Item Subtotal', 0);
+                return;
+            }
+            container.innerHTML = `<div class="max-w-xl mx-auto pb-4">
+                <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">${escapeHtml(cat.label)}</p>
+                <p class="text-sm font-bold text-neutral-900 uppercase tracking-wide mb-3">WBS ${escapeHtml(item.code)} — ${escapeHtml(item.desc)}</p>
+                ${buildGroupHtml('Mat', 'text-amber-600', item.mat)}
+                ${buildGroupHtml('Lab', 'text-blue-600', item.lab)}
+                ${buildGroupHtml('Lump Sum', 'text-purple-600', item.lump)}
+            </div>`;
+            setBoqTotal('Item Subtotal', item.subtotal);
+        }
+
+        // Dispatches to whichever of the three views is active. Reads urc_ces_full_breakdown,
+        // written live by CES — never recomputed here.
+        function renderFullBoq() {
+            let data = null;
+            try { data = JSON.parse(localStorage.getItem('urc_ces_full_breakdown') || 'null'); } catch(e) {}
+
+            updateBoqViewButtons();
+            const catPicker = document.getElementById('boq-category-picker');
+            const itemPicker = document.getElementById('boq-item-picker');
+            catPicker.classList.toggle('hidden', boqViewMode !== 'category');
+            catPicker.classList.toggle('flex', boqViewMode === 'category');
+            itemPicker.classList.toggle('hidden', boqViewMode !== 'item');
+
+            if (!data || !data.categories || !data.categories.length) {
+                document.getElementById('boq-full-content').innerHTML = '<p class="text-sm text-neutral-400 text-center py-16">No items have been priced yet in Master Estimator.</p>';
+                setBoqTotal('Grand Total', 0);
+                catPicker.innerHTML = '';
+                itemPicker.innerHTML = '<option value="">Pick a WBS item…</option>';
+                return;
+            }
+
+            if (boqViewMode === 'category') renderCategoryMode(data);
+            else if (boqViewMode === 'item') renderItemMode(data);
+            else renderAllMode(data);
+        }
+
+        function renderMeta() {
+            let meta = {};
+            try { meta = JSON.parse(localStorage.getItem('urc_ces_meta') || '{}'); } catch(e) {}
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '—'; };
+            set('meta-project', meta.project);
+            set('meta-plant', meta.plant);
+            set('meta-type', meta.type);
+            set('meta-preparedby', meta.preparedBy);
+            set('meta-date', meta.date);
+            set('meta-meanspend', meta.meanSpendingDate);
+        }
+
+        // Same math as calculator.html's updateFinancialLedger() — Material/Labor/Raw Total and
+        // the Undefined/Contingency percentages come from CES, Escalation from calc.html's own
+        // saved state. Nothing is recomputed here, only read and displayed.
+        function renderFinancialLedger() {
+            let cesSnap = {}, contingencySnap = {}, undefinedSnap = {}, calcState = {};
+            try { cesSnap = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
+            try { contingencySnap = JSON.parse(localStorage.getItem('urc_ces_contingency_subtotal') || '{}'); } catch(e) {}
+            try { undefinedSnap = JSON.parse(localStorage.getItem('urc_ces_undefinedCost_subtotal') || '{}'); } catch(e) {}
+            try { calcState = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}'); } catch(e) {}
+
+            const materialCost = cesSnap.materialCost || 0;
+            const laborCost    = cesSnap.laborCost || 0;
+            const definedCost  = cesSnap.definedCost || 0;
+
+            const undefinedPct   = undefinedSnap.subtotal || 0;
+            const contingencyPct = contingencySnap.subtotal || 0;
+            const escalationPct  = calcState.escalationPct || 0;
+
+            const undefinedAmt   = definedCost * (undefinedPct / 100);
+            const escalationAmt  = definedCost * (escalationPct / 100);
+            const contingencyAmt = definedCost * (contingencyPct / 100);
+            const grandTotal     = definedCost + undefinedAmt + escalationAmt + contingencyAmt;
+
+            const fmt = v => '₱' + (v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const pct = v => (v || 0).toFixed(1) + '%';
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+            set('fl-material', fmt(materialCost));
+            set('fl-labor', fmt(laborCost));
+            set('fl-defined', fmt(definedCost));
+            set('fl-undefined', fmt(undefinedAmt));
+            set('fl-undefined-pct', pct(undefinedPct));
+            set('fl-escalation', fmt(escalationAmt));
+            set('fl-escalation-pct', pct(escalationPct));
+            set('fl-contingency', fmt(contingencyAmt));
+            set('fl-contingency-pct', pct(contingencyPct));
+            set('fl-total', fmt(grandTotal));
+
+            const target = calcState.currencyTarget || 'USD';
+            const selEl = document.getElementById('select-currencyTarget');
+            if (selEl && selEl.value !== target) selEl.value = target;
+
+            const elConverted = document.getElementById('fl-total-converted');
+            const elAsOf = document.getElementById('fl-fx-asof');
+            if (window.FX_RATES && window.FX_RATES.rates && window.FX_RATES.rates[target]) {
+                const converted = grandTotal * window.FX_RATES.rates[target];
+                if (elConverted) elConverted.textContent = converted.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + target;
+                if (elAsOf) elAsOf.textContent = 'Rate as of ' + window.FX_RATES.date;
+            } else {
+                if (elConverted) elConverted.textContent = '—';
+                if (elAsOf) elAsOf.textContent = 'Rates unavailable';
+            }
+
+            updateLastUpdated(cesSnap.updatedAt);
+        }
+
+        function updateLastUpdated(cesUpdatedAt) {
+            const el = document.getElementById('last-updated');
+            if (!el) return;
+            if (!cesUpdatedAt) { el.textContent = 'No estimate data yet'; return; }
+            const d = new Date(cesUpdatedAt);
+            el.textContent = 'Master Estimator data as of ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Currency choice is a shared, low-stakes display preference — kept in sync with
+        // calculator.html's own state so picking it once applies wherever it's looked at.
+        // Every OTHER field in urc_ccc_state_v10 is read and written back untouched.
+        function setCurrencyTarget(value) {
+            try {
+                const raw = localStorage.getItem('urc_ccc_state_v10');
+                const state = raw ? JSON.parse(raw) : {};
+                state.currencyTarget = value;
+                localStorage.setItem('urc_ccc_state_v10', JSON.stringify(state));
+            } catch(e) {}
+            renderFinancialLedger();
+        }
+
+        // ============================================================
+        // LIVE EXCHANGE RATES — identical source/cache key to calculator.html
+        // so both pages always agree on the same rate.
+        // ============================================================
+        async function loadFxRates() {
+            try {
+                const res = await fetch('https://api.frankfurter.dev/v1/latest?base=PHP&symbols=USD,EUR,JPY,SGD');
+                if (!res.ok) throw new Error('fx fetch failed');
+                const data = await res.json();
+                window.FX_RATES = { base: data.base, rates: data.rates, date: data.date };
+                try { localStorage.setItem('urc_ccc_fx_rates', JSON.stringify(window.FX_RATES)); } catch(e) {}
+            } catch(_) {
+                try {
+                    const cached = localStorage.getItem('urc_ccc_fx_rates');
+                    if (cached) window.FX_RATES = JSON.parse(cached);
+                } catch(e) {}
+            }
+            renderFinancialLedger();
+        }
+
+        function refreshSummary() {
+            renderMeta();
+            renderFullBoq();
+            renderFinancialLedger();
+            showToast('Summary refreshed.', 'info');
+        }
+
+        // Auto-refresh when CES or calc.html write updated numbers in another tab — the
+        // 'storage' event only fires in tabs OTHER than the one that made the change, which is
+        // exactly the case this page needs to handle (person edits CES in one tab, has this
+        // summary open in another).
+        window.addEventListener('storage', (e) => {
+            if (!e.key) return;
+            const watched = ['urc_ces_full_breakdown', 'urc_ces_meta', 'urc_ces_cross_page', 'urc_ces_contingency_subtotal', 'urc_ces_undefinedCost_subtotal', 'urc_ccc_state_v10'];
+            if (watched.includes(e.key)) { renderMeta(); renderFullBoq(); renderFinancialLedger(); }
+        });
+
+        // Belt-and-suspenders: also refresh whenever the tab regains focus, in case a browser
+        // doesn't fire 'storage' reliably (e.g. same-window tab switches in some setups).
+        window.addEventListener('focus', () => { renderMeta(); renderFullBoq(); renderFinancialLedger(); });
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm w-full bg-white';
+            if (type === 'error') toast.classList.add('bg-rose-50','border-rose-100','text-rose-800');
+            else if (type === 'info') toast.classList.add('bg-slate-50','border-neutral-100','text-slate-800');
+            else toast.classList.add('border-neutral-200','text-neutral-900');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2','opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('opacity-0','scale-95'); setTimeout(() => toast.remove(), 300); }, 3500);
+        }
+
+        window.onload = function() {
+            if (typeof Auth !== 'undefined') Auth.requireLogin();
+            renderMeta();
+            renderFullBoq();
+            loadFxRates(); // ends by calling renderFinancialLedger()
+        };
+    </script>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Offline Engine Active: ', reg.scope))
+                .catch(err => console.error('Offline Engine Failed: ', err));
+        });
+    }
+    </script>
+</body>
+</html>

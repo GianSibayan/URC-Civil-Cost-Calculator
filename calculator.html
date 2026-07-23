@@ -304,26 +304,16 @@
                                 </div>
                             </div>
 
-                            <!-- FOOTING MATERIALS SECTION -->
+                            <!-- FOOTING MATERIALS SECTION — quantities only now, no pricing. CES's own
+                                 Foundations WBS row is the one place a peso figure for this ever lives;
+                                 duplicating it here would double-count. Excavation Depth, Rebar Ratio, and
+                                 Steel Density stay because they drive real physical quantities (Excavation
+                                 Volume, Rebar Weight) shown in the Live Output Summary. -->
                             <div id="section-footing-materials" class="hidden flex flex-col gap-6">
                                 <!-- <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3> -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Concrete Class</span><div class="field-control"><select id="select-concreteClass" class="struct-select" onchange="handleConcreteClassChange(this.value)">
-                                            <option value="C16/20">C16/20 — Lean/Blinding</option>
-                                            <option value="C20/25">C20/25 — Light Slabs</option>
-                                            <option value="C25/30">C25/30 — General</option>
-                                            <option value="C30/37" selected>C30/37 — Heavy Columns</option>
-                                            <option value="C35/45">C35/45 — High-Rise</option>
-                                        </select></div></div>
-                                    <div class="field-row"><span class="field-label">Concrete Price / m³</span><div class="field-control"><input id="input-concretePriceM3" class="dim-input select-text bg-neutral-100 font-bold" type="text" readonly placeholder="Calculated from DB" /></div></div>
                                     <div class="field-row"><span class="field-label">Excavation Depth</span><div class="field-control"><input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Excavation Cost / m³</span><div class="field-control"><input id="input-excavationCostM3" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('excavationCostM3', this.value)" /></div></div>
-                                    <div class="field-row"><span class="field-label">Labor Rate / m³</span><div class="field-control"><input id="input-laborRateM3" class="dim-input select-text bg-neutral-100 font-bold" type="number" readonly placeholder="0.00" /></div></div>
                                     <div class="field-row"><span class="field-label">Rebar Ratio</span><div class="field-control"><input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" /><span class="field-unit">percent Ratio (%)</span></div></div>
-                                    <div class="field-row"><span class="field-label">Rebar Price / kg</span><div class="field-control"><input id="input-rebarPriceKg" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('rebarPriceKg', this.value)" /></div></div>
-                                    <div class="field-row"><span class="field-label">Overhead Profit</span><div class="field-control"><input id="input-overheadProfit" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('overheadProfit', this.value)" /></div></div>
-                                    <div class="field-row"><span class="field-label">Forms Price / m²</span><div class="field-control"><input id="input-formsPriceM2" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('formsPriceM2', this.value)" /></div></div>
-                                    <div class="field-row"><span class="field-label">Labor Cost / day</span><div class="field-control"><input id="input-laborCostDay" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('laborCostDay', this.value)" /></div></div>
                                     <div class="field-row md:col-span-2"><span class="field-label">Steel Density</span><div class="field-control"><input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" /></div></div>
                                 </div>
                             </div>
@@ -383,6 +373,27 @@
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Rebar Weight</span>
+                                        <span id="side-rebar" class="font-semibold text-neutral-900">0.00 kg</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Concrete Volume × Rebar Ratio × Steel Density</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Excavation Volume</span>
+                                        <span id="side-excavation" class="font-semibold text-neutral-900">0.00 m³</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Footing Length × Width × Excavation Depth × Nodes</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Forms Area</span>
+                                        <span id="side-forms" class="font-semibold text-neutral-900">0.00 m²</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Perimeter × Depth/Height (Footing + Pedestal) × Nodes</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Total Nodes</span>
                                         <span id="side-baySpacing" class="font-semibold text-neutral-900">0</span>
                                     </div>
@@ -412,9 +423,9 @@
                                     <span id="fl-defined" class="font-bold text-neutral-900 whitespace-nowrap shrink-0">₱0.00</span>
                                 </div>
 
-                                <!-- % adjustments — Undefined & Contingency from CES scorecards, Escalation is inputtable here.
-                                     Grid (not flex) so the value column never gets pushed off — label/badge/input
-                                     side is free to shrink or wrap, the peso value always stays put on the right. -->
+                                <!-- % adjustments — all three (Undefined, Escalation, Contingency) now come from
+                                     CES's scorecards. Nothing here is editable anymore; every subtotal has exactly
+                                     one place it's set, and it isn't this page. -->
                                 <div class="space-y-2.5 text-sm text-neutral-600 pt-1">
                                     <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                                         <span class="flex items-center gap-1.5 min-w-0">
@@ -424,12 +435,9 @@
                                         <span id="fl-undefined" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
                                     </div>
                                     <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-                                        <span class="flex items-center gap-1.5 min-w-0 flex-wrap">
-                                            <span class="shrink-0">Escalation</span>
-                                            <input id="input-escalationPct" type="number" min="0" max="100" step="0.1" placeholder="0"
-                                                class="w-12 shrink-0 text-xs text-right border border-neutral-200 rounded-md px-1.5 py-0.5 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition"
-                                                oninput="handleInput('escalationPct', this.value)" />
-                                            <span class="shrink-0 text-[11px] text-neutral-400">%</span>
+                                        <span class="flex items-center gap-1.5 min-w-0" title="Set on the Escalation Scorecard in Master Estimator">
+                                            <span class="truncate">Escalation</span>
+                                            <span id="fl-escalation-pct" class="shrink-0 text-[10px] font-semibold text-neutral-500 bg-neutral-100 rounded px-1.5 py-0.5">0.0%</span>
                                         </span>
                                         <span id="fl-escalation" class="font-bold text-neutral-900 whitespace-nowrap justify-self-end">₱0.00</span>
                                     </div>
@@ -488,13 +496,9 @@
             dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
             footingLength: 0, footingWidth: 0, footingDepth: 0,
             pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
-            concreteClass: 'C30/37', concretePriceM3: 0,
-            excavationDepth: 0, excavationCostM3: 0, laborRateM3: 0,
-            rebarRatio: 0, rebarPriceKg: 0, overheadProfit: 0,
-            formsPriceM2: 0, laborCostDay: 0, steelDensity: 7850,
+            excavationDepth: 0, rebarRatio: 0, steelDensity: 7850,
             globalEquipment: 0, globalProfit: 0,
-            currencyTarget: 'USD',
-            escalationPct: 0
+            currencyTarget: 'USD'
         };
 
         // ============================================================
@@ -520,34 +524,10 @@
         function applyPricesToState() {
             if (!window.PRICES) return;
             const p = window.PRICES.tab1_tab2;
-            const cls = estimateState.concreteClass || 'C30/37';
-            const concretePrice = (p.concrete_classes && p.concrete_classes[cls]) ? p.concrete_classes[cls].price_per_m3 : 0;
-            const defaults = {
-                concretePriceM3: concretePrice, excavationCostM3: p.excavation_cost_per_m3,
-                rebarPriceKg: p.rebar_price_per_kg, overheadProfit: Math.round((p.overhead_profit_rate || 0) * 100),
-                formsPriceM2: p.forms_price_per_m2, laborCostDay: p.labor_cost_per_day, steelDensity: p.steel_density_kg_per_m3
-            };
-            Object.entries(defaults).forEach(([k, v]) => { if (estimateState[k] === 0) estimateState[k] = v; });
-            const concEl = document.getElementById('input-concretePriceM3');
-            if (concEl && concretePrice) concEl.value = concretePrice;
+            // Steel Density is the only one of these that still feeds a real quantity (Rebar
+            // Weight) — everything else here used to be pricing, which now lives only in CES.
+            if (estimateState.steelDensity === 0 && p.steel_density_kg_per_m3) estimateState.steelDensity = p.steel_density_kg_per_m3;
             saveToCache();
-        }
-
-        function handleConcreteClassChange(value) {
-            estimateState.concreteClass = value;
-            if (window.PRICES) {
-                const cls = window.PRICES.tab1_tab2.concrete_classes;
-                if (cls && cls[value]) {
-                    estimateState.concretePriceM3 = cls[value].price_per_m3;
-                    const el = document.getElementById('input-concretePriceM3');
-                    if (el) el.value = estimateState.concretePriceM3;
-                }
-            } else {
-                estimateState.concretePriceM3 = 0;
-                const el = document.getElementById('input-concretePriceM3');
-                if (el) el.value = '';
-            }
-            saveToCache(); updateUI();
         }
 
         // ============================================================
@@ -727,7 +707,7 @@
             const ces = getCesSnapshot();
             const undefinedPct = ces.scorecards?.undefinedCost?.subtotal || 0;
             const contingencyPct = ces.scorecards?.contingency?.subtotal || 0;
-            const escalationPct = estimateState.escalationPct || 0;
+            const escalationPct = ces.scorecards?.escalation?.subtotal || 0;
             const definedCost = ces.definedCost || 0;
             const grandTotal = definedCost * (1 + (undefinedPct + escalationPct + contingencyPct) / 100);
 
@@ -766,11 +746,16 @@
             const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
+            const rebarRatioPct = (estimateState.rebarRatio || 0) / 100;
+            const rebarWeight = concreteVol * rebarRatioPct * (estimateState.steelDensity || 0);
+            const excavationDepth = estimateState.excavationDepth || 0;
+            const excavationVolume = fl * fw * excavationDepth * nodes;
+            const formsArea = (2 * (fl + fw) * fd + 2 * (pl + pw) * ph) * nodes;
 
             const ces = getCesSnapshot();
             const undefinedPct = ces.scorecards?.undefinedCost?.subtotal || 0;
             const contingencyPct = ces.scorecards?.contingency?.subtotal || 0;
-            const escalationPct = estimateState.escalationPct || 0;
+            const escalationPct = ces.scorecards?.escalation?.subtotal || 0;
             const definedCost = ces.definedCost || 0;
             const grandTotal = definedCost * (1 + (undefinedPct + escalationPct + contingencyPct) / 100);
 
@@ -790,9 +775,9 @@
                         structureType: estimateState.structureType, roofType: estimateState.roofType, wallCladding: estimateState.wallCladding,
                         slabThickness: estimateState.slabThickness, dockDoors: estimateState.dockDoors || 0, driveInDoors: estimateState.driveInDoors || 0,
                         baySpacingL: bsl, baySpacingW: bsw, footingLength: fl, footingWidth: fw, footingDepth: fd,
-                        pedestalLength: pl, pedestalWidth: pw, pedestalHeight: ph, concretePriceM3: estimateState.concretePriceM3 || 0, concreteClass: estimateState.concreteClass
+                        pedestalLength: pl, pedestalWidth: pw, pedestalHeight: ph, excavationDepth, rebarRatio: estimateState.rebarRatio || 0, steelDensity: estimateState.steelDensity || 0
                     },
-                    summary: { floorArea: +floorArea.toFixed(2), grossArea: +grossArea.toFixed(2), perimeter: +(2 * (L + W)).toFixed(2), nodes, concreteVol: +concreteVol.toFixed(2) }
+                    summary: { floorArea: +floorArea.toFixed(2), grossArea: +grossArea.toFixed(2), perimeter: +(2 * (L + W)).toFixed(2), nodes, concreteVol: +concreteVol.toFixed(2), rebarWeight: +rebarWeight.toFixed(2), excavationVolume: +excavationVolume.toFixed(2), formsArea: +formsArea.toFixed(2) }
                 },
 
                 ces: {
@@ -807,7 +792,8 @@
 
                 scorecards: {
                     contingency: ces.scorecards?.contingency || { subtotal: 0, criteria: [] },
-                    undefinedCost: ces.scorecards?.undefinedCost || { subtotal: 0, criteria: [] }
+                    undefinedCost: ces.scorecards?.undefinedCost || { subtotal: 0, criteria: [] },
+                    escalation: ces.scorecards?.escalation || { subtotal: 0, criteria: [] }
                 },
 
                 escalationPct: escalationPct,
@@ -834,16 +820,31 @@
             let totalBaySpacing = 0;
             if (bsl > 0 && bsw > 0) totalBaySpacing = L / bsl + W / bsw;
             const nodes = Math.ceil(totalBaySpacing);
-            const rh = estimateState.rackHeight || 0, ps = estimateState.palletSize || 0;
+            const rh = estimateState.rackHeight || 0;
             const bc = estimateState.bottomClearance || 0, se = (estimateState.storageEfficiency || 0) / 100;
-            const ds = (estimateState.dockStagingArea || 0) / 100, rlh = estimateState.rackLevelHeight || 0, pd = estimateState.palletDepth || 0;
+            const ds = (estimateState.dockStagingArea || 0) / 100, rlh = estimateState.rackLevelHeight || 0;
+            const pd = estimateState.palletDepth || 0, iw = estimateState.isleWidth || 0;
             let rackLevels = 0;
             if (rlh > 0 && rh > bc) rackLevels = Math.floor((rh - bc) / rlh);
+            // Row width = Pallet Depth + Isle Width, then Pallets/m² = 1 / (Row Width × Pallet Depth).
+            // Isle Width used to be collected but never actually read anywhere — this is the fix.
+            const rowWidth = pd + iw;
             let totalPalletPositions = 0;
-            if (ps * pd > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / (ps * pd)) * rackLevels;
+            if (rowWidth * pd > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / (rowWidth * pd)) * rackLevels;
             const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
+            // Rebar Weight = Concrete Volume × Rebar Ratio × Steel Density (kg/m³) — same formula
+            // as the original footing/pedestal spreadsheet.
+            const rebarWeight = concreteVol * ((estimateState.rebarRatio || 0) / 100) * (estimateState.steelDensity || 0);
+            // Excavation Volume assumes the dig matches the footing's own footprint — no working
+            // clearance margin added, since none was specified anywhere. Worth confirming with
+            // whoever reviews this if a wider dig is standard practice.
+            const excavationVolume = fl * fw * (estimateState.excavationDepth || 0) * nodes;
+            // Forms Area = the vertical formwork skin needed around each pour — perimeter × depth
+            // for the footing, perimeter × height for the pedestal, no formwork assumed on the
+            // underside (rests on excavated soil) or the open top.
+            const formsArea = (2 * (fl + fw) * fd + 2 * (pl + pw) * ph) * nodes;
 
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             set('side-floorArea',  floorArea.toFixed(2) + ' sqm');
@@ -851,6 +852,9 @@
             set('side-bldgVolume', bldgVolume.toFixed(2) + ' cu.m');
             set('side-perimeter',  perimeter.toFixed(2) + ' m');
             set('side-concrete',   concreteVol.toFixed(2) + ' m³');
+            set('side-rebar',      rebarWeight.toFixed(2) + ' kg');
+            set('side-excavation', excavationVolume.toFixed(2) + ' m³');
+            set('side-forms',      formsArea.toFixed(2) + ' m²');
             set('side-baySpacing', nodes);
             set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
             renderIsoBuilding();
@@ -870,21 +874,22 @@
         // Escalation % is the one figure entered directly here.
         // ============================================================
         function updateFinancialLedger() {
-            let cesSnap = {}, contingencySnap = {}, undefinedSnap = {};
+            let cesSnap = {}, contingencySnap = {}, undefinedSnap = {}, escalationSnap = {};
             try { cesSnap = JSON.parse(localStorage.getItem('urc_ces_cross_page') || '{}'); } catch(e) {}
             try { contingencySnap = JSON.parse(localStorage.getItem('urc_ces_contingency_subtotal') || '{}'); } catch(e) {}
             try { undefinedSnap = JSON.parse(localStorage.getItem('urc_ces_undefinedCost_subtotal') || '{}'); } catch(e) {}
+            try { escalationSnap = JSON.parse(localStorage.getItem('urc_ces_escalation_subtotal') || '{}'); } catch(e) {}
 
             const materialCost = cesSnap.materialCost || 0;
             const laborCost    = cesSnap.laborCost || 0;
             const definedCost  = cesSnap.definedCost || 0;
 
-            // CES's scorecard subtotal is the raw sum of picked point values (e.g. 8, 11) —
-            // that number IS the percentage (8 = 8%), not a fraction to multiply by 100.
-            // Escalation's own input is entered the same way (e.g. "2" for 2%).
+            // All three — Undefined, Escalation, Contingency — are now CES scorecard subtotals:
+            // the average of that scorecard's rows, already capped at 100. That number IS the
+            // percentage (8 = 8%), not a fraction to multiply by 100.
             const undefinedPct   = undefinedSnap.subtotal || 0;
             const contingencyPct = contingencySnap.subtotal || 0;
-            const escalationPct  = estimateState.escalationPct || 0;
+            const escalationPct  = escalationSnap.subtotal || 0;
 
             const undefinedAmt   = definedCost * (undefinedPct / 100);
             const escalationAmt  = definedCost * (escalationPct / 100);
@@ -901,6 +906,7 @@
             set('fl-undefined', fmt(undefinedAmt));
             set('fl-undefined-pct', pct(undefinedPct));
             set('fl-escalation', fmt(escalationAmt));
+            set('fl-escalation-pct', pct(escalationPct));
             set('fl-contingency', fmt(contingencyAmt));
             set('fl-contingency-pct', pct(contingencyPct));
             set('fl-total', fmt(grandTotal));
@@ -954,19 +960,15 @@
                 'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth',
                 'footingLength','footingWidth','footingDepth',
                 'pedestalLength','pedestalWidth','pedestalHeight',
-                'excavationDepth','excavationCostM3','laborRateM3',
-                'rebarRatio','rebarPriceKg','overheadProfit','formsPriceM2','laborCostDay','steelDensity',
-                'escalationPct'
+                'excavationDepth','rebarRatio','steelDensity'
             ].forEach(f => {
                 const el = document.getElementById('input-' + f);
                 if (el && estimateState[f] !== 0) el.value = estimateState[f];
             });
-            ['structureType','roofType','wallCladding','slabThickness','skylights','concreteClass', 'currencyTarget'].forEach(f => {
+            ['structureType','roofType','wallCladding','slabThickness','skylights', 'currencyTarget'].forEach(f => {
                 const el = document.getElementById('select-' + f);
                 if (el) el.value = estimateState[f];
             });
-            const concEl = document.getElementById('input-concretePriceM3');
-            if (concEl && estimateState.concretePriceM3 !== 0) concEl.value = estimateState.concretePriceM3;
         }
 
         function saveToCache() { try { localStorage.setItem('urc_ccc_state_v10', JSON.stringify(estimateState)); } catch(e) {} }

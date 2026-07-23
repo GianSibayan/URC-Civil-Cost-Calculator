@@ -170,6 +170,7 @@
                         <button id="tab-btn-grid" onclick="switchTab('grid')" class="px-4 py-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-900 font-bold text-xs whitespace-nowrap transition">Scope Items Grid</button>
                         <button id="tab-btn-contingency" onclick="switchTab('contingency')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Contingency Scorecard</button>
                         <button id="tab-btn-undefined" onclick="switchTab('undefinedCost')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Undefined Costs Scorecard</button>
+                        <button id="tab-btn-escalation" onclick="switchTab('escalation')" class="px-4 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 font-semibold text-xs whitespace-nowrap hover:bg-neutral-300 transition cursor-pointer">Escalation Scorecard</button>
                     </div>
                     <button id="btn-fullscreen-toggle" onclick="toggleGridFullscreen()" title="Expand this panel to fill the screen" class="flex-shrink-0 px-3 py-1.5 text-xs font-bold text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-100 transition inline-flex items-center gap-1.5 cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
@@ -208,13 +209,17 @@
 
                 <div id="tab-panel-contingency" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
                 <div id="tab-panel-undefined" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
+                <div id="tab-panel-escalation" class="hidden flex-1 overflow-y-auto custom-scrollbar p-6"></div>
             </div>
 
             <div id="boq-panel" class="w-80 flex-shrink-0 flex flex-col gap-4 transition-[width] duration-150">
                 <div id="boq-panel-expanded" class="p-6 bg-white border border-neutral-200 shadow-sm rounded-xl h-full flex flex-col overflow-y-auto custom-scrollbar">
                     <div class="flex items-center justify-between gap-2 mb-6 border-b border-neutral-100 pb-3">
                         <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Bill Of Quantities</h3>
-                        <button onclick="toggleBoqPanel()" title="Collapse this panel" class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition text-sm leading-none">»</button>
+                        <button onclick="toggleBoqPanel()" title="Collapse this panel" class="flex-shrink-0 px-2.5 py-1 text-xs font-bold text-neutral-600 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-100 transition inline-flex items-center gap-1 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            Hide
+                        </button>
                     </div>
 
                     <div id="breakdown-content" class="flex-1 flex flex-col overflow-hidden">
@@ -332,6 +337,15 @@
 
         const SCOPE_CATEGORIES = [
             {
+                id: "site-clearance", label: "Site Clearance", isIndirect: false,
+                sections: [{
+                    title: "Site Clearance",
+                    items: [
+                        { code: "1", desc: "Site Clearance" }
+                    ]
+                }]
+            },
+            {
                 id: "yard-underground", label: "Yard & Underground", isIndirect: false,
                 sections: [{
                     title: "Yard & Underground",
@@ -411,6 +425,37 @@
                 ]
             },
             {
+                id: "others", label: "Others", isIndirect: false,
+                sections: [{
+                    title: "Others",
+                    items: [
+                        { code: "510", desc: "Truck Dock Doors/Levelers" },
+                        { code: "520", desc: "Furnishings (attached or unattached furniture or computer)" },
+                        { code: "530", desc: "Canopies" },
+                        { code: "940", desc: "Racks" },
+                        { code: "950", desc: "Warehouse Management System" }
+                    ]
+                }]
+            },
+            {
+                id: "other-buildings", label: "Other Buildings", isIndirect: false,
+                sections: [{
+                    title: "Other Buildings",
+                    items: [
+                        { code: "610", desc: "Transformer Building" },
+                        { code: "620", desc: "Guard House" },
+                        { code: "630", desc: "Fire Pump House" },
+                        { code: "640", desc: "Boiler House" },
+                        { code: "650", desc: "Flammable Material Storage" },
+                        { code: "660", desc: "Empty Pallet Storage" },
+                        { code: "670", desc: "Scrap Building" },
+                        { code: "680", desc: "Cafeteria" },
+                        { code: "690", desc: "Waste Water Treatment" },
+                        { code: "699", desc: "Others" }
+                    ]
+                }]
+            },
+            {
                 id: "indirect-costs", label: "Indirect Costs", isIndirect: true,
                 sections: [
                     {
@@ -425,6 +470,24 @@
                             { code: "N", desc: "Overhead (Home, Office and field support) & Profit" },
                             { code: "O", desc: "Government Permit (Building/Occupancy, Electrical, Mechanical)" },
                             { code: "P", desc: "Bonds and Insurance" }
+                        ]
+                    },
+                    {
+                        title: "Engineering & Construction Management",
+                        items: [
+                            { code: "Const", desc: "Construction Management incl. Temporary facilities, Equipment & Tools, Security Guards, Permits, Licenses" },
+                            { code: "Com", desc: "Commissioning" },
+                            { code: "Con Eng", desc: "Contractor Engineering" },
+                            { code: "Plant Eng", desc: "Plant Engineering" },
+                            { code: "PG Eng", desc: "P&G Engineering" }
+                        ]
+                    },
+                    {
+                        title: "Others",
+                        items: [
+                            { code: "Main", desc: "Maintaining Production" },
+                            { code: "Prem", desc: "Premium Time" },
+                            { code: "Tax", desc: "Taxes" }
                         ]
                     }
                 ]
@@ -538,6 +601,9 @@
         function removeItem(itemKey) {
             const found = findItemById(itemKey);
             if (!found) return;
+            // Default items can't be removed at all — the UI no longer offers the button, this
+            // is the backstop in case something else ever tries to call this directly.
+            if (!itemKey.startsWith('custom-')) { showToast('Standard WBS items can\'t be removed — only ones you added yourself.', 'error'); return; }
             const hasData = (gridState[itemKey] || []).some(lineHasData);
             const msg = hasData
                 ? 'This WBS item has priced material/labor/lump sum lines. Remove it and that cost data permanently?'
@@ -571,6 +637,9 @@
         function updateItemField(itemKey, field, value) {
             const found = findItemById(itemKey);
             if (!found) return;
+            // Default items' codes are locked — the UI no longer offers an input for it, this
+            // is the backstop in case something else ever tries to call this directly.
+            if (field === 'code' && !itemKey.startsWith('custom-')) return;
             found.item[field] = value;
 
             const addedEntry = scopeOverrides.added.find(a => a.id === itemKey);
@@ -640,9 +709,26 @@
             ]}
         ];
 
-        let contingencySelections = {}; // criterionId -> choice index
-        let undefinedSelections = {};
+        // Placeholder — Sir Tony hasn't given the real criteria for this one yet. One row so the
+        // tab actually works end-to-end (input, average, feeds the Financial Ledger) the moment
+        // it's opened; swap in the real criteria list here once it exists, same shape as the
+        // two above (id, label, choices[] of { desc } for reference text).
+        const ESCALATION_CRITERIA = [
+            { id: 'escalation-placeholder', label: 'Overall Escalation Assessment (placeholder — awaiting criteria from Sir Tony)', choices: [] }
+        ];
+
+        // Every criterion row across all three scorecards is a typed percentage (0–100), not a
+        // pick from preset choices — the choices[] arrays above are shown as reference guidance
+        // text only now. The subtotal is the AVERAGE of every row's value, not the sum, and is
+        // hard-capped at 100 on input so a typo can't produce something like 1000%.
+        let scorecardSelections = { contingency: {}, undefinedCost: {}, escalation: {} };
         let activeTab = 'grid';
+
+        const SCORECARD_CONFIG = {
+            contingency:   { criteria: CONTINGENCY_CRITERIA,  containerId: 'tab-panel-contingency', tabBtnId: 'tab-btn-contingency', subtotalLabel: 'Base Contingency Subtotal' },
+            undefinedCost: { criteria: UNDEFINED_CRITERIA,    containerId: 'tab-panel-undefined',   tabBtnId: 'tab-btn-undefined',   subtotalLabel: 'Undefined Cost Subtotal' },
+            escalation:    { criteria: ESCALATION_CRITERIA,   containerId: 'tab-panel-escalation',  tabBtnId: 'tab-btn-escalation',  subtotalLabel: 'Escalation Subtotal' }
+        };
 
         function switchTab(tab) {
             activeTab = tab;
@@ -651,12 +737,13 @@
             document.getElementById('tab-panel-grid').classList.toggle('hidden', tab !== 'grid');
             document.getElementById('tab-panel-contingency').classList.toggle('hidden', tab !== 'contingency');
             document.getElementById('tab-panel-undefined').classList.toggle('hidden', tab !== 'undefinedCost');
+            document.getElementById('tab-panel-escalation').classList.toggle('hidden', tab !== 'escalation');
             // The BOQ breakdown panel and the search/clear controls only make sense for the grid —
             // a scorecard has no rows to search or a per-row cost breakdown to show.
             document.getElementById('boq-panel').classList.toggle('hidden', tab !== 'grid');
             document.getElementById('grid-toolbar-extras').classList.toggle('hidden', tab !== 'grid');
 
-            const tabs = { grid: 'tab-btn-grid', contingency: 'tab-btn-contingency', undefinedCost: 'tab-btn-undefined' };
+            const tabs = { grid: 'tab-btn-grid', contingency: 'tab-btn-contingency', undefinedCost: 'tab-btn-undefined', escalation: 'tab-btn-escalation' };
             Object.keys(tabs).forEach(key => {
                 const btn = document.getElementById(tabs[key]);
                 if (key === tab) {
@@ -666,96 +753,105 @@
                 }
             });
 
-            if (tab === 'contingency') renderScorecard('tab-panel-contingency', CONTINGENCY_CRITERIA, contingencySelections, 'contingency');
-            if (tab === 'undefinedCost') renderScorecard('tab-panel-undefined', UNDEFINED_CRITERIA, undefinedSelections, 'undefinedCost');
+            if (tab === 'contingency' || tab === 'undefinedCost' || tab === 'escalation') renderScorecard(tab);
         }
 
-        function renderScorecard(containerId, criteria, selections, scorecardType) {
-            const container = document.getElementById(containerId);
-            const subtitle = scorecardType === 'contingency'
-                ? 'For each criterion below, select the description that best matches this project. The percentages are summed, not averaged.'
-                : 'For each criterion below, select the description that best matches this project\u2019s current state of definition. The percentages are summed, not averaged.';
+        // Every row is a typed percentage now, not a pick from preset choices — the reference
+        // descriptions from the original criteria still show as guidance text, they just don't
+        // drive the number directly anymore. Subtotal is the AVERAGE across every row (blank
+        // rows count as 0), never the sum, and every input is hard-capped at 100 so a stray
+        // keystroke can't produce something like 1000%.
+        function renderScorecard(scorecardType) {
+            const cfg = SCORECARD_CONFIG[scorecardType];
+            const criteria = cfg.criteria;
+            const selections = scorecardSelections[scorecardType];
+            const container = document.getElementById(cfg.containerId);
 
-            let subtotal = 0;
             let html = `
                 <div class="max-w-4xl mx-auto">
-                    <p class="text-xs text-neutral-500 mb-6">${subtitle}</p>
+                    <p class="text-xs text-neutral-500 mb-6">Type a percentage from 0–100 for every row below, using the reference descriptions as guidance. The subtotal is the average across all rows (capped at 100%), not the sum.</p>
                     <div class="space-y-4">`;
 
             criteria.forEach(crit => {
-                const selectedIdx = selections[crit.id];
-                if (selectedIdx !== undefined) subtotal += crit.choices[selectedIdx].value;
-
+                const raw = selections[crit.id];
+                const hasValue = raw !== undefined && raw !== null && raw !== '';
                 html += `
-                    <div class="border border-neutral-200 rounded-xl overflow-hidden">
-                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
-                            <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wide">${crit.label}</h3>
-                            <span class="text-xs font-bold ${selectedIdx !== undefined ? 'text-blue-600' : 'text-neutral-300'}">${selectedIdx !== undefined ? crit.choices[selectedIdx].value + '%' : 'Not selected'}</span>
-                        </div>
-                        <div class="divide-y divide-neutral-100">`;
+                    <div class="border border-neutral-300 rounded-xl overflow-hidden">
+                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between gap-3">
+                            <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wide">${escapeHtml(crit.label)}</h3>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <input type="number" min="0" max="100" step="1" placeholder="0" value="${hasValue ? raw : ''}"
+                                       class="w-16 text-center text-sm font-bold border border-neutral-300 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                       onchange="setScoreValue('${scorecardType}', '${crit.id}', this.value)">
+                                <span class="text-xs font-bold text-neutral-500">%</span>
+                            </div>
+                        </div>`;
 
-                crit.choices.forEach((choice, idx) => {
-                    const isSelected = selectedIdx === idx;
-                    html += `
-                            <div onclick="selectScoreChoice('${scorecardType}', '${crit.id}', ${idx})" class="flex items-start gap-3 px-4 py-2.5 cursor-pointer transition hover:bg-blue-50/60 ${isSelected ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''}">
-                                <span class="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold mt-0.5 ${isSelected ? 'bg-blue-600 text-white' : 'bg-neutral-100 text-neutral-500'}">${choice.value}%</span>
-                                <p class="text-xs text-neutral-600 leading-relaxed">${choice.desc}</p>
-                            </div>`;
-                });
+                if (crit.choices && crit.choices.length) {
+                    html += `<div class="px-4 py-3 space-y-1.5">`;
+                    crit.choices.forEach(choice => {
+                        html += `<p class="text-xs text-neutral-500 leading-relaxed">• ${escapeHtml(choice.desc)}</p>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div class="px-4 py-3"><p class="text-xs text-amber-600 italic">Awaiting detailed criteria from Sir Tony — use your own judgment for now.</p></div>`;
+                }
 
-                html += `
-                        </div>
-                    </div>`;
+                html += `</div>`;
             });
 
-            const allSelected = criteria.every(c => selections[c.id] !== undefined);
+            const subtotal = scorecardSubtotal(criteria, selections);
+            const blankCount = criteria.filter(c => selections[c.id] === undefined || selections[c.id] === null || selections[c.id] === '').length;
             html += `
                     </div>
-                    <div class="mt-6 p-4 rounded-xl border border-neutral-200 bg-neutral-50 flex items-center justify-between">
+                    <div class="mt-6 p-4 rounded-xl border border-neutral-300 bg-neutral-50 flex items-center justify-between">
                         <div>
-                            <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wide">${scorecardType === 'contingency' ? 'Base Contingency Subtotal' : 'Undefined Cost Subtotal'}</h4>
-                            ${!allSelected ? `<p class="text-[11px] text-amber-600 mt-0.5">${criteria.filter(c => selections[c.id] === undefined).length} criteria still need a selection</p>` : ''}
+                            <h4 class="text-xs font-bold text-neutral-500 uppercase tracking-wide">${cfg.subtotalLabel}</h4>
+                            ${blankCount > 0 ? `<p class="text-[11px] text-amber-600 mt-0.5">${blankCount} row(s) still blank, counted as 0% in the average</p>` : ''}
                         </div>
-                        <span class="text-2xl font-black text-blue-600">${subtotal}%</span>
+                        <span class="text-2xl font-black text-blue-600">${subtotal.toFixed(1)}%</span>
                     </div>
                 </div>`;
 
             container.innerHTML = html;
         }
 
+        // Average, not sum — and hard-clamped to [0, 100] here too as a second line of defense,
+        // on top of the input-level clamp in setScoreValue().
         function scorecardSubtotal(criteria, selections) {
-            return criteria.reduce((sum, c) => sum + (selections[c.id] !== undefined ? c.choices[selections[c.id]].value : 0), 0);
+            if (!criteria.length) return 0;
+            const total = criteria.reduce((sum, c) => sum + (Number(selections[c.id]) || 0), 0);
+            return Math.max(0, Math.min(100, total / criteria.length));
         }
 
-        function selectScoreChoice(scorecardType, criterionId, idx) {
-            const selections = scorecardType === 'contingency' ? contingencySelections : undefinedSelections;
-            selections[criterionId] = idx;
+        function setScoreValue(scorecardType, criterionId, rawValue) {
+            const cfg = SCORECARD_CONFIG[scorecardType];
+            if (!cfg) return;
+            let value = parseFloat(rawValue);
+            if (isNaN(value)) value = 0;
+            value = Math.max(0, Math.min(100, value)); // the actual "keep the limit 100" cap — no 1000% typos surviving this
+            scorecardSelections[scorecardType][criterionId] = value;
             saveScorecardState();
 
-            const criteria = scorecardType === 'contingency' ? CONTINGENCY_CRITERIA : UNDEFINED_CRITERIA;
-            const containerId = scorecardType === 'contingency' ? 'tab-panel-contingency' : 'tab-panel-undefined';
-            renderScorecard(containerId, criteria, selections, scorecardType);
+            renderScorecard(scorecardType);
 
-            // Hand off the final subtotal for calculator.html to pick up later — separate keys per
-            // scorecard, written every time a selection changes so it's always current.
-            const subtotal = scorecardSubtotal(criteria, selections);
+            // Hand off the final subtotal for calculator.html and Estimate Summary to pick up —
+            // separate keys per scorecard, written every time a value changes so it's always current.
+            const subtotal = scorecardSubtotal(cfg.criteria, scorecardSelections[scorecardType]);
             try { localStorage.setItem(`urc_ces_${scorecardType}_subtotal`, JSON.stringify({ subtotal, updatedAt: Date.now() })); } catch(e) {}
             updateTotals(); // also refreshes urc_ces_cross_page's scorecards section, not just the standalone subtotal keys
         }
 
         function saveScorecardState() {
             try {
-                localStorage.setItem('urc_ces_contingency_selections', JSON.stringify(contingencySelections));
-                localStorage.setItem('urc_ces_undefined_selections', JSON.stringify(undefinedSelections));
+                localStorage.setItem('urc_ces_scorecard_selections', JSON.stringify(scorecardSelections));
             } catch(e) {}
         }
 
         function loadScorecardState() {
             try {
-                const c = localStorage.getItem('urc_ces_contingency_selections');
-                if (c) contingencySelections = JSON.parse(c);
-                const u = localStorage.getItem('urc_ces_undefined_selections');
-                if (u) undefinedSelections = JSON.parse(u);
+                const raw = localStorage.getItem('urc_ces_scorecard_selections');
+                if (raw) scorecardSelections = Object.assign({ contingency: {}, undefinedCost: {}, escalation: {} }, JSON.parse(raw));
             } catch(e) {}
         }
 
@@ -827,25 +923,20 @@
         }
 
         function scorecardDetail(criteria, selections) {
-            return criteria.map(c => {
-                const idx = selections[c.id];
-                return { label: c.label, value: idx !== undefined ? c.choices[idx].value : null, desc: idx !== undefined ? c.choices[idx].desc : null };
-            });
+            return criteria.map(c => ({ label: c.label, value: (selections[c.id] !== undefined && selections[c.id] !== null && selections[c.id] !== '') ? selections[c.id] : null }));
         }
 
-        // Escalation is entered on calc.html, but since Save Estimate can now fire from either
-        // page, CES needs to fold it in too — read the last-known value from calc's own cache.
+        // Escalation now comes from its own scorecard here in CES, same mechanism as Contingency
+        // and Undefined Cost — no longer read from calc.html's manual entry, so there's only ever
+        // one place this number gets set.
         function getEscalationPct() {
-            try {
-                const calcSnap = JSON.parse(localStorage.getItem('urc_ccc_state_v10') || '{}');
-                return calcSnap.escalationPct || 0;
-            } catch(e) { return 0; }
+            return scorecardSubtotal(ESCALATION_CRITERIA, scorecardSelections.escalation);
         }
 
         function estimatedGrandTotal() {
             const { definedCost } = getCostBreakdown();
-            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
-            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, scorecardSelections.contingency);
+            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, scorecardSelections.undefinedCost);
             const escalationPct = getEscalationPct();
             return definedCost * (1 + (contSubtotal + undefSubtotal + escalationPct) / 100);
         }
@@ -872,8 +963,8 @@
 
         function openSaveModal() {
             const breakdown = getCostBreakdown();
-            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections);
-            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections);
+            const contSubtotal = scorecardSubtotal(CONTINGENCY_CRITERIA, scorecardSelections.contingency);
+            const undefSubtotal = scorecardSubtotal(UNDEFINED_CRITERIA, scorecardSelections.undefinedCost);
             const escalationPct = getEscalationPct();
 
             document.getElementById('modal-preview-project').textContent = estimateMeta.project || '—';
@@ -956,8 +1047,9 @@
                 },
 
                 scorecards: {
-                    contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections), criteria: scorecardDetail(CONTINGENCY_CRITERIA, contingencySelections) },
-                    undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
+                    contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, scorecardSelections.contingency), criteria: scorecardDetail(CONTINGENCY_CRITERIA, scorecardSelections.contingency) },
+                    undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, scorecardSelections.undefinedCost), criteria: scorecardDetail(UNDEFINED_CRITERIA, scorecardSelections.undefinedCost) },
+                    escalation: { subtotal: scorecardSubtotal(ESCALATION_CRITERIA, scorecardSelections.escalation), criteria: scorecardDetail(ESCALATION_CRITERIA, scorecardSelections.escalation) }
                 },
 
                 escalationPct: escalationPct,
@@ -1307,6 +1399,7 @@
                         if (searchQuery && !secTitleMatches && !matchesSearch(item.desc)) return; // hide non-matching individual items
 
                         const itemKey = item.id;
+                        const isCustomItem = itemKey.startsWith('custom-');
                         const autoCode = cat.isIndirect ? '' : `${cIdx+1}.${sIdx+1}.${iIdx+1}`;
                         const code = item.code || autoCode; // an explicit edit always wins over the auto-numbered position
                         const lines = getLines(itemKey);
@@ -1318,14 +1411,21 @@
                             html += `<tr class="hover:bg-neutral-50 transition-colors border-b border-neutral-200 ${total > 0 ? 'bg-blue-50/40' : ''}" id="row-${lineKey}">`;
 
                             if (lIdx === 0) {
+                                // Default items' codes are fixed, not editable — several parts of the app
+                                // (structural-component totals on Estimate Summary) sum specific codes across
+                                // categories, and that only works if a standard code can't drift by accident.
+                                // Description and add/remove stay fully editable either way.
+                                const codeCell = isCustomItem
+                                    ? `<input type="text" id="code-input-${itemKey}" class="w-full bg-transparent text-center font-bold text-neutral-900 border-0 border-b border-transparent hover:border-neutral-300 focus:border-blue-400 focus:outline-none" placeholder="${escapeHtml(autoCode)}" value="${escapeHtml(item.code || '')}" title="WBS code — edit to override the auto-numbered ${escapeHtml(autoCode)}" onclick="event.stopPropagation(); selectItem('${itemKey}')" onblur="updateItemField('${itemKey}', 'code', this.value)">`
+                                    : `<span class="font-bold text-neutral-900" title="Standard WBS code — kept fixed so structural-component totals stay reliable">${escapeHtml(code)}</span>`;
                                 html += `
                                 <td class="excel-cell text-center" rowspan="${lines.length}" data-boq-trigger="1" onclick="selectItem('${itemKey}')">
-                                    <input type="text" id="code-input-${itemKey}" class="w-full bg-transparent text-center font-bold text-neutral-900 border-0 border-b border-transparent hover:border-neutral-300 focus:border-blue-400 focus:outline-none" placeholder="${escapeHtml(autoCode)}" value="${escapeHtml(item.code || '')}" title="WBS code — edit to override the auto-numbered ${escapeHtml(autoCode)}" onclick="event.stopPropagation(); selectItem('${itemKey}')" onblur="updateItemField('${itemKey}', 'code', this.value)">
+                                    ${codeCell}
                                 </td>
                                 <td class="excel-cell font-medium text-neutral-900" rowspan="${lines.length}" data-boq-trigger="1">
                                     <div class="flex items-center gap-1">
                                         <input type="text" id="desc-input-${itemKey}" class="excel-input flex-1 truncate" placeholder="Scope description" title="${escapeHtml(item.desc || '')}" value="${escapeHtml(item.desc || '')}" onclick="event.stopPropagation(); selectItem('${itemKey}')" onblur="updateItemField('${itemKey}', 'desc', this.value)">
-                                        <button onclick="event.stopPropagation(); removeItem('${itemKey}')" class="text-neutral-300 hover:text-red-500 transition text-xs font-bold flex-shrink-0 px-0.5" title="Remove this WBS item (all its lines)">✕</button>
+                                        ${isCustomItem ? `<button onclick="event.stopPropagation(); removeItem('${itemKey}')" class="text-neutral-300 hover:text-red-500 transition text-xs font-bold flex-shrink-0 px-0.5" title="Remove this WBS item (all its lines)">✕</button>` : ''}
                                     </div>
                                 </td>`;
                             }
@@ -1875,8 +1975,9 @@
                     pricedLines: countPricedLines(),
                     laborBreakdown: getLaborBreakdown().map(r => ({ name: r.name, ratePerDay: +r.ratePerDay.toFixed(2), personDays: +r.personDays.toFixed(2), subtotal: +r.subtotal.toFixed(2) })),
                     scorecards: {
-                        contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, contingencySelections), criteria: scorecardDetail(CONTINGENCY_CRITERIA, contingencySelections) },
-                        undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, undefinedSelections), criteria: scorecardDetail(UNDEFINED_CRITERIA, undefinedSelections) }
+                        contingency: { subtotal: scorecardSubtotal(CONTINGENCY_CRITERIA, scorecardSelections.contingency), criteria: scorecardDetail(CONTINGENCY_CRITERIA, scorecardSelections.contingency) },
+                        undefinedCost: { subtotal: scorecardSubtotal(UNDEFINED_CRITERIA, scorecardSelections.undefinedCost), criteria: scorecardDetail(UNDEFINED_CRITERIA, scorecardSelections.undefinedCost) },
+                        escalation: { subtotal: scorecardSubtotal(ESCALATION_CRITERIA, scorecardSelections.escalation), criteria: scorecardDetail(ESCALATION_CRITERIA, scorecardSelections.escalation) }
                     },
                     updatedAt: Date.now()
                 }));

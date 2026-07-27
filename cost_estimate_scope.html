@@ -335,6 +335,18 @@
             { code: "440", desc: "Building Grounding" }, { code: "450", desc: "Security" }, { code: "499", desc: "Other" }
         ];
 
+        // RM Warehouse / Making / Converting / PUB / Admin Building all use the identical WBS
+        // code set for Building Shell/Interior/Mechanical/Electrical (commonShell etc. above), but
+        // each building needs its OWN independent item objects — reusing the same array reference
+        // across all 5 categories meant hydrateScopeStructure()'s `if (!item.id) item.id = ...`
+        // only ever ran once (for whichever building was processed first, RM Warehouse), so the
+        // other 4 buildings silently inherited RM Warehouse's ids and were reading/writing the
+        // exact same gridState entries — not independent at all. cloneItems() gives every building
+        // its own copies so each gets its own stable id and its own real pricing data.
+        function cloneItems(items) {
+            return items.map(i => ({ ...i }));
+        }
+
         const SCOPE_CATEGORIES = [
             {
                 id: "site-clearance", label: "Site Clearance", isIndirect: false,
@@ -382,46 +394,46 @@
             {
                 id: "rm-warehouse", label: "RM Warehouse", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", items: commonShell },
-                    { title: "Interior Finishing", items: commonInterior },
-                    { title: "Building Mechanical", items: commonMechanical },
-                    { title: "Building Electrical", items: commonElectrical }
+                    { title: "Building Shell", items: cloneItems(commonShell) },
+                    { title: "Interior Finishing", items: cloneItems(commonInterior) },
+                    { title: "Building Mechanical", items: cloneItems(commonMechanical) },
+                    { title: "Building Electrical", items: cloneItems(commonElectrical) }
                 ]
             },
             {
                 id: "making", label: "Making", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", items: commonShell },
-                    { title: "Interior Finishing", items: commonInterior },
-                    { title: "Building Mechanical", items: commonMechanical },
-                    { title: "Building Electrical", items: commonElectrical }
+                    { title: "Building Shell", items: cloneItems(commonShell) },
+                    { title: "Interior Finishing", items: cloneItems(commonInterior) },
+                    { title: "Building Mechanical", items: cloneItems(commonMechanical) },
+                    { title: "Building Electrical", items: cloneItems(commonElectrical) }
                 ]
             },
             {
                 id: "converting", label: "Converting", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", items: commonShell },
-                    { title: "Interior Finishing", items: commonInterior },
-                    { title: "Building Mechanical", items: commonMechanical },
-                    { title: "Building Electrical", items: commonElectrical }
+                    { title: "Building Shell", items: cloneItems(commonShell) },
+                    { title: "Interior Finishing", items: cloneItems(commonInterior) },
+                    { title: "Building Mechanical", items: cloneItems(commonMechanical) },
+                    { title: "Building Electrical", items: cloneItems(commonElectrical) }
                 ]
             },
             {
                 id: "pub", label: "PUB", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", items: commonShell },
-                    { title: "Interior Finishing", items: commonInterior },
-                    { title: "Building Mechanical", items: commonMechanical },
-                    { title: "Building Electrical", items: commonElectrical }
+                    { title: "Building Shell", items: cloneItems(commonShell) },
+                    { title: "Interior Finishing", items: cloneItems(commonInterior) },
+                    { title: "Building Mechanical", items: cloneItems(commonMechanical) },
+                    { title: "Building Electrical", items: cloneItems(commonElectrical) }
                 ]
             },
             {
                 id: "admin", label: "Admin Building", isIndirect: false,
                 sections: [
-                    { title: "Building Shell", items: commonShell },
-                    { title: "Interior Finishing", items: commonInterior },
-                    { title: "Building Mechanical", items: commonMechanical },
-                    { title: "Building Electrical", items: commonElectrical }
+                    { title: "Building Shell", items: cloneItems(commonShell) },
+                    { title: "Interior Finishing", items: cloneItems(commonInterior) },
+                    { title: "Building Mechanical", items: cloneItems(commonMechanical) },
+                    { title: "Building Electrical", items: cloneItems(commonElectrical) }
                 ]
             },
             {
@@ -569,14 +581,11 @@
                 });
             }));
 
-            // 4. Default items can no longer be removed at all (see removeItem()'s guard), and
-            // every custom item's removal is tracked via `added` instead, never `removed` — so
-            // this list can only ever contain stale entries from before that lock existed. Rather
-            // than hide a default item forever because of a leftover flag, just clear it out once
-            // here, which also un-hides anything that got caught by this before the fix.
+            // 4. Strip out anything the person has removed.
             if (scopeOverrides.removed.length) {
-                scopeOverrides.removed = [];
-                saveScopeOverrides();
+                SCOPE_CATEGORIES.forEach(cat => cat.sections.forEach(sec => {
+                    sec.items = sec.items.filter(item => !scopeOverrides.removed.includes(item.id));
+                }));
             }
         }
 
@@ -759,23 +768,9 @@
             if (tab === 'contingency' || tab === 'undefinedCost' || tab === 'escalation') renderScorecard(tab);
         }
 
-        // Flattens a scorecard's criteria into individually-scoreable rows — one row per
-        // reference description, not one row per criterion. A criterion with no choices yet
-        // (the Escalation placeholder) counts as exactly one row, keyed by its own id directly.
-        function scorecardRows(criteria) {
-            const rows = [];
-            criteria.forEach(crit => {
-                if (crit.choices && crit.choices.length) {
-                    crit.choices.forEach((choice, idx) => rows.push({ id: `${crit.id}__${idx}`, desc: choice.desc, critLabel: crit.label }));
-                } else {
-                    rows.push({ id: crit.id, desc: null, critLabel: crit.label });
-                }
-            });
-            return rows;
-        }
-
-        // Every individual description row is its own typed percentage now — not one input per
-        // criterion group. Subtotal is the AVERAGE across every row in the whole scorecard (blank
+        // Every row is a typed percentage now, not a pick from preset choices — the reference
+        // descriptions from the original criteria still show as guidance text, they just don't
+        // drive the number directly anymore. Subtotal is the AVERAGE across every row (blank
         // rows count as 0), never the sum, and every input is hard-capped at 100 so a stray
         // keystroke can't produce something like 1000%.
         function renderScorecard(scorecardType) {
@@ -786,40 +781,16 @@
 
             let html = `
                 <div class="max-w-4xl mx-auto">
-                    <p class="text-xs text-neutral-500 mb-6">Type a percentage from 0–100 for every description below. The subtotal is the average across every row (capped at 100%), not the sum.</p>
+                    <p class="text-xs text-neutral-500 mb-6">Type a percentage from 0–100 for every row below, using the reference descriptions as guidance. The subtotal is the average across all rows (capped at 100%), not the sum.</p>
                     <div class="space-y-4">`;
 
             criteria.forEach(crit => {
+                const raw = selections[crit.id];
+                const hasValue = raw !== undefined && raw !== null && raw !== '';
                 html += `
                     <div class="border border-neutral-300 rounded-xl overflow-hidden">
-                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200">
+                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between gap-3">
                             <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wide">${escapeHtml(crit.label)}</h3>
-                        </div>`;
-
-                if (crit.choices && crit.choices.length) {
-                    html += `<div class="divide-y divide-neutral-200">`;
-                    crit.choices.forEach((choice, idx) => {
-                        const rowId = `${crit.id}__${idx}`;
-                        const raw = selections[rowId];
-                        const hasValue = raw !== undefined && raw !== null && raw !== '';
-                        html += `
-                            <div class="flex items-start gap-3 px-4 py-2.5">
-                                <p class="text-xs text-neutral-600 leading-relaxed flex-1">${escapeHtml(choice.desc)}</p>
-                                <div class="flex items-center gap-1.5 flex-shrink-0">
-                                    <input type="number" min="0" max="100" step="1" placeholder="0" value="${hasValue ? raw : ''}"
-                                           class="w-16 text-center text-sm font-bold border border-neutral-300 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                           onchange="setScoreValue('${scorecardType}', '${rowId}', this.value)">
-                                    <span class="text-xs font-bold text-neutral-500">%</span>
-                                </div>
-                            </div>`;
-                    });
-                    html += `</div>`;
-                } else {
-                    const raw = selections[crit.id];
-                    const hasValue = raw !== undefined && raw !== null && raw !== '';
-                    html += `
-                        <div class="flex items-center gap-3 px-4 py-3">
-                            <p class="text-xs text-amber-600 italic flex-1">Awaiting detailed criteria from Sir Tony — use your own judgment for now.</p>
                             <div class="flex items-center gap-1.5 flex-shrink-0">
                                 <input type="number" min="0" max="100" step="1" placeholder="0" value="${hasValue ? raw : ''}"
                                        class="w-16 text-center text-sm font-bold border border-neutral-300 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -827,14 +798,22 @@
                                 <span class="text-xs font-bold text-neutral-500">%</span>
                             </div>
                         </div>`;
+
+                if (crit.choices && crit.choices.length) {
+                    html += `<div class="px-4 py-3 space-y-1.5">`;
+                    crit.choices.forEach(choice => {
+                        html += `<p class="text-xs text-neutral-500 leading-relaxed">• ${escapeHtml(choice.desc)}</p>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    html += `<div class="px-4 py-3"><p class="text-xs text-amber-600 italic">Awaiting detailed criteria from Sir Tony — use your own judgment for now.</p></div>`;
                 }
 
                 html += `</div>`;
             });
 
-            const rows = scorecardRows(criteria);
-            const blankCount = rows.filter(r => selections[r.id] === undefined || selections[r.id] === null || selections[r.id] === '').length;
             const subtotal = scorecardSubtotal(criteria, selections);
+            const blankCount = criteria.filter(c => selections[c.id] === undefined || selections[c.id] === null || selections[c.id] === '').length;
             html += `
                     </div>
                     <div class="mt-6 p-4 rounded-xl border border-neutral-300 bg-neutral-50 flex items-center justify-between">
@@ -849,23 +828,21 @@
             container.innerHTML = html;
         }
 
-        // Average across EVERY row (every description, not every criterion) — and hard-clamped
-        // to [0, 100] here too as a second line of defense, on top of the input-level clamp in
-        // setScoreValue().
+        // Average, not sum — and hard-clamped to [0, 100] here too as a second line of defense,
+        // on top of the input-level clamp in setScoreValue().
         function scorecardSubtotal(criteria, selections) {
-            const rows = scorecardRows(criteria);
-            if (!rows.length) return 0;
-            const total = rows.reduce((sum, r) => sum + (Number(selections[r.id]) || 0), 0);
-            return Math.max(0, Math.min(100, total / rows.length));
+            if (!criteria.length) return 0;
+            const total = criteria.reduce((sum, c) => sum + (Number(selections[c.id]) || 0), 0);
+            return Math.max(0, Math.min(100, total / criteria.length));
         }
 
-        function setScoreValue(scorecardType, rowId, rawValue) {
+        function setScoreValue(scorecardType, criterionId, rawValue) {
             const cfg = SCORECARD_CONFIG[scorecardType];
             if (!cfg) return;
             let value = parseFloat(rawValue);
             if (isNaN(value)) value = 0;
             value = Math.max(0, Math.min(100, value)); // the actual "keep the limit 100" cap — no 1000% typos surviving this
-            scorecardSelections[scorecardType][rowId] = value;
+            scorecardSelections[scorecardType][criterionId] = value;
             saveScorecardState();
 
             renderScorecard(scorecardType);
@@ -958,10 +935,7 @@
         }
 
         function scorecardDetail(criteria, selections) {
-            return scorecardRows(criteria).map(r => ({
-                label: r.desc ? `${r.critLabel} — ${r.desc}` : r.critLabel,
-                value: (selections[r.id] !== undefined && selections[r.id] !== null && selections[r.id] !== '') ? selections[r.id] : null
-            }));
+            return criteria.map(c => ({ label: c.label, value: (selections[c.id] !== undefined && selections[c.id] !== null && selections[c.id] !== '') ? selections[c.id] : null }));
         }
 
         // Escalation now comes from its own scorecard here in CES, same mechanism as Contingency

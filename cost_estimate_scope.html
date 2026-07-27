@@ -569,11 +569,14 @@
                 });
             }));
 
-            // 4. Strip out anything the person has removed.
+            // 4. Default items can no longer be removed at all (see removeItem()'s guard), and
+            // every custom item's removal is tracked via `added` instead, never `removed` — so
+            // this list can only ever contain stale entries from before that lock existed. Rather
+            // than hide a default item forever because of a leftover flag, just clear it out once
+            // here, which also un-hides anything that got caught by this before the fix.
             if (scopeOverrides.removed.length) {
-                SCOPE_CATEGORIES.forEach(cat => cat.sections.forEach(sec => {
-                    sec.items = sec.items.filter(item => !scopeOverrides.removed.includes(item.id));
-                }));
+                scopeOverrides.removed = [];
+                saveScopeOverrides();
             }
         }
 
@@ -756,9 +759,23 @@
             if (tab === 'contingency' || tab === 'undefinedCost' || tab === 'escalation') renderScorecard(tab);
         }
 
-        // Every row is a typed percentage now, not a pick from preset choices — the reference
-        // descriptions from the original criteria still show as guidance text, they just don't
-        // drive the number directly anymore. Subtotal is the AVERAGE across every row (blank
+        // Flattens a scorecard's criteria into individually-scoreable rows — one row per
+        // reference description, not one row per criterion. A criterion with no choices yet
+        // (the Escalation placeholder) counts as exactly one row, keyed by its own id directly.
+        function scorecardRows(criteria) {
+            const rows = [];
+            criteria.forEach(crit => {
+                if (crit.choices && crit.choices.length) {
+                    crit.choices.forEach((choice, idx) => rows.push({ id: `${crit.id}__${idx}`, desc: choice.desc, critLabel: crit.label }));
+                } else {
+                    rows.push({ id: crit.id, desc: null, critLabel: crit.label });
+                }
+            });
+            return rows;
+        }
+
+        // Every individual description row is its own typed percentage now — not one input per
+        // criterion group. Subtotal is the AVERAGE across every row in the whole scorecard (blank
         // rows count as 0), never the sum, and every input is hard-capped at 100 so a stray
         // keystroke can't produce something like 1000%.
         function renderScorecard(scorecardType) {
@@ -769,16 +786,40 @@
 
             let html = `
                 <div class="max-w-4xl mx-auto">
-                    <p class="text-xs text-neutral-500 mb-6">Type a percentage from 0–100 for every row below, using the reference descriptions as guidance. The subtotal is the average across all rows (capped at 100%), not the sum.</p>
+                    <p class="text-xs text-neutral-500 mb-6">Type a percentage from 0–100 for every description below. The subtotal is the average across every row (capped at 100%), not the sum.</p>
                     <div class="space-y-4">`;
 
             criteria.forEach(crit => {
-                const raw = selections[crit.id];
-                const hasValue = raw !== undefined && raw !== null && raw !== '';
                 html += `
                     <div class="border border-neutral-300 rounded-xl overflow-hidden">
-                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between gap-3">
+                        <div class="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200">
                             <h3 class="text-xs font-bold text-neutral-800 uppercase tracking-wide">${escapeHtml(crit.label)}</h3>
+                        </div>`;
+
+                if (crit.choices && crit.choices.length) {
+                    html += `<div class="divide-y divide-neutral-200">`;
+                    crit.choices.forEach((choice, idx) => {
+                        const rowId = `${crit.id}__${idx}`;
+                        const raw = selections[rowId];
+                        const hasValue = raw !== undefined && raw !== null && raw !== '';
+                        html += `
+                            <div class="flex items-start gap-3 px-4 py-2.5">
+                                <p class="text-xs text-neutral-600 leading-relaxed flex-1">${escapeHtml(choice.desc)}</p>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <input type="number" min="0" max="100" step="1" placeholder="0" value="${hasValue ? raw : ''}"
+                                           class="w-16 text-center text-sm font-bold border border-neutral-300 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                           onchange="setScoreValue('${scorecardType}', '${rowId}', this.value)">
+                                    <span class="text-xs font-bold text-neutral-500">%</span>
+                                </div>
+                            </div>`;
+                    });
+                    html += `</div>`;
+                } else {
+                    const raw = selections[crit.id];
+                    const hasValue = raw !== undefined && raw !== null && raw !== '';
+                    html += `
+                        <div class="flex items-center gap-3 px-4 py-3">
+                            <p class="text-xs text-amber-600 italic flex-1">Awaiting detailed criteria from Sir Tony — use your own judgment for now.</p>
                             <div class="flex items-center gap-1.5 flex-shrink-0">
                                 <input type="number" min="0" max="100" step="1" placeholder="0" value="${hasValue ? raw : ''}"
                                        class="w-16 text-center text-sm font-bold border border-neutral-300 rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -786,22 +827,14 @@
                                 <span class="text-xs font-bold text-neutral-500">%</span>
                             </div>
                         </div>`;
-
-                if (crit.choices && crit.choices.length) {
-                    html += `<div class="px-4 py-3 space-y-1.5">`;
-                    crit.choices.forEach(choice => {
-                        html += `<p class="text-xs text-neutral-500 leading-relaxed">• ${escapeHtml(choice.desc)}</p>`;
-                    });
-                    html += `</div>`;
-                } else {
-                    html += `<div class="px-4 py-3"><p class="text-xs text-amber-600 italic">Awaiting detailed criteria from Sir Tony — use your own judgment for now.</p></div>`;
                 }
 
                 html += `</div>`;
             });
 
+            const rows = scorecardRows(criteria);
+            const blankCount = rows.filter(r => selections[r.id] === undefined || selections[r.id] === null || selections[r.id] === '').length;
             const subtotal = scorecardSubtotal(criteria, selections);
-            const blankCount = criteria.filter(c => selections[c.id] === undefined || selections[c.id] === null || selections[c.id] === '').length;
             html += `
                     </div>
                     <div class="mt-6 p-4 rounded-xl border border-neutral-300 bg-neutral-50 flex items-center justify-between">
@@ -816,21 +849,23 @@
             container.innerHTML = html;
         }
 
-        // Average, not sum — and hard-clamped to [0, 100] here too as a second line of defense,
-        // on top of the input-level clamp in setScoreValue().
+        // Average across EVERY row (every description, not every criterion) — and hard-clamped
+        // to [0, 100] here too as a second line of defense, on top of the input-level clamp in
+        // setScoreValue().
         function scorecardSubtotal(criteria, selections) {
-            if (!criteria.length) return 0;
-            const total = criteria.reduce((sum, c) => sum + (Number(selections[c.id]) || 0), 0);
-            return Math.max(0, Math.min(100, total / criteria.length));
+            const rows = scorecardRows(criteria);
+            if (!rows.length) return 0;
+            const total = rows.reduce((sum, r) => sum + (Number(selections[r.id]) || 0), 0);
+            return Math.max(0, Math.min(100, total / rows.length));
         }
 
-        function setScoreValue(scorecardType, criterionId, rawValue) {
+        function setScoreValue(scorecardType, rowId, rawValue) {
             const cfg = SCORECARD_CONFIG[scorecardType];
             if (!cfg) return;
             let value = parseFloat(rawValue);
             if (isNaN(value)) value = 0;
             value = Math.max(0, Math.min(100, value)); // the actual "keep the limit 100" cap — no 1000% typos surviving this
-            scorecardSelections[scorecardType][criterionId] = value;
+            scorecardSelections[scorecardType][rowId] = value;
             saveScorecardState();
 
             renderScorecard(scorecardType);
@@ -923,7 +958,10 @@
         }
 
         function scorecardDetail(criteria, selections) {
-            return criteria.map(c => ({ label: c.label, value: (selections[c.id] !== undefined && selections[c.id] !== null && selections[c.id] !== '') ? selections[c.id] : null }));
+            return scorecardRows(criteria).map(r => ({
+                label: r.desc ? `${r.critLabel} — ${r.desc}` : r.critLabel,
+                value: (selections[r.id] !== undefined && selections[r.id] !== null && selections[r.id] !== '') ? selections[r.id] : null
+            }));
         }
 
         // Escalation now comes from its own scorecard here in CES, same mechanism as Contingency

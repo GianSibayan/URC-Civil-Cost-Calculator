@@ -225,6 +225,17 @@
         // a code across every category gives the total for that component
         // across the whole project. Default items' codes are locked in CES
         // specifically so this stays reliable.
+        //
+        // 10 of the 11 components below are physical building systems, keyed
+        // off WBS code. The 11th, "Indirect Costs & Overhead", is project-level
+        // (Construction Indirects + Engineering & Construction Management +
+        // Taxes/Maintaining Production/Premium Time) and is keyed off category
+        // label instead, same mechanism as Sitework/Others/Other Buildings.
+        // It's listed last since it isn't a physical system like the rest —
+        // but it has to be one of the 11, or its cost silently disappears from
+        // this card while still counting toward the BOQ Grand Total below,
+        // which would make the two totals disagree. With it included, summing
+        // every component here always equals the BOQ's Grand Total exactly.
         // ============================================================
         function inCodeRange(code, lo, hi) {
             const n = parseInt(code, 10);
@@ -234,53 +245,58 @@
         const STRUCTURAL_COMPONENTS = [
             {
                 name: 'Sitework',
-                description: 'Everything outside the building footprint — clearing, grading, drainage, utilities, paving, and site power distribution.',
+                description: 'Everything outside the building footprint: site clearance, grading & drainage, landscaping, retention basins, fire loop/hydrants/fire water tank, paving (roadway, parking lot, truck dock), outdoor lighting, fencing, railroad sidings, truck scales, and site security — plus yard/plant utilities (potable & city water, sanitary/process sewer, natural & LPG gas, hot water, steam, fuel oil) and primary power distribution (high-voltage feed, substation/PDP, backup generator).',
                 match: (catLabel) => ['Site Clearance', 'Yard & Underground', 'Yard Utilities', 'Plant Utilities', 'Substation & Power'].includes(catLabel)
             },
             {
                 name: 'Substructure',
-                description: "Everything below or at ground level that carries the building's weight into the soil: excavation, foundations, and the ground floor slab.",
+                description: "Everything below or at ground level that carries the building's weight into the soil: excavation & fill, foundations, and the slab on grade.",
                 match: (catLabel, code) => ['105', '110', '120'].includes(code)
             },
             {
                 name: 'Superstructure',
-                description: 'The structural frame holding the building up above the foundation, including the floor level above ground.',
+                description: 'The structural frame holding the building up above the foundation: elevated superstructure slabs, the steel or concrete/wood frame (including stairs), and structural platforms.',
                 match: (catLabel, code) => ['115', '130', '135', '155'].includes(code)
             },
             {
                 name: 'Roofing',
-                description: 'The roof deck and the weatherproofing/sheet metal covering it.',
+                description: 'The roof deck structure and the roofing/sheet metal weatherproofing over it.',
                 match: (catLabel, code) => ['140', '150'].includes(code)
             },
             {
                 name: 'Exterior Enclosure',
-                description: 'The walls, doors, and windows separating inside from outside.',
+                description: 'The building envelope separating inside from outside: siding, exterior walls, concrete tilt-up walls, windows and doors, truck doors, exterior painting, floor/wall caulking, interior load-bearing & fire walls, and stair/elevator enclosures.',
                 match: (catLabel, code) => ['125', '160', '165', '170', '175', '180', '185', '190', '195', '199'].includes(code)
             },
             {
                 name: 'Interior Finishes',
-                description: 'Everything inside that organizes and finishes the space for use: partitions, flooring, ceilings, doors.',
+                description: 'Everything inside that organizes and finishes the space for use: partitions, office shell build-out, interior window/glazing, wall finishes, flooring & floor sealer, interior doors, ceilings, built-in carpentry, and specialty items.',
                 match: (catLabel, code) => inCodeRange(code, 210, 299)
             },
             {
                 name: 'Mechanical / MEP',
-                description: 'Climate control, plumbing, and fire protection systems.',
+                description: 'HVAC (incl. chiller & cooling tower), plumbing, fire protection (sprinklers, smoke exhaust, hose racks), laboratory utilities, and elevators/escalators.',
                 match: (catLabel, code) => inCodeRange(code, 310, 399)
             },
             {
                 name: 'Electrical',
-                description: 'Power distribution, lighting, and low-voltage systems (communications, security, grounding).',
+                description: 'Interior lighting, power wiring, communications systems (phone & computer wiring), building grounding, and security systems.',
                 match: (catLabel, code) => inCodeRange(code, 410, 499)
             },
             {
                 name: 'Equipment & Furnishings',
-                description: 'Freestanding items not part of the structure itself: dock doors/levelers, furnishings, canopies, racks, warehouse management system.',
+                description: 'Freestanding items not part of the structure itself: truck dock doors/levelers, furnishings (attached or unattached furniture/computers), canopies, racks, and the warehouse management system.',
                 match: (catLabel) => catLabel === 'Others'
             },
             {
                 name: 'Other Buildings',
-                description: 'Smaller standalone structures on site — transformer building, guard house, boiler house, cafeteria, and similar support buildings.',
+                description: 'Smaller standalone structures on site: transformer building, guard house, fire pump house, boiler house, flammable material storage, empty pallet storage, scrap building, cafeteria, and waste water treatment.',
                 match: (catLabel) => catLabel === 'Other Buildings'
+            },
+            {
+                name: 'Indirect Costs & Overhead',
+                description: "Project-level costs that aren't tied to any single building system: construction equipment, tools, safety gear, scaffolding, mobilization/demobilization, overhead & profit, government permits, and bonds/insurance; engineering & construction management (commissioning, contractor/plant/P&G engineering); and maintaining production, premium time, and taxes.",
+                match: (catLabel) => catLabel === 'Indirect Costs'
             }
         ];
 

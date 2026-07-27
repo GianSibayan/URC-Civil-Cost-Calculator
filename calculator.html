@@ -820,6 +820,12 @@
             let totalBaySpacing = 0;
             if (bsl > 0 && bsw > 0) totalBaySpacing = L / bsl + W / bsw;
             const nodes = Math.ceil(totalBaySpacing);
+            // NOTE: this is (L/spacingL)+(W/spacingW), i.e. a sum — it's what the source spreadsheet
+            // (BUILDING CALCULATOR!J12) uses too, so it's consistent, but a real column grid's node
+            // count is closer to (bays_L+1)×(bays_W+1), a product. Unconfirmed with structural —
+            // flagged for Sir Tony / Engr. Emir, not changed here since it's an engineering call, not
+            // a coding bug. Everything below (Concrete/Rebar/Excavation/Forms/Pallets) inherits whatever
+            // this resolves to.
             const rh = estimateState.rackHeight || 0;
             const bc = estimateState.bottomClearance || 0, se = (estimateState.storageEfficiency || 0) / 100;
             const ds = (estimateState.dockStagingArea || 0) / 100, rlh = estimateState.rackLevelHeight || 0;
@@ -827,23 +833,32 @@
             let rackLevels = 0;
             if (rlh > 0 && rh > bc) rackLevels = Math.floor((rh - bc) / rlh);
             // Row width = Pallet Depth + Isle Width, then Pallets/m² = 1 / (Row Width × Pallet Depth).
-            // Isle Width used to be collected but never actually read anywhere — this is the fix.
+            // Confirmed against the fixed source spreadsheet (BASIS!E16) — that cell used to hardcode
+            // 1/(4.5×1) instead of linking to these two inputs; both now compute the same way.
             const rowWidth = pd + iw;
             let totalPalletPositions = 0;
-            if (rowWidth * pd > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / (rowWidth * pd)) * rackLevels;
+            // Floor once, at the very end — matches BASIS!E13 = FLOOR(StorageArea × Pallets/m² × RackLevels, 1).
+            // Flooring the inner quotient first (before × rackLevels) under-counts by up to rackLevels−1.
+            if (rowWidth * pd > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / (rowWidth * pd) * rackLevels);
             const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
+            // × nodes matches the fixed source spreadsheet's FOOTING PEDESTAL CALCULATOR!E2, which
+            // used to price one footing+pedestal only — now scaled by Total Nodes there too.
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
             // Rebar Weight = Concrete Volume × Rebar Ratio × Steel Density (kg/m³) — same formula
             // as the original footing/pedestal spreadsheet.
             const rebarWeight = concreteVol * ((estimateState.rebarRatio || 0) / 100) * (estimateState.steelDensity || 0);
             // Excavation Volume assumes the dig matches the footing's own footprint — no working
-            // clearance margin added, since none was specified anywhere. Worth confirming with
-            // whoever reviews this if a wider dig is standard practice.
+            // clearance margin added, since none was specified anywhere. Matches the fixed source
+            // spreadsheet's FOOTING PEDESTAL CALCULATOR!J4 (=FootingL×FootingW×ExcavDepth×Nodes),
+            // which was blank before and modeled the same way when filled in. Still worth confirming
+            // with whoever reviews this if a wider dig is standard practice — that's a real-world
+            // assumption, not something either file settles on its own.
             const excavationVolume = fl * fw * (estimateState.excavationDepth || 0) * nodes;
             // Forms Area = the vertical formwork skin needed around each pour — perimeter × depth
             // for the footing, perimeter × height for the pedestal, no formwork assumed on the
-            // underside (rests on excavated soil) or the open top.
+            // underside (rests on excavated soil) or the open top. Matches FOOTING PEDESTAL
+            // CALCULATOR!E4 in the fixed source spreadsheet (was blank there too).
             const formsArea = (2 * (fl + fw) * fd + 2 * (pl + pw) * ph) * nodes;
 
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };

@@ -73,5 +73,80 @@
     "id": "consultant",
     "name": "Consultant",
     "rate": 5000
+  },
+  {
+    "id": "painter",
+    "name": "Painter - Installation",
+    "rate": 535
+  },
+  {
+    "id": "steelman",
+    "name": "Steelman - Rebar Installation",
+    "rate": 750
+  },
+  {
+    "id": "tileSetter",
+    "name": "Tile Setter - Flooring Installation",
+    "rate": 700
+  },
+  {
+    "id": "glazier",
+    "name": "Glazier - Window & Door Installation",
+    "rate": 750
+  },
+  {
+    "id": "roofer",
+    "name": "Roofer - Sheet Metal Installation",
+    "rate": 750
+  },
+  {
+    "id": "hvacInstaller",
+    "name": "HVAC Technician - Installation",
+    "rate": 950
+  },
+  {
+    "id": "fireProtectionFitter",
+    "name": "Fire Protection - Sprinkler Fitter",
+    "rate": 900
+  },
+  {
+    "id": "scaffolder",
+    "name": "Scaffolder - Erection & Dismantling",
+    "rate": 700
+  },
+  {
+    "id": "rigger",
+    "name": "Rigger - Lifting & Erection Support",
+    "rate": 700
+  },
+  {
+    "id": "drywallInstaller",
+    "name": "Drywall/Partition Installer",
+    "rate": 700
+  },
+  {
+    "id": "ceilingInstaller",
+    "name": "Ceiling Installer",
+    "rate": 650
+  },
+  {
+    "id": "waterproofer",
+    "name": "Waterproofing Applicator",
+    "rate": 700
+  },
+  {
+    "id": "elevatorTech",
+    "name": "Elevator/Escalator Technician",
+    "rate": 1300
+  },
+  {
+    "id": "lowVoltageTech",
+    "name": "Low-Voltage/Communications Technician",
+    "rate": 800
+  },
+  {
+    "id": "landscaper",
+    "name": "Landscaper",
+    "rate": 550
   }
 ]

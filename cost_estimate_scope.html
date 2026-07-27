@@ -1130,7 +1130,15 @@
                     pipeFitter: { name: 'Pipe Fitter', dailyRate: 700 }, civilEng: { name: 'Civil Engineer', dailyRate: 2700 },
                     electricalEng:{ name: 'Electrical Engineer', dailyRate: 2100 }, mechanicalEng:{ name: 'Mechanical Engineer', dailyRate: 2500 },
                     generalEng: { name: 'General Engineer', dailyRate: 1700 }, itEng: { name: 'IT / Software Engineer', dailyRate: 2500 },
-                    consultant: { name: 'Consultant', dailyRate: 5000 }
+                    consultant: { name: 'Consultant', dailyRate: 5000 },
+                    painter: { name: 'Painter - Installation', dailyRate: 535 }, steelman: { name: 'Steelman - Rebar Installation', dailyRate: 750 },
+                    tileSetter: { name: 'Tile Setter - Flooring Installation', dailyRate: 700 }, glazier: { name: 'Glazier - Window & Door Installation', dailyRate: 750 },
+                    roofer: { name: 'Roofer - Sheet Metal Installation', dailyRate: 750 }, hvacInstaller: { name: 'HVAC Technician - Installation', dailyRate: 950 },
+                    fireProtectionFitter: { name: 'Fire Protection - Sprinkler Fitter', dailyRate: 900 }, scaffolder: { name: 'Scaffolder - Erection & Dismantling', dailyRate: 700 },
+                    rigger: { name: 'Rigger - Lifting & Erection Support', dailyRate: 700 }, drywallInstaller: { name: 'Drywall/Partition Installer', dailyRate: 700 },
+                    ceilingInstaller: { name: 'Ceiling Installer', dailyRate: 650 }, waterproofer: { name: 'Waterproofing Applicator', dailyRate: 700 },
+                    elevatorTech: { name: 'Elevator/Escalator Technician', dailyRate: 1300 }, lowVoltageTech: { name: 'Low-Voltage/Communications Technician', dailyRate: 800 },
+                    landscaper: { name: 'Landscaper', dailyRate: 550 }
                 };
             }
         }
@@ -1299,7 +1307,7 @@
 
             if (line.labId) {
                 const lab = LABOR_DB[line.labId];
-                const unitCost = lab ? lab.dailyRate : 0; // dailyRate field is actually PER HOUR in the database — ×8 for the real daily cost used by the "# of Days" input
+                const unitCost = lab ? lab.dailyRate : 0; // dailyRate is a plain per-day rate already (see labor_rates.json / admin.html's "Rate (₱/Day)" column) — no x8 conversion, despite what an older comment here used to claim
                 const headcount = parseFloat(line.headcount) || 0;
                 const days = parseFloat(line.days) || 0;
                 return { total: (unitCost * headcount * days) + lumpSum, unitCost, unitStr: 'Days' };

@@ -215,10 +215,7 @@
             <header class="h-16 px-8 border-b border-neutral-200 flex items-center justify-between sticky top-0 z-10 bg-white">
                 <h2 id="header-title" class="text-2xl font-bold text-neutral-900">Dimensions Calculator</h2>
                 <div class="flex items-center gap-2">
-                    <div class="tip">
-                        <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
-                        <span class="tip-bubble tip-bubble-end">Enable by filling in Dimensions and completing Master Estimator</span>
-                    </div>
+                    <button id="btn-save-estimate" onclick="openSaveModal()" disabled class="px-4 py-2 text-sm font-medium bg-black text-white rounded-lg shadow-sm opacity-40 pointer-events-none transition-opacity cursor-pointer">Save Estimate</button>
                     <!-- <button class="pointer-events-none px-4 py-2 text-sm font-medium bg-black text-white rounded-lg opacity-40">Export</button> -->
                 </div>
             </header>
@@ -236,15 +233,10 @@
                             <div class="flex items-center gap-6 py-4 border-y border-neutral-200 mb-6 -mx-8 px-8">
                                 <h3 class="text-2xl font-bold text-neutral-900">Building Calculator</h3>
                                 <div class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40">
-                                    <button id="tab-dimension" onclick="switchSection('dimension')" class="tip bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension
-                                        <span class="tip-bubble">Length, width, height, stories, mezzanine %</span>
-                                    </button>
-                                    <button id="tab-structure" onclick="switchSection('structure')" class="tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure
-                                        <span class="tip-bubble">Frame, roof, cladding, slab, doors, bay spacing</span>
-                                    </button>
-                                    <button id="tab-capacity" onclick="switchSection('capacity')" class="tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity
-                                        <span class="tip-bubble">Rack, pallet, and storage layout inputs</span>
-                                    </button>
+                                    <button id="tab-dimension" onclick="switchSection('dimension')" class="tip bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Dimension<span class="tip-bubble">Building footprint and height</span></button>
+                                    <button id="tab-structure" onclick="switchSection('structure')" class="tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Structure<span class="tip-bubble">Structural system, envelope, and doors</span></button>
+                                    <button id="tab-capacity" onclick="switchSection('capacity')" class="tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Capacity<span class="tip-bubble">Racking and storage capacity</span></button>
+                                    <button id="tab-footing" onclick="switchSection('footing')" class="tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Footing<span class="tip-bubble tip-bubble-end">Footing & pedestal foundation quantities</span></button>
                                 </div>
                             </div>
 
@@ -252,69 +244,84 @@
 
                             <!-- DIMENSION SECTION -->
                             <div id="section-dimension" class="flex flex-col gap-6">
-                                <!-- <h3 class="text-2xl font-bold text-neutral-900">Dimension Metrics</h3> -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Length</span><div class="field-control"><input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Width</span><div class="field-control"><input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Clear Height</span><div class="field-control"><input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">No. of Stories</span><div class="field-control"><input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" /><span class="field-unit">floors</span></div></div>
-                                    <div class="field-row md:col-span-2"><span class="field-label">% Mezzanine</span><div class="field-control"><input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" /><span class="field-unit">percent (%)</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Length<span class="tip-bubble">Building footprint, side 1.</span></span><div class="field-control"><input id="input-length" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('length', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Width<span class="tip-bubble">Building footprint, side 2.</span></span><div class="field-control"><input id="input-width" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('width', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Clear Height<span class="tip-bubble">Usable height under the roof structure, per floor.</span></span><div class="field-control"><input id="input-clearHeight" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('clearHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">No. of Stories<span class="tip-bubble">Multiplies Gross Area and Building Volume.</span></span><div class="field-control"><input id="input-stories" class="dim-input select-text" type="number" min="0" step="1" placeholder="0" oninput="handleInput('stories', this.value)" /><span class="field-unit">floors</span></div></div>
+                                    <div class="field-row md:col-span-2"><span class="field-label tip">% Mezzanine<span class="tip-bubble">Extra floor area from a mezzanine, as % of ground floor.</span></span><div class="field-control"><input id="input-mezzanine" class="dim-input select-text" type="number" min="0" max="100" placeholder="0" oninput="handleInput('mezzanine', this.value)" /><span class="field-unit">percent (%)</span></div></div>
                                 </div>
                             </div>
 
                             <!-- STRUCTURE SECTION -->
                             <div id="section-structure" class="hidden flex flex-col gap-6">
-                                <!-- <h3 class="text-2xl font-bold text-neutral-900">Structural Envelope</h3> -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Structure Type</span><div class="field-control"><select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
+                                    <div class="field-row"><span class="field-label tip">Structure Type<span class="tip-bubble">Primary structural frame system.</span></span><div class="field-control"><select id="select-structureType" class="struct-select" onchange="handleSelect('structureType', this.value)">
                                             <option value="steel_rigid">Steel Rigid Frames</option>
                                             <option value="steel_joist">Steel Joist and Column</option>
                                             <option value="tilt_up">Tilt-Up Concrete</option>
                                             <option value="pre_cast">Pre-Cast Concrete</option>
                                         </select></div></div>
-                                    <div class="field-row"><span class="field-label">Roof Type</span><div class="field-control"><select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
+                                    <div class="field-row"><span class="field-label tip">Roof Type<span class="tip-bubble">Roofing material and system.</span></span><div class="field-control"><select id="select-roofType" class="struct-select" onchange="handleSelect('roofType', this.value)">
                                             <option value="standing_seam">Standing Seam Metal</option>
                                             <option value="r_panel">R Panel Metal</option>
                                             <option value="tpo_membrane">TPO Membrane</option>
                                             <option value="epdm_membrane">EPDM Membrane</option>
                                         </select></div></div>
-                                    <div class="field-row"><span class="field-label">Wall Cladding</span><div class="field-control"><select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
+                                    <div class="field-row"><span class="field-label tip">Wall Cladding<span class="tip-bubble">Exterior wall material.</span></span><div class="field-control"><select id="select-wallCladding" class="struct-select" onchange="handleSelect('wallCladding', this.value)">
                                             <option value="metal_panel">Metal Panel</option>
                                             <option value="tilt_up_wall">Tilt-Up Concrete</option>
                                             <option value="pre_cast_wall">Pre-Cast Panel</option>
                                             <option value="masonry_block">Masonry Block</option>
                                         </select></div></div>
-                                    <div class="field-row"><span class="field-label">Slab Thickness</span><div class="field-control"><select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
+                                    <div class="field-row"><span class="field-label tip">Slab Thickness<span class="tip-bubble">Ground floor slab thickness, by expected load.</span></span><div class="field-control"><select id="select-slabThickness" class="struct-select" onchange="handleSelect('slabThickness', this.value)">
                                             <option value="100mm">100mm Light Storage</option>
                                             <option value="150mm">150mm Standard</option>
                                             <option value="200mm">200mm Heavy Loads</option>
                                             <option value="250mm">250mm Very Heavy</option>
                                         </select></div></div>
-                                    <div class="field-row"><span class="field-label">Dock Doors</span><div class="field-control"><input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" /></div></div>
-                                    <div class="field-row"><span class="field-label">Drive-In Doors</span><div class="field-control"><input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" /></div></div>
-                                    <div class="field-row"><span class="field-label">Skylights / Windows</span><div class="field-control"><select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
+                                    <div class="field-row"><span class="field-label tip">Dock Doors<span class="tip-bubble">Number of dock-level loading doors.</span></span><div class="field-control"><input id="input-dockDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('dockDoors', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label tip">Drive-In Doors<span class="tip-bubble">Number of ground-level drive-in doors.</span></span><div class="field-control"><input id="input-driveInDoors" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('driveInDoors', this.value)" /></div></div>
+                                    <div class="field-row"><span class="field-label tip">Skylights / Windows<span class="tip-bubble">Amount of natural light/roof openings.</span></span><div class="field-control"><select id="select-skylights" class="struct-select" onchange="handleSelect('skylights', this.value)">
                                             <option value="standard">Standard</option>
                                             <option value="none">None</option>
                                             <option value="minimal">Minimal</option>
                                             <option value="many">Many</option>
                                         </select></div></div>
-                                    <div class="field-row"><span class="field-label">Bay Spacing (L)</span><div class="field-control"><input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row md:col-span-2"><span class="field-label">Bay Spacing (W)</span><div class="field-control"><input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Bay Spacing (L)<span class="tip-bubble">Column spacing along the length.</span></span><div class="field-control"><input id="input-baySpacingL" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingL', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row md:col-span-2"><span class="field-label tip">Bay Spacing (W)<span class="tip-bubble">Column spacing along the width.</span></span><div class="field-control"><input id="input-baySpacingW" class="dim-input select-text" type="number" min="0" placeholder="0" oninput="handleInput('baySpacingW', this.value)" /><span class="field-unit">meters</span></div></div>
                                 </div>
                             </div>
 
                             <!-- CAPACITY SECTION -->
                             <div id="section-capacity" class="hidden flex flex-col gap-6">
-                                <!-- <h3 class="text-2xl font-bold text-neutral-900">Logistics Capacity</h3> -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Rack Height</span><div class="field-control"><input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Pallet Size</span><div class="field-control"><input id="input-palletSize" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletSize', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Isle Width</span><div class="field-control"><input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Bottom Clearance</span><div class="field-control"><input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Storage Efficiency</span><div class="field-control"><input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" /><span class="field-unit">percent (%)</span></div></div>
-                                    <div class="field-row"><span class="field-label">Dock / Staging Area</span><div class="field-control"><input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" /><span class="field-unit">percent (%)</span></div></div>
-                                    <div class="field-row"><span class="field-label">Rack Level Height</span><div class="field-control"><input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Pallet Depth</span><div class="field-control"><input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Rack Height<span class="tip-bubble">Usable racking height, floor to top beam.</span></span><div class="field-control"><input id="input-rackHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Bottom Clearance<span class="tip-bubble">Floor/base allowance before the first rack level.</span></span><div class="field-control"><input id="input-bottomClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('bottomClearance', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Top Clearance<span class="tip-bubble">Ceiling/sprinkler buffer above the top load.</span></span><div class="field-control"><input id="input-topClearance" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('topClearance', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Rack Level Height<span class="tip-bubble">Vertical spacing from one rack beam to the next.</span></span><div class="field-control"><input id="input-rackLevelHeight" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('rackLevelHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Pallet Depth<span class="tip-bubble">Pallet dimension facing into the rack.</span></span><div class="field-control"><input id="input-palletDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletDepth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Pallet Width<span class="tip-bubble">Pallet dimension facing the aisle.</span></span><div class="field-control"><input id="input-palletWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('palletWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Isle Width<span class="tip-bubble">Forklift aisle width — sets what equipment fits.</span></span><div class="field-control"><input id="input-isleWidth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('isleWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Storage Efficiency<span class="tip-bubble">% of floor area usable for storage after aisles/infra.</span></span><div class="field-control"><input id="input-storageEfficiency" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('storageEfficiency', this.value)" /><span class="field-unit">percent (%)</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Dock / Staging Area<span class="tip-bubble">% of floor area set aside for dock/staging.</span></span><div class="field-control"><input id="input-dockStagingArea" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('dockStagingArea', this.value)" /><span class="field-unit">percent (%)</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Operational Buffer<span class="tip-bubble">Plan below the theoretical max, for in/outbound flow.</span></span><div class="field-control"><input id="input-operationalBuffer" class="dim-input select-text" type="number" min="0" max="100" step="1" placeholder="0" oninput="handleInput('operationalBuffer', this.value)" /><span class="field-unit">percent (%)</span></div></div>
+                                </div>
+                            </div>
+
+                            <!-- FOOTING & PEDESTAL SECTION — folded into the main tab bar as its own tab,
+                                 not a separate module, so this space stays free for something else. -->
+                            <div id="section-footing" class="hidden flex flex-col gap-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                    <div class="field-row"><span class="field-label tip">Footing Length<span class="tip-bubble">Footing base, length.</span></span><div class="field-control"><input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Footing Width<span class="tip-bubble">Footing base, width.</span></span><div class="field-control"><input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Footing Depth<span class="tip-bubble">Footing base, depth.</span></span><div class="field-control"><input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Pedestal Length<span class="tip-bubble">Column pedestal above the footing, length.</span></span><div class="field-control"><input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Pedestal Width<span class="tip-bubble">Column pedestal above the footing, width.</span></span><div class="field-control"><input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Pedestal Height<span class="tip-bubble">Column pedestal above the footing, height.</span></span><div class="field-control"><input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Excavation Depth<span class="tip-bubble">How deep the dig goes for each footing.</span></span><div class="field-control"><input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" /><span class="field-unit">meters</span></div></div>
+                                    <div class="field-row"><span class="field-label tip">Rebar Ratio<span class="tip-bubble">Rebar weight as a % of concrete volume.</span></span><div class="field-control"><input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" /><span class="field-unit">percent Ratio (%)</span></div></div>
+                                    <div class="field-row md:col-span-2"><span class="field-label tip">Steel Density<span class="tip-bubble">Rebar steel density, kg per m³. Default 7850.</span></span><div class="field-control"><input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" /></div></div>
                                 </div>
                             </div>
 
@@ -323,51 +330,6 @@
                             </div>
                             </div>
 
-                            <div id="module-footing" class="mt-10">
-
-                            <div class="flex items-center gap-6 py-4 border-y border-neutral-200 mb-6 -mx-8 px-8">
-                                <h3 class="text-2xl font-bold text-neutral-900">Footing &amp; Pedestal</h3>
-                                <div class="inline-flex bg-neutral-100 rounded-full p-1 border border-neutral-200/40">
-                                    <button id="tab-footing-geometry" onclick="switchSection('footing-geometry')" class="tip bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all">Geometry
-                                        <span class="tip-bubble">Footing and pedestal dimensions</span>
-                                    </button>
-                                    <button id="tab-footing-materials" onclick="switchSection('footing-materials')" class="tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all">Materials &amp; Costs
-                                        <span class="tip-bubble">Excavation depth, rebar ratio, steel density — quantities only, no pricing</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="footing-sections-wrap" class="transition-opacity duration-200 ease-apple opacity-100">
-
-                            <!-- FOOTING GEOMETRY SECTION -->
-                            <div id="section-footing-geometry" class="flex flex-col gap-6">
-                                <!-- <h3 class="text-2xl font-bold text-neutral-900">Foundation Footprints</h3> -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Footing Length</span><div class="field-control"><input id="input-footingLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingLength', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Footing Width</span><div class="field-control"><input id="input-footingWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingWidth', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Footing Depth</span><div class="field-control"><input id="input-footingDepth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('footingDepth', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Pedestal Length</span><div class="field-control"><input id="input-pedestalLength" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalLength', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Pedestal Width</span><div class="field-control"><input id="input-pedestalWidth" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalWidth', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Pedestal Height</span><div class="field-control"><input id="input-pedestalHeight" class="dim-input select-text" type="number" min="0" step="0.01" placeholder="0" oninput="handleInput('pedestalHeight', this.value)" /><span class="field-unit">meters</span></div></div>
-                                </div>
-                            </div>
-
-                            <!-- FOOTING MATERIALS SECTION — quantities only now, no pricing. CES's own
-                                 Foundations WBS row is the one place a peso figure for this ever lives;
-                                 duplicating it here would double-count. Excavation Depth, Rebar Ratio, and
-                                 Steel Density stay because they drive real physical quantities (Excavation
-                                 Volume, Rebar Weight) shown in the Live Output Summary. -->
-                            <div id="section-footing-materials" class="hidden flex flex-col gap-6">
-                                <!-- <h3 class="text-2xl font-bold text-neutral-900">Materials Weight Variables</h3> -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                                    <div class="field-row"><span class="field-label">Excavation Depth</span><div class="field-control"><input id="input-excavationDepth" class="dim-input select-text" type="number" min="0" step="0.1" placeholder="0" oninput="handleInput('excavationDepth', this.value)" /><span class="field-unit">meters</span></div></div>
-                                    <div class="field-row"><span class="field-label">Rebar Ratio</span><div class="field-control"><input id="input-rebarRatio" class="dim-input select-text" type="number" min="0" max="100" step="0.01" placeholder="0" oninput="handleInput('rebarRatio', this.value)" /><span class="field-unit">percent Ratio (%)</span></div></div>
-                                    <div class="field-row md:col-span-2"><span class="field-label">Steel Density</span><div class="field-control"><input id="input-steelDensity" class="dim-input select-text" type="number" min="0" step="1" placeholder="7850" oninput="handleInput('steelDensity', this.value)" /></div></div>
-                                </div>
-                            </div>
-
-                            </div>
-                            </div>
                         </div>
 
                     </div>
@@ -389,70 +351,98 @@
                                         <span class="text-neutral-500 font-medium">Floor Area</span>
                                         <span id="side-floorArea" class="font-semibold text-neutral-900">0.00 sqm</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Length × Width</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Length × Width</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Gross Area</span>
                                         <span id="side-grossArea" class="font-semibold text-neutral-900">0.00 sqm</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Floor + (Floor × Mezzanine %)</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Floor + (Floor × Mezzanine %)</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Building Volume</span>
                                         <span id="side-bldgVolume" class="font-semibold text-neutral-900">0.00 cu.m</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Area × H) + (Area × Mezz % × 6)</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">(Area × H) + (Area × Mezz % × 6)</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Perimeter Line</span>
                                         <span id="side-perimeter" class="font-semibold text-neutral-900">0.00 m</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: 2 × (Length + Width)</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">2 × (Length + Width)</p>
                                 </div>
                                 <div class="pt-3 border-t border-neutral-100">
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Total Nodes</span>
+                                        <span id="side-baySpacing" class="font-semibold text-neutral-900">0</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">(bays along L + 1) × (bays along W + 1)</p>
+                                </div>
+                                <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Concrete Volume</span>
                                         <span id="side-concrete" class="font-semibold text-neutral-900">0.00 m³</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Footing Vol + Pedestal Vol) × Nodes</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">(Footing Vol + Pedestal Vol) × Nodes</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Rebar Weight</span>
                                         <span id="side-rebar" class="font-semibold text-neutral-900">0.00 kg</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Concrete Volume × Rebar Ratio × Steel Density</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Concrete Volume × Rebar Ratio × Steel Density</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Excavation Volume</span>
                                         <span id="side-excavation" class="font-semibold text-neutral-900">0.00 m³</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Footing Length × Width × Excavation Depth × Nodes</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Footing Length × Width × Excavation Depth × Nodes</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
                                         <span class="text-neutral-500 font-medium">Forms Area</span>
                                         <span id="side-forms" class="font-semibold text-neutral-900">0.00 m²</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: Perimeter × Depth/Height (Footing + Pedestal) × Nodes</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Perimeter × Depth/Height (Footing + Pedestal) × Nodes</p>
                                 </div>
-                                <div>
+                                <div class="pt-3 border-t border-neutral-100">
                                     <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Total Nodes</span>
-                                        <span id="side-baySpacing" class="font-semibold text-neutral-900">0</span>
+                                        <span class="text-neutral-500 font-medium">Rack Levels</span>
+                                        <span id="side-rackLevels" class="font-semibold text-neutral-900">0</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (L / Space L) + (W / Space W)</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">(Rack Height − Bottom Clearance − Top Clearance) ÷ Rack Level Height</p>
                                 </div>
                                 <div>
                                     <div class="flex justify-between items-center mb-0.5">
-                                        <span class="text-neutral-500 font-medium">Total Pallet Slots</span>
+                                        <span class="text-neutral-500 font-medium">Pallet Footprint</span>
+                                        <span id="side-palletFootprint" class="font-semibold text-neutral-900">0.00 m²</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Pallet Depth × Pallet Width</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Aisle Classification</span>
+                                        <span id="side-aisleClass" class="font-semibold text-neutral-900 text-right text-xs">—</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Sanity-check your Storage Efficiency % against this class</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Total Pallet Slots (Theoretical Max)</span>
                                         <span id="side-pallets" class="font-semibold text-neutral-900">0</span>
                                     </div>
-                                    <p class="text-[11px] text-neutral-400 font-mono italic">Formula: (Usable Area / Pallet Footprint) × Levels</p>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">(Floor Area × Storage Efficiency % × (1 − Dock/Staging %) ÷ Pallet Footprint) × Rack Levels</p>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-0.5">
+                                        <span class="text-neutral-500 font-medium">Practical Pallet Capacity</span>
+                                        <span id="side-practicalPallets" class="font-semibold text-neutral-900">0</span>
+                                    </div>
+                                    <p class="text-[11px] text-neutral-400 font-mono italic">Total Pallet Slots × Operational Buffer %</p>
                                 </div>
                             </div>
 
@@ -508,9 +498,8 @@
 
                                 <!-- Live currency conversion — fetched from a public FX API, cached for offline use -->
                                 <div class="border-t border-neutral-100 pt-3 flex items-center justify-between gap-3">
-                                    <div class="flex items-center gap-2 min-w-0 tip">
+                                    <div class="flex items-center gap-2 min-w-0">
                                         <span class="text-[11px] text-neutral-400 font-medium shrink-0">Convert to</span>
-                                        <span class="tip-bubble">Live ECB rates via Frankfurter, cached for offline use</span>
                                         <select id="select-currencyTarget" class="text-xs font-semibold border border-neutral-200 rounded-md pl-2 pr-6 py-1 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 bg-white cursor-pointer" onchange="handleSelect('currencyTarget', this.value)">
                                             <option value="USD">USD</option>
                                             <option value="EUR">EUR</option>
@@ -541,8 +530,8 @@
             length: 0, width: 0, clearHeight: 0, stories: 0, mezzanine: 0,
             structureType: 'steel_rigid', roofType: 'standing_seam', wallCladding: 'metal_panel', slabThickness: '100mm',
             dockDoors: 0, driveInDoors: 0, skylights: 'standard', baySpacingL: 0, baySpacingW: 0,
-            rackHeight: 0, palletSize: 0, isleWidth: 0, bottomClearance: 0, storageEfficiency: 0,
-            dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0,
+            rackHeight: 0, isleWidth: 0, bottomClearance: 0, topClearance: 0, storageEfficiency: 0,
+            dockStagingArea: 0, rackLevelHeight: 0, palletDepth: 0, palletWidth: 0, operationalBuffer: 0,
             footingLength: 0, footingWidth: 0, footingDepth: 0,
             pedestalLength: 0, pedestalWidth: 0, pedestalHeight: 0,
             excavationDepth: 0, rebarRatio: 0, steelDensity: 7850,
@@ -651,11 +640,10 @@
         }
 
         const SECTION_GROUPS = {
-            'dimension':          { group: ['dimension','structure','capacity'], wrapper: 'building-sections-wrap' },
-            'structure':          { group: ['dimension','structure','capacity'], wrapper: 'building-sections-wrap' },
-            'capacity':           { group: ['dimension','structure','capacity'], wrapper: 'building-sections-wrap' },
-            'footing-geometry':   { group: ['footing-geometry','footing-materials'], wrapper: 'footing-sections-wrap' },
-            'footing-materials':  { group: ['footing-geometry','footing-materials'], wrapper: 'footing-sections-wrap' }
+            'dimension':  { group: ['dimension','structure','capacity','footing'], wrapper: 'building-sections-wrap' },
+            'structure':  { group: ['dimension','structure','capacity','footing'], wrapper: 'building-sections-wrap' },
+            'capacity':   { group: ['dimension','structure','capacity','footing'], wrapper: 'building-sections-wrap' },
+            'footing':    { group: ['dimension','structure','capacity','footing'], wrapper: 'building-sections-wrap' }
         };
 
         function switchSection(section) {
@@ -679,10 +667,10 @@
             setTimeout(() => {
                 cfg.group.forEach(s => {
                     const el = document.getElementById('section-' + s); if (el) el.classList.add('hidden');
-                    const tab = document.getElementById('tab-' + s); if (tab) tab.className = 'tip text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
+                    const tab = document.getElementById('tab-' + s); if (tab) tab.className = 'text-neutral-500 hover:text-neutral-800 px-4 py-1 rounded-full text-xs font-medium transition-all';
                 });
                 const activeSec = document.getElementById('section-' + section); if (activeSec) activeSec.classList.remove('hidden');
-                const targetTab = document.getElementById('tab-' + section); if (targetTab) targetTab.className = 'tip bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
+                const targetTab = document.getElementById('tab-' + section); if (targetTab) targetTab.className = 'bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-xs font-semibold transition-all';
 
                 wrapper.style.transition = 'none';
                 wrapper.style.height = 'auto';
@@ -789,9 +777,10 @@
 
             const L = estimateState.length || 0, W = estimateState.width || 0, H = estimateState.clearHeight || 0;
             const M = (estimateState.mezzanine || 0) / 100;
-            const floorArea = L * W, grossArea = floorArea * (1 + M);
+            const stories = Math.max(estimateState.stories || 1, 1);
+            const floorArea = L * W, grossArea = floorArea * (1 + M) * stories;
             const bsl = estimateState.baySpacingL || 0, bsw = estimateState.baySpacingW || 0;
-            const nodes = (bsl > 0 && bsw > 0) ? Math.ceil(L / bsl + W / bsw) : 0;
+            const nodes = (bsl > 0 && bsw > 0) ? (Math.ceil(L / bsl) + 1) * (Math.ceil(W / bsw) + 1) : 0;
             const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
@@ -863,51 +852,43 @@
         function updateUI() {
             const L = estimateState.length || 0, W = estimateState.width || 0, H = estimateState.clearHeight || 0;
             const M = (estimateState.mezzanine || 0) / 100;
-            const floorArea = L * W, grossArea = floorArea + floorArea * M;
-            const bldgVolume = L * W * H + L * W * M * 6, perimeter = 2 * (L + W);
+            const stories = Math.max(estimateState.stories || 1, 1);
+            const floorArea = L * W;
+            // Gross Area and Building Volume now scale by Stories (min 1) — confirmed against the fixed
+            // source spreadsheet (BUILDING CALCULATOR!C9, D9), which used to collect this input and ignore it.
+            const grossArea = (floorArea + floorArea * M) * stories;
+            const bldgVolume = (L * W * H + L * W * M * 6) * stories;
+            const perimeter = 2 * (L + W);
+            // Total Bay Spacing and Total Nodes only need Length/Width/Bay Spacing (Structure tab) — they
+            // don't actually depend on Footing & Pedestal at all, just used to scale its quantities below.
             const bsl = estimateState.baySpacingL || 0, bsw = estimateState.baySpacingW || 0;
             let totalBaySpacing = 0;
             if (bsl > 0 && bsw > 0) totalBaySpacing = L / bsl + W / bsw;
-            const nodes = Math.ceil(totalBaySpacing);
-            // NOTE: this is (L/spacingL)+(W/spacingW), i.e. a sum — it's what the source spreadsheet
-            // (BUILDING CALCULATOR!J12) uses too, so it's consistent, but a real column grid's node
-            // count is closer to (bays_L+1)×(bays_W+1), a product. Unconfirmed with structural —
-            // flagged for Sir Tony / Engr. Emir, not changed here since it's an engineering call, not
-            // a coding bug. Everything below (Concrete/Rebar/Excavation/Forms/Pallets) inherits whatever
-            // this resolves to.
+            let nodes = 0;
+            if (bsl > 0 && bsw > 0) nodes = (Math.ceil(L / bsl) + 1) * (Math.ceil(W / bsw) + 1);
             const rh = estimateState.rackHeight || 0;
-            const bc = estimateState.bottomClearance || 0, se = (estimateState.storageEfficiency || 0) / 100;
+            const bc = estimateState.bottomClearance || 0, tc = estimateState.topClearance || 0;
+            const se = (estimateState.storageEfficiency || 0) / 100;
             const ds = (estimateState.dockStagingArea || 0) / 100, rlh = estimateState.rackLevelHeight || 0;
-            const pd = estimateState.palletDepth || 0, iw = estimateState.isleWidth || 0;
+            const pd = estimateState.palletDepth || 0, pw2 = estimateState.palletWidth || 0, iw = estimateState.isleWidth || 0;
+            const opBuffer = (estimateState.operationalBuffer || 0) / 100;
             let rackLevels = 0;
-            if (rlh > 0 && rh > bc) rackLevels = Math.floor((rh - bc) / rlh);
-            // Row width = Pallet Depth + Isle Width, then Pallets/m² = 1 / (Row Width × Pallet Depth).
-            // Confirmed against the fixed source spreadsheet (BASIS!E16) — that cell used to hardcode
-            // 1/(4.5×1) instead of linking to these two inputs; both now compute the same way.
-            const rowWidth = pd + iw;
+            if (rlh > 0 && rh > (bc + tc)) rackLevels = Math.floor((rh - bc - tc) / rlh);
+            const palletFootprint = pd * pw2;
+            let aisleClass = 'Not set';
+            if (iw > 0) {
+                if (iw < 2.2) aisleClass = 'VNA';
+                else if (iw < 3.3) aisleClass = 'Narrow Aisle';
+                else aisleClass = 'Wide Aisle';
+            }
             let totalPalletPositions = 0;
-            // Floor once, at the very end — matches BASIS!E13 = FLOOR(StorageArea × Pallets/m² × RackLevels, 1).
-            // Flooring the inner quotient first (before × rackLevels) under-counts by up to rackLevels−1.
-            if (rowWidth * pd > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / (rowWidth * pd) * rackLevels);
+            if (palletFootprint > 0) totalPalletPositions = Math.floor(floorArea * se * (1 - ds) / palletFootprint * rackLevels);
+            const practicalPalletCapacity = Math.floor(totalPalletPositions * opBuffer);
             const fl = estimateState.footingLength || 0, fw = estimateState.footingWidth || 0, fd = estimateState.footingDepth || 0;
             const pl = estimateState.pedestalLength || 0, pw = estimateState.pedestalWidth || 0, ph = estimateState.pedestalHeight || 0;
-            // × nodes matches the fixed source spreadsheet's FOOTING PEDESTAL CALCULATOR!E2, which
-            // used to price one footing+pedestal only — now scaled by Total Nodes there too.
             const concreteVol = (fl * fw * fd + pl * pw * ph) * nodes;
-            // Rebar Weight = Concrete Volume × Rebar Ratio × Steel Density (kg/m³) — same formula
-            // as the original footing/pedestal spreadsheet.
             const rebarWeight = concreteVol * ((estimateState.rebarRatio || 0) / 100) * (estimateState.steelDensity || 0);
-            // Excavation Volume assumes the dig matches the footing's own footprint — no working
-            // clearance margin added, since none was specified anywhere. Matches the fixed source
-            // spreadsheet's FOOTING PEDESTAL CALCULATOR!J4 (=FootingL×FootingW×ExcavDepth×Nodes),
-            // which was blank before and modeled the same way when filled in. Still worth confirming
-            // with whoever reviews this if a wider dig is standard practice — that's a real-world
-            // assumption, not something either file settles on its own.
             const excavationVolume = fl * fw * (estimateState.excavationDepth || 0) * nodes;
-            // Forms Area = the vertical formwork skin needed around each pour — perimeter × depth
-            // for the footing, perimeter × height for the pedestal, no formwork assumed on the
-            // underside (rests on excavated soil) or the open top. Matches FOOTING PEDESTAL
-            // CALCULATOR!E4 in the fixed source spreadsheet (was blank there too).
             const formsArea = (2 * (fl + fw) * fd + 2 * (pl + pw) * ph) * nodes;
 
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -915,12 +896,16 @@
             set('side-grossArea',  grossArea.toFixed(2) + ' sqm');
             set('side-bldgVolume', bldgVolume.toFixed(2) + ' cu.m');
             set('side-perimeter',  perimeter.toFixed(2) + ' m');
+            set('side-baySpacing', nodes);
             set('side-concrete',   concreteVol.toFixed(2) + ' m³');
             set('side-rebar',      rebarWeight.toFixed(2) + ' kg');
             set('side-excavation', excavationVolume.toFixed(2) + ' m³');
             set('side-forms',      formsArea.toFixed(2) + ' m²');
-            set('side-baySpacing', nodes);
+            set('side-rackLevels', rackLevels);
+            set('side-palletFootprint', palletFootprint.toFixed(2) + ' m²');
+            set('side-aisleClass', aisleClass);
             set('side-pallets',    totalPalletPositions.toLocaleString('en-US'));
+            set('side-practicalPallets', practicalPalletCapacity.toLocaleString('en-US'));
             renderIsoBuilding();
 
             const calcReady = (estimateState.length > 0) && (estimateState.width > 0) && (estimateState.clearHeight > 0);
@@ -1020,8 +1005,8 @@
             [
                 'length','width','clearHeight','stories','mezzanine',
                 'dockDoors','driveInDoors','baySpacingL','baySpacingW',
-                'rackHeight','palletSize','isleWidth','bottomClearance',
-                'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth',
+                'rackHeight','isleWidth','bottomClearance','topClearance',
+                'storageEfficiency','dockStagingArea','rackLevelHeight','palletDepth','palletWidth','operationalBuffer',
                 'footingLength','footingWidth','footingDepth',
                 'pedestalLength','pedestalWidth','pedestalHeight',
                 'excavationDepth','rebarRatio','steelDensity'

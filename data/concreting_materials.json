@@ -158,5 +158,10 @@
     "name": "testing 2",
     "unit": "lbs",
     "price_php": 7
+  },
+  {
+    "name": "testingggg",
+    "unit": "hotdogs",
+    "price_php": 67
   }
 ]

@@ -163,5 +163,10 @@
     "name": "testingggg",
     "unit": "hotdogs",
     "price_php": 67
+  },
+  {
+    "name": "Material X",
+    "unit": "lbs",
+    "price_php": 100
   }
 ]

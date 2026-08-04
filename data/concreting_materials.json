@@ -112,56 +112,56 @@
   {
     "name": "Plywood Ordinary 3/4″ x 4′ x 8′",
     "unit": "pc",
-    "price_php": 1175
+    "price_php": 0
   },
   {
     "name": "Reinforcing Steel Bars Plain Grade 40",
     "unit": "Kg",
-    "price_php": 39
+    "price_php": 0
   },
   {
     "name": "Reinforcing Steel Bars Plain Grade 60",
     "unit": "Kg",
-    "price_php": 40
+    "price_php": 0
   },
   {
     "name": "Reinforcing Steel Bars Deformed Grade 40",
     "unit": "Kg",
-    "price_php": 39
+    "price_php": 0
   },
   {
     "name": "Reinforcing Steel Bars Deformed Grade 60",
     "unit": "Kg",
-    "price_php": 40
+    "price_php": 0
   },
   {
     "name": "Steel Deck",
     "unit": "sq.m.",
-    "price_php": 820
+    "price_php": 0
   },
   {
     "name": "GI Tie Wire #12",
     "unit": "Kg",
-    "price_php": 75
+    "price_php": 0
   },
   {
     "name": "GI Tie Wire #16",
     "unit": "Kg",
-    "price_php": 65
+    "price_php": 0
   },
   {
     "name": "testing",
     "unit": "ml",
-    "price_php": 100
+    "price_php": 0
   },
   {
     "name": "testing 2",
     "unit": "lbs",
-    "price_php": 7
+    "price_php": 0
   },
   {
     "name": "testingggg",
     "unit": "hotdogs",
-    "price_php": 67
+    "price_php": 0
   }
 ]
